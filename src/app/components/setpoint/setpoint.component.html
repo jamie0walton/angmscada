@@ -1,0 +1,35 @@
+<div class="row mb-2 {{item.style}}">
+  <div class="col-8 d-flex justify-content-between">
+    <div class="ms-pad-v-s">{{tag.desc}}</div>
+  </div>
+  <div class="col-4 d-grid">
+    <button type="button" class="btn btn-outline-primary mb-auto pt-0 pb-0" (click)="makeForm()">
+      <div [ngSwitch]="tag.format">
+        <div *ngSwitchCase="'float'" class="row">
+          <div class="col-8 ms-pad-v-e">&#8203;{{tag.value | number:'1.'+tag.dp+'-'+tag.dp}}</div>
+          <div class="col-4 ms-pad-v-s">{{tag.units}}</div>
+        </div>
+        <div *ngSwitchCase="'int'" class="row">
+          <div class="col-8 ms-pad-v-e">&#8203;{{tag.value | number:'1.'+tag.dp+'-'+tag.dp}}</div>
+          <div class="col-4 ms-pad-v-s">{{tag.units}}</div>
+        </div>
+        <div *ngSwitchCase="'multi'" class="row">
+          <div>&#8203;{{tag.value | msMulti: tag.multi}}</div>
+        </div>
+        <div *ngSwitchCase="'time'" class="row">
+          <div class="col ms-pad-v">&#8203;{{tag.value | msTime}}</div>
+        </div>
+        <div *ngSwitchCase="'date'" class="row">
+          <div class="col ms-pad-v">&#8203;{{tag.value | msDate}}</div>
+        </div>
+        <div *ngSwitchCase="'datetime'" class="row">
+          <div class="col ms-pad-v">&#8203;{{tag.value | msDate}}&nbsp;{{tag.value | msTime}}</div>
+        </div>
+        <div *ngSwitchCase="'str'" class="ms-pad-v">
+          &#8203;{{tag.value}}
+        </div>
+        <div *ngSwitchDefault class="row text-info">{{tag.value}}</div>
+      </div>
+    </button>
+  </div>
+</div>

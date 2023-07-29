@@ -1,0 +1,27 @@
+<div class="container-fluid p-0">
+  <div class="row mb-2">
+    <div class="col-12 col-md-6">
+      <div class="row">
+        <div class="col-6 pt-1 pb-1"><h3>{{tag.desc}}</h3></div>
+        <div class="col-6 d-grid" *ngIf="change">
+          <button type="button" class="btn btn-outline-primary mb-auto pt-0 pb-0" (click)="makeForm()">Change to</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mb-2" *ngIf="tag.value != null">
+    <div class="col-6 col-lg-3" *ngFor="let label of tag.value.labels; let i = index">
+      <div class="row mb-2">
+        <div class="col-6 text-end">{{label}}</div>
+        <div class="col-6 d-grid">
+          <button type="button" class="btn mb-auto pt-0 pb-0" [ngClass]="{'btn-primary': selected[i], 'btn-outline-primary': !selected[i], 'disabled': tag.value.locks[i]}" (click)="peg(i, $event)">
+            <div class="row text-nowrap">
+              <div class="col-8 ms-pad-v-e">&#8203;{{tag.value.values[i] | msSelect: item.config.opts}}</div>
+              <div class="col-4 ms-pad-v-s">{{tag.units}}</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

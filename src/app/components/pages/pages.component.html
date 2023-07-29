@@ -1,0 +1,21 @@
+<div class="container-fluid" id="ms-pages">
+  <div class="row">
+    <div *ngFor="let i of pages[selected].items" [ngClass]="['value', 'setpoint'].includes(i.type) ? 'col-md-6 col-xl-4 col-xxl-3 pe-5' : 'col-12'">
+      <div [ngSwitch]="i.type">
+        <app-value *ngSwitchCase="'value'" [item]="i"></app-value>
+        <app-setpoint *ngSwitchCase="'setpoint'" [item]="i"></app-setpoint>
+        <app-uplot *ngSwitchCase="'uplot'" [item]="i"></app-uplot>
+        <app-files *ngSwitchCase="'files'" [item]="i"></app-files>
+        <app-selectdict *ngSwitchCase="'selectdict'" [item]="i"></app-selectdict>
+        <app-opnotes *ngSwitchCase="'opnotes'" [item]="i"></app-opnotes>
+        <div *ngSwitchCase="'h1'"><h1>{{i.desc}}</h1></div>
+        <div *ngSwitchCase="'h2'"><h2>{{i.desc}}</h2></div>
+        <div *ngSwitchCase="'h3'"><h3>{{i.desc}}</h3></div>
+        <div *ngSwitchCase="'p'"><p>{{i.desc}}</p></div>
+        <div *ngSwitchCase="'br'"><br/></div>
+        <div *ngSwitchCase="'hr'"><hr/></div>
+        <div *ngSwitchDefault><p>Nothing defined for {{i.type}}</p></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+<h1>Deprecated.</h1>
+<div class="row mb-2">
+  <div class="col d-flex justify-content-between">
+    <div class="ms-pad-v-s">{{tag.desc}}</div>
+  </div>
+</div>
+<div class="row" *ngFor="let h of get_stringlist()">
+  <div class="col-2 mt-1 mb-1">{{h[0] | date : 'E hh:mm:ss'}}</div>
+  <div class="col-10 mt-1 mb-1">{{h[1]}}</div>
+</div>

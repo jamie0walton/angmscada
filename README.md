@@ -1,4 +1,12 @@
-# Angmscada
+# angmscada
+Build pages for pymscada
+
+See [pymscada](https://github.com/jamie0walton/pymscada) for most of the documentation.
+This is really just the web pages for the Python project.
+
+BTW this works perfectly fine behind an Apache proxy for both https and wss. 
+
+# Angular Stuff
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.6.
 

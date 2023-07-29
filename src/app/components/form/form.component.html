@@ -1,0 +1,114 @@
+<div class="modal" tabindex="-1" role="dialog" [style]="{'display':display}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="modal-header">
+          <h5 class="modal-title">{{name}}</h5>
+          <button type="button" class="btn-close" (click)="onCancel()"></button>
+        </div>
+        <div class="modal-body">
+          <p>{{description}}</p>
+          <div *ngFor="let c of controls">
+            <div [ngSwitch]="c.inputtype">
+              <!-- Plain Description -->
+              <div *ngSwitchCase="'description'" class="mb-3 w-100">
+                <p>{{c.name}}</p>
+              </div>
+              <!-- float entry -->
+              <div *ngSwitchCase="'float'" class="mb-3">
+                <label class="w-100">
+                  Enter Floating Point Setpoint:
+                  <input class="form-control" formControlName="{{c.name}}">
+                </label>
+                <p>
+                  <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
+                </p>
+              </div>
+              <!-- int entry -->
+              <div *ngSwitchCase="'int'" class="mb-3">
+                <label class="w-100">
+                  Enter Integer Setpoint:
+                  <input class="form-control" formControlName="{{c.name}}">
+                </label>
+                <p>
+                  <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
+                </p>
+              </div>
+              <!-- Multi selector, value as integer -->
+              <div *ngSwitchCase="'multi'" class="mb-3">
+                <label class="w-100">
+                  Enter Selection:
+                  <select class="form-select" formControlName="{{c.name}}">
+                    <option *ngFor="let o of c.options; let i = index" [ngValue]="i">{{o}}</option>
+                  </select>
+                </label>
+              </div>
+              <!-- Time entry -->
+              <div *ngSwitchCase="'time'" class="mb-3">
+                <label class="w-100">
+                  Enter Time:
+                  <input type="time" class="form-control" formControlName="{{c.name}}">
+                </label>
+              </div>
+              <!-- Date entry -->
+              <div *ngSwitchCase="'date'" class="mb-3">
+                <label class="w-100">
+                  Enter Date:
+                  <input type="date" class="form-control" formControlName="{{c.name}}">
+                </label>
+              </div>
+              <!-- Date and Time entry -->
+              <div *ngSwitchCase="'datetime'" class="mb-3">
+                <label class="w-100">
+                  Enter Date and Time:
+                  <input type="datetime-local" class="form-control" formControlName="{{c.name}}">
+                </label>
+              </div>
+              <!-- String entry -->
+              <div *ngSwitchCase="'str'" class="mb-3">
+                <label class="w-100">
+                  Enter Text:
+                  <input type="text" class="form-control" formControlName="{{c.name}}">
+                </label>
+              </div>
+              <!-- Large string entry -->
+              <div *ngSwitchCase="'textarea'" class="mb-3">
+                <label class="w-100">
+                  Enter Text:
+                  <textarea type="textarea" rows="8" class="form-control" formControlName="{{c.name}}"></textarea>
+                </label>
+              </div>
+              <!-- Filter text entry with a clear field option -->
+              <div *ngSwitchCase="'filter'" class="input-group mb-3">
+                <div appDropdown>
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button">{{c.name}}</button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item bg-light" (click)="patch(c.name,'')">Clear</a>
+                    <a class="dropdown-item" *ngFor="let o of c.options" (click)="patch(c.name,o)">{{o}}</a>
+                  </div>
+                </div>
+                <input type="text" class="form-control" formControlName="{{c.name}}" (click)="$event.stopPropagation()">
+              </div>
+              <!-- Filter text entry with a clear field option -->
+              <div *ngSwitchCase="'drag_n_drop'" class="mb-3">
+                <div appDnd (filesDropped)="onFilesDropped($event)" class="w-100">
+                  <label class="mt-4 mb-4 w-100">
+                    Drop file here. {{filename}}
+                    <input type="file" (change)="onFilesBrowsed($event)"/>
+                  </label>
+                </div>
+              </div>
+              <!--  -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" *ngIf="delete" class="btn btn-outline-danger align-self-start" (click)="onDelete()">Delete</button>
+          <div class="flex-fill"></div>
+          <button type="button" class="btn btn-outline-dark" (click)="onCancel()">Cancel</button>
+          <button type="submit" class="btn btn-outline-primary">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
