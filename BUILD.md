@@ -18,3 +18,16 @@ ng serve --open
 What might be nice in future is to edit ```angular.json``` with
 ```"outputPath": "../pymscada/src/html",``` so that the build goes
 directly in with the python package which will serve the pages.
+
+```
+git remote add origin https://github.com/jamie0walton/angmscada.git
+git fetch
+git add .
+git commit -m "initial ng project"
+git push --set-upstream origin main
+# complains - requires pull first
+git pull origin main
+# likely complains about unrelated histories
+git pull origin main --allow-unrelated-histories
+# edit README.md to include both, only conflict in this instance.
+```
