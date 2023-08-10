@@ -30,3 +30,30 @@ git pull origin main --allow-unrelated-histories
 # edit README.md to include both, only conflict in this instance.
 git push --set-upstream origin main
 ```
+
+# Writing
+
+```
+npm install bootstrap
+npm install uplot
+# make it so bootstrap and uplot scss imports work
+ng generate component bus
+ng generate component navbar
+ng generate component pages
+# update app.component.html
+# this will generate a pretty boring navbar works! etc.
+```
+
+Migrate copies of components in.
+
+# Debugging
+
+Routine issue, cannot get edge to debug. So ...
+```
+ng build --configuration development
+python run wwwserver # debug with wwwserver.yaml with ../angmscada/dist/mscada
+start chrome --remote-debugging-port=9222
+```
+Net result two VSCode windows, one debugging the python server, the other debugging angular.
+
+More to write on this.

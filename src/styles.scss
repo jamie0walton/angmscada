@@ -1,1 +1,223 @@
-/* You can add global styles to this file, and also import other style files */
+// -----------------------------------
+//   MobileSCADA scheme colors
+// -----------------------------------
+
+$mscolor_hard: hsl(0, 0%, 15%);  // #262626 #31849b #e36c0a #a6a6a6
+$mscolor_hard_dark: hsl(0, 0%, 0%);  // #0d0d0d
+$mscolor_man: hsl(194, 52%, 28%);  // #31849b
+$mscolor_man_dark: hsl(193, 53%, 20%);  // #256374
+$mscolor_software: hsl(27, 92%, 35%);  // #e36c0a
+$mscolor_software_dark: hsl(27, 92%, 20%);  // #bd5a08
+$mscolor_limited: hsl(0, 0%, 60%);  // #a6a6a6
+$mscolor_limited_dark: hsl(0, 0%, 40%);  // #8c8c8c
+// $mscolor_hard_trans: hsla(0, 0%, 15%, 0.25);  // 
+// $mscolor_man_trans: hsla(193, 52%, 40%, 0.25);  // 
+// $mscolor_software_trans: hsla(27, 92%, 46%, 0.25);  // 
+// $mscolor_limited_trans: hsla(0, 0%, 65%, 0.25);  // 
+
+// -----------------------------------
+//     Bootstrap
+// -----------------------------------
+// @import "../node_modules/bootstrap/scss/mixins/banner";
+// @include bsBanner("");
+
+// Theme a couple of the colours, best place!
+$primary: $mscolor_man;
+$secondary: $mscolor_software;
+$headings-color: $mscolor_man;
+$danger: $mscolor_software_dark;
+
+$border-radius: .15rem;
+$spacer: .7rem;
+
+// $font-family-sans-serif:      system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+// $font-family-monospace:       SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !default;
+// $font-family-sans-serif:      Tahoma, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$font-family-sans-serif:      Arial, Helvetica;
+
+// $input-btn-padding-y: .175rem;
+
+$font-size-base: 1rem;
+$h1-font-size: $font-size-base * 1.8;
+$h2-font-size: $font-size-base * 1.6;
+$h3-font-size: $font-size-base * 1.4;
+$h4-font-size: $font-size-base * 1.2;
+$h5-font-size: $font-size-base * 1.1;
+$h6-font-size: $font-size-base;
+
+// scss-docs-start import-stack
+// Configuration
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+@import "../node_modules/bootstrap/scss/variables-dark";
+@import "../node_modules/bootstrap/scss/maps";
+@import "../node_modules/bootstrap/scss/mixins";
+@import "../node_modules/bootstrap/scss/utilities";
+
+// Layout & components
+@import "../node_modules/bootstrap/scss/root";
+@import "../node_modules/bootstrap/scss/reboot";
+@import "../node_modules/bootstrap/scss/type";
+// @import "../node_modules/bootstrap/scss/images";
+@import "../node_modules/bootstrap/scss/containers";
+@import "../node_modules/bootstrap/scss/grid";
+@import "../node_modules/bootstrap/scss/tables";
+@import "../node_modules/bootstrap/scss/forms";
+@import "../node_modules/bootstrap/scss/buttons";
+@import "../node_modules/bootstrap/scss/transitions";
+@import "../node_modules/bootstrap/scss/dropdown";
+@import "../node_modules/bootstrap/scss/button-group";
+@import "../node_modules/bootstrap/scss/nav";
+@import "../node_modules/bootstrap/scss/navbar";
+// @import "../node_modules/bootstrap/scss/card";
+// @import "../node_modules/bootstrap/scss/accordion";
+// @import "../node_modules/bootstrap/scss/breadcrumb";
+// @import "../node_modules/bootstrap/scss/pagination";
+// @import "../node_modules/bootstrap/scss/badge";
+@import "../node_modules/bootstrap/scss/alert";
+// @import "../node_modules/bootstrap/scss/progress";
+@import "../node_modules/bootstrap/scss/list-group";
+@import "../node_modules/bootstrap/scss/close";
+// @import "../node_modules/bootstrap/scss/toasts";
+@import "../node_modules/bootstrap/scss/modal";
+// @import "../node_modules/bootstrap/scss/tooltip";
+// @import "../node_modules/bootstrap/scss/popover";
+// @import "../node_modules/bootstrap/scss/carousel";
+// @import "../node_modules/bootstrap/scss/spinners";
+@import "../node_modules/bootstrap/scss/offcanvas";
+// @import "../node_modules/bootstrap/scss/placeholders";
+
+// Helpers
+// @import "../node_modules/bootstrap/scss/helpers";
+
+// Utilities
+@import "../node_modules/bootstrap/scss/utilities/api";
+// scss-docs-end import-stack
+
+
+// -----------------------------------
+//     Uplot
+// -----------------------------------
+@import '../node_modules/uplot/dist/uPlot.min.css';
+
+// -----------------------------------
+//     MobileSCADA customisations
+// -----------------------------------
+.ms-brand {
+    @extend .lh-1;
+    font-size: $font-size-base * 0.7;
+    font-weight: bold;
+}
+
+// /* right/stacked legend */
+// .uplot.rgt-leg {
+//     display: flex;
+//     width: auto;
+//     background: tomato;
+//   }
+  
+//   .uplot.rgt-leg .u-wrap {
+//     flex: none;
+//   }
+  
+//   .uplot.rgt-leg .u-legend {
+//     text-align: left;
+//     margin-left: 0;
+//     background: tomato;
+//   }
+  
+//   .uplot.rgt-leg .u-legend,
+//   .uplot.rgt-leg .u-legend tr,
+//   .uplot.rgt-leg .u-legend th,
+//   .uplot.rgt-leg .u-legend td {
+//     display: revert;
+//     background: tomato;
+//   }
+  
+  
+//   /* top legend */
+//   .uplot.top-leg {
+//     display: flex;
+//     flex-direction: column;
+//     background: tomato;
+//   }
+  
+//   .uplot.top-leg .u-legend {
+//     order: -1;
+//     background: tomato;
+//   }
+
+// // Place the legend up to the top left corner of .ms-uplot
+// .uplot.rgt-leg .u-legend {
+//     position: absolute;
+//     top: 45px;
+//     left: 45px;
+//     background-color: rgba(255,255,255,0.9);
+//     text-align: left;
+// }
+
+
+// Provide a uplot parent for absolute positioning to reference.
+.ms-uplot { // }, .ms-uplot-left, .ms-uplot-right, .ms-uplot-after {
+    position: relative;
+}
+
+.ms-uplot-left .u-legend {
+    position: absolute;
+    top: 0px;
+    left: 45px;
+    background-color: rgba(255,255,255,0.9);
+    text-align: left;
+}
+
+.ms-uplot-right .u-legend {
+    position: absolute;
+    top: 0px;
+    right: 90px;
+    background-color: rgba(255,255,255,0.9);
+    text-align: left;
+}
+
+.ms-uplot-after .u-legend {
+    background-color: rgba(255,255,255,0.9);
+    text-align: left;
+}
+
+.ms-uplot-none .u-legend {
+    display: none;
+}
+
+.ms-pad-v {
+    // font-size: $font-size-base * 0.85;
+    @extend .align-middle;
+    @extend .mb-auto;
+    @extend .pt-0;
+    @extend .pb-0;
+}
+
+.ms-pad-v-s {
+    // font-size: $font-size-base * 0.85;
+    @extend .ps-0;
+    @extend .text-start;
+    @extend .ms-pad-v;
+}
+
+.ms-pad-v-e {
+    // font-size: $font-size-base * 0.85;
+    @extend .pe-1;
+    @extend .text-end;
+    @extend .ms-pad-v;
+}
+
+.ms-short-nowrap {
+    white-space: nowrap;
+}
+
+.ms-inline-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.ms-inline-icon>* {
+    display: inline-flex;
+}

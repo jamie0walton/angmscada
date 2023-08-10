@@ -1,0 +1,28 @@
+<div class="container-fluid p-0">
+  <div class="row mb-2">
+    <div class="col-12 col-md-6">
+      <div class="row">
+        <div class="col-6 pt-1 pb-1"><h3>{{tag.desc}}</h3></div>
+        <div class="col-6 d-grid" *ngIf="change">
+          <button type="button" class="btn btn-outline-primary mb-auto pt-0 pb-0" (click)="makeForm()">Change to</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mb-2">
+    <div class="col-6 col-lg-3" *ngFor="let period of periods; let i = index">
+      <div class="row mb-2">
+        <div class="col-3 text-end">{{times[i]}}</div>
+        <div class="col-3 text-end">{{period}}</div>
+        <div class="col-6 d-grid">
+          <button type="button" class="btn mb-auto pt-0 pb-0" [ngClass]="btnclass[i]" (click)="peg(i, $event)">
+            <div class="row text-nowrap">
+              <div class="col-8 ms-pad-v-e">{{setpoints[i]}}</div>
+              <div class="col-4 ms-pad-v-s">{{tag.units}}</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

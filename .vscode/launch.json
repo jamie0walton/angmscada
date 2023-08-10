@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "attach python",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222
+    },
+    {
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",

@@ -1,0 +1,13 @@
+<div class="row mb-2 {{item.style}}">
+  <div class="col-8 d-flex justify-content-between">
+    <div class="ms-pad-v-s">{{tag.desc}}</div>
+  </div>
+  <div class="col-4 d-grid">
+    <button type="button" class="btn btn-outline-primary mb-auto pt-0 pb-0" (click)="makeForm()">
+      <div class="row">
+        <div class="col-8 ms-pad-v-e">{{tag.value | number:'1.'+tag.dp+'-'+tag.dp}}</div>
+        <div class="col-4 ms-pad-v-s">{{tag.units}}</div>
+      </div>
+    </button>
+  </div>
+</div>

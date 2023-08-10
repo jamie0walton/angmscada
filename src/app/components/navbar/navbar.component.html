@@ -1,0 +1,36 @@
+<div *ngIf='reload' class="alert alert-warning">RELOAD this page</div>
+<nav class="mb-2 navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid" id="ms-navbar">
+    <a class="navbar-brand ms-brand">
+      <div>Mobile</div>
+      <div>SCADA</div>
+    </a>
+    <button class="navbar-toggler" type="button" (click)="toggleNav()" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" [class]="{'collapse': collapse}">
+      <div class="navbar-nav me-auto mb-2 mb-lg-0">
+        <div *ngFor="let m of newmenu">
+          <div *ngIf="m.length == 1; then thenBlock else elseBlock"></div>
+          <ng-template #thenBlock>
+            <li class="nav-item">
+              <a class="nav-link" [class]="{'active': m[0].id == selected}" (click)="onClick(m[0].id)">{{m[0].name}}</a>
+            </li>
+          </ng-template>
+          <ng-template #elseBlock>
+            <li class="nav-item dropdown" appDropdown>
+              <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button"
+                data-bs-toggle="dropdown">{{m[0].name}}</a>
+              <ul class="dropdown-menu dropdown-menu-dark bg-primary">
+                <div *ngFor="let n of m | slice: 1">
+                  <li><a class="dropdown-item" [class]="{'active': n.id == selected}"
+                      (click)="onClick(n.id)">{{n.name}}</a></li>
+                </div>
+              </ul>
+            </li>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

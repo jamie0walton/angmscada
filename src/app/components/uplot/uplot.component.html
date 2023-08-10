@@ -1,0 +1,14 @@
+<div class="d-flex">
+  <div class="me-auto">
+    <h3>{{desc}}</h3>
+  </div>
+  <div class="pe-4" (click)="toggleLegend()">
+    <app-icon icon="list" width="20" height="20"></app-icon>
+  </div>
+  <div class="pe-4" (click)="showForm($event)">
+    <app-icon icon="gear" width="20" height="20"></app-icon>
+  </div>
+</div>
+<div class="ms-uplot" #msu>
+  <div #uplot></div>
+</div>
