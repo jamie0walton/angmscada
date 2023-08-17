@@ -7,6 +7,7 @@ export interface Tag {
     id: number | null
     name: string
     desc: string
+    type: string | null
     value: any  // number | string | null
     time_ms: number
     min: number | null
@@ -30,6 +31,7 @@ export class Tag implements Tag {
         this.id = null
         this.name = ""
         this.desc = ""
+        this.type = null
         this.value = null
         this.time_ms = 0
         this.min = null
@@ -48,73 +50,52 @@ export class Tag implements Tag {
     providedIn: 'root'
 })
 export class TagSubject {
+    // Tag subject, re-present bus tag values as Behaviour subject.
     private subjects: { [key: string]: BehaviorSubject<Tag> }
-    private tags: { [key: string]: Tag }
-    private tags_index: string[]
+    private tag_by_name: { [key: string]: Tag }
+    private tag_by_id: { [id: number]: Tag }
 
     constructor() {
         this.subjects = {}
-        this.tags = {}
-        this.tags_index = []
-    }
-
-    make_tag(src: any) {
-        let tag = new Tag
-        if (typeof src === 'string') {
-            tag.name = src
-            return tag
-        }
-        else {
-            if (src.hasOwnProperty('id')) { tag.id = src.id }
-            if (src.hasOwnProperty('name')) { tag.name = src.name }
-            if (src.hasOwnProperty('desc')) { tag.desc = src.desc }
-            if (src.hasOwnProperty('value')) { tag.value = src.value }
-            if (src.hasOwnProperty('time_ms')) { tag.time_ms = src.time_ms }
-            if (src.hasOwnProperty('min')) { tag.min = src.min }
-            if (src.hasOwnProperty('max')) { tag.max = src.max }
-            if (src.hasOwnProperty('units')) { tag.units = src.units }
-            if (src.hasOwnProperty('multi')) { tag.multi = src.multi }
-            if (src.hasOwnProperty('dp')) { tag.dp = src.dp }
-            if (src.hasOwnProperty('age_us')) {
-                if (src.age_us === null) {
-                    tag.age_ms = 0
-                }
-                else {
-                    tag.age_ms = src.age_us / 1000
-                }
-            }
-        }
-        return tag
+        this.tag_by_name = {}
+        this.tag_by_id = {}
     }
 
     subject(tagname: string) {
+        // Provide subject to observers. Assume observer requested tagname
+        // will exist even if it doesn't yet.
         if (!this.subjects.hasOwnProperty(tagname)) {
-            this.tags[tagname] = this.make_tag(tagname)
-            this.subjects[tagname] = new BehaviorSubject<Tag>(
-                this.tags[tagname]
-            )
+            let tag = new Tag
+            tag.name = tagname
+            this.subjects[tagname] = new BehaviorSubject<Tag>(tag)
+            this.tag_by_name[tagname] = tag
         }
-        this.subjects[tagname].next(this.tags[tagname])
+        this.subjects[tagname].next(this.tag_by_name[tagname])
         return this.subjects[tagname]
     }
 
-    init(tag: Tag) { // bus.component initialises from websocket messages
-        // console.log("Tag init", tag)
-        this.tags[tag.name] = tag
-        if (!this.subjects.hasOwnProperty(tag.name)) {
-            this.subjects[tag.name] = new BehaviorSubject<Tag>(
-                this.tags[tag.name]
-            )
-        }
-        if (tag.id != null) {
-            this.tags_index[tag.id] = tag.name
-        }
-        this.subjects[tag.name].next(this.tags[tag.name])
+    add_tag(src: any) {
+        let tag = new Tag
+        if (src.hasOwnProperty('id')) { tag.id = src.id as number } else {return}
+        if (src.hasOwnProperty('name')) { tag.name = src.name }
+        if (src.hasOwnProperty('desc')) { tag.desc = src.desc }
+        if (src.hasOwnProperty('type')) { tag.type = src.type }
+        if (src.hasOwnProperty('value')) { tag.value = src.value }
+        if (src.hasOwnProperty('time_ms')) { tag.time_ms = src.time_ms }
+        if (src.hasOwnProperty('min')) { tag.min = src.min }
+        if (src.hasOwnProperty('max')) { tag.max = src.max }
+        if (src.hasOwnProperty('units')) { tag.units = src.units }
+        if (src.hasOwnProperty('multi')) { tag.multi = src.multi }
+        if (src.hasOwnProperty('dp')) { tag.dp = src.dp }
+        if (src.hasOwnProperty('age_us')) { tag.age_ms = src.age_us / 1000 }
+        this.tag_by_id[tag.id] = tag
+        this.tag_by_name[tag.name] = tag
+        this.subjects[tag.name].next(this.tag_by_name[tag.name])
+        console.log(tag)
     }
 
     update(id: number, time_ms: number, value: any) {
-        let tagname: string = this.tags_index[id]
-        let tag: Tag = this.tags[tagname]
+        let tag: Tag = this.tag_by_id[id]
         tag.time_ms = time_ms
         tag.value = value
         if (typeof value === 'number') {
@@ -136,7 +117,7 @@ export class TagSubject {
                 const start = Math.floor(time - time % 1800)
                 let offset = plan.period[0]
                 let last = offset - 1
-                this.tags[tagname].future = []
+                tag.future = []
                 for (let i = 0; i < plan.setpoint.length; i++) {
                     const setpt = plan.setpoint[i]
                     const period = plan.period[i]
@@ -146,28 +127,28 @@ export class TagSubject {
                     else {
                         last = period
                     }
-                    this.tags[tagname].future.push([start + i * 1800, setpt])
+                    tag.future.push([start + i * 1800, setpt])
                 }
             }
             else {
                 let hi = 5
             }
         }
-        this.subjects[tagname].next(this.tags[tagname])
+        this.subjects[tag.name].next(tag)
     }
 
     update_history(id: number, time_ms: number[], value: (number | string | null)[]) {
         // history it put into time order
-        let tagname: string = this.tags_index[id]
+        let tag: Tag = this.tag_by_id[id]
         for (let index = 0; index < time_ms.length; index++) {
             let time_i = time_ms[index]
             let value_i = value[index]
             if (typeof value_i === 'number') {
-                this.tags[tagname].history.push([time_i, value_i])
+                tag.history.push([time_i, value_i])
             }
         }
-        this.tags[tagname].history.sort((a, b) => a[0] - b[0])
-        this.subjects[tagname].next(this.tags[tagname])
+        tag.history.sort((a, b) => a[0] - b[0])
+        this.subjects[tag.name].next(tag)
     }
 
     reset() { }

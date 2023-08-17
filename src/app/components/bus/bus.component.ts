@@ -5,7 +5,7 @@ import { Tag, TagSubject } from 'src/app/store/tag'
 import { Page, PageSubject } from 'src/app/store/page'
 import { Menu, MenuSubject } from 'src/app/store/menu'
 import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
-import { CommandSubject } from 'src/app/store/command'
+import { Command, OpCommand, CommandSubject } from 'src/app/store/command'
 
 const INT_TYPE = 1
 const FLOAT_TYPE = 2
@@ -42,14 +42,14 @@ export class BusComponent implements OnInit, OnDestroy {
             let msg: any = JSON.parse(e['data'])
             let type: any = msg['type']
             let data: any = msg['payload']
-            if (type == 'pages') {
+            if (type == 'tag') {  // json for dict and some lists
+                this.tagstore.update(data.tagid, Math.trunc(data.time_us / 1000), data.value)
+            }
+            else if (type == 'tag_info') {
+                this.tagstore.add_tag(data)
+            }
+            else if (type == 'pages') {
                 this.reset_stores()
-                // let tags: Tag[] = []
-                // data['tags'].forEach((taglike: any) => {
-                //     let tag = this.tagstore.make_tag(taglike)
-                //     this.tagstore.init(tag)
-                //     tags.push(tag)
-                // })
                 let pages: Page[] = []
                 let menu: Menu[] = []
                 for (let page_no = 0; page_no < data.length; page_no++) {
@@ -61,13 +61,20 @@ export class BusComponent implements OnInit, OnDestroy {
                         name: page.name,
                         parent: page.parent
                     })
+                    for (let i = 0; i < page.items.length; i++) {
+                        const item = page.items[i]
+                        if (item.tagname.length > 0) {
+                            this.sendCommand({
+                                type: 'sub',
+                                tagname: item.tagname,
+                                value: null
+                            })
+                        }
+                    }
                 }
                 this.pagestore.load(pages)
                 this.menustore.load(menu)
                 this.configstore.set_page(0)
-            }
-            else if (type == 'tag') {  // json: probably more complex structures
-                this.tagstore.update(data.tagid, Math.trunc(data.time_us / 1000), data.value)
             }
             else if (type == 'file') {
                 this.sendfilestore.fromWs(data)
@@ -137,9 +144,6 @@ export class BusComponent implements OnInit, OnDestroy {
             if(this.ws == null) {
                 console.log('websocket is closed on opening?')
             }
-            else {
-                this.ws.send(JSON.stringify({type: 'init'}))
-            }
         }
         this.ws.onmessage = (msg) => this.WSmessage(msg)
         this.ws.onerror = () => {
@@ -174,7 +178,7 @@ export class BusComponent implements OnInit, OnDestroy {
         }
     }
 
-    sendCommand(cmd: any) {
+    sendCommand(cmd: Command | OpCommand) {
         if (cmd != null && this.ws != null) {
             this.ws.send(JSON.stringify(cmd))
         }
