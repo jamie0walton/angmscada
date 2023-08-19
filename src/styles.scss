@@ -10,10 +10,6 @@ $mscolor_software: hsl(27, 92%, 35%);  // #e36c0a
 $mscolor_software_dark: hsl(27, 92%, 20%);  // #bd5a08
 $mscolor_limited: hsl(0, 0%, 60%);  // #a6a6a6
 $mscolor_limited_dark: hsl(0, 0%, 40%);  // #8c8c8c
-// $mscolor_hard_trans: hsla(0, 0%, 15%, 0.25);  // 
-// $mscolor_man_trans: hsla(193, 52%, 40%, 0.25);  // 
-// $mscolor_software_trans: hsla(27, 92%, 46%, 0.25);  // 
-// $mscolor_limited_trans: hsla(0, 0%, 65%, 0.25);  // 
 
 // -----------------------------------
 //     Bootstrap
@@ -29,13 +25,7 @@ $danger: $mscolor_software_dark;
 
 $border-radius: .15rem;
 $spacer: .7rem;
-
-// $font-family-sans-serif:      system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
-// $font-family-monospace:       SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !default;
-// $font-family-sans-serif:      Tahoma, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 $font-family-sans-serif:      Arial, Helvetica;
-
-// $input-btn-padding-y: .175rem;
 
 $font-size-base: 1rem;
 $h1-font-size: $font-size-base * 1.8;
@@ -109,54 +99,6 @@ $h6-font-size: $font-size-base;
     font-weight: bold;
 }
 
-// /* right/stacked legend */
-// .uplot.rgt-leg {
-//     display: flex;
-//     width: auto;
-//     background: tomato;
-//   }
-  
-//   .uplot.rgt-leg .u-wrap {
-//     flex: none;
-//   }
-  
-//   .uplot.rgt-leg .u-legend {
-//     text-align: left;
-//     margin-left: 0;
-//     background: tomato;
-//   }
-  
-//   .uplot.rgt-leg .u-legend,
-//   .uplot.rgt-leg .u-legend tr,
-//   .uplot.rgt-leg .u-legend th,
-//   .uplot.rgt-leg .u-legend td {
-//     display: revert;
-//     background: tomato;
-//   }
-  
-  
-//   /* top legend */
-//   .uplot.top-leg {
-//     display: flex;
-//     flex-direction: column;
-//     background: tomato;
-//   }
-  
-//   .uplot.top-leg .u-legend {
-//     order: -1;
-//     background: tomato;
-//   }
-
-// // Place the legend up to the top left corner of .ms-uplot
-// .uplot.rgt-leg .u-legend {
-//     position: absolute;
-//     top: 45px;
-//     left: 45px;
-//     background-color: rgba(255,255,255,0.9);
-//     text-align: left;
-// }
-
-
 // Provide a uplot parent for absolute positioning to reference.
 .ms-uplot { // }, .ms-uplot-left, .ms-uplot-right, .ms-uplot-after {
     position: relative;
@@ -188,7 +130,6 @@ $h6-font-size: $font-size-base;
 }
 
 .ms-pad-v {
-    // font-size: $font-size-base * 0.85;
     @extend .align-middle;
     @extend .mb-auto;
     @extend .pt-0;
@@ -196,14 +137,12 @@ $h6-font-size: $font-size-base;
 }
 
 .ms-pad-v-s {
-    // font-size: $font-size-base * 0.85;
     @extend .ps-0;
     @extend .text-start;
     @extend .ms-pad-v;
 }
 
 .ms-pad-v-e {
-    // font-size: $font-size-base * 0.85;
     @extend .pe-1;
     @extend .text-end;
     @extend .ms-pad-v;

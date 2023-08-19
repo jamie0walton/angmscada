@@ -106,7 +106,7 @@ export class FormComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.subs.push(
-            this.formstore.filtersubject.asObservable().subscribe(config => {
+            this.formstore.formsubject.asObservable().subscribe(config => {
                 this.makeForm(config)
             })
         )

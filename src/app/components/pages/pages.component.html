@@ -1,25 +1,15 @@
 <div class="container-fluid" id="ms-pages">
   <div class="row">
-    <div [ngClass]="getClass(i.type)" *ngFor="let i of pages[selected].items">
+    <div *ngFor="let i of pages[selected].items" [ngClass]="['value', 'setpoint'].includes(i.type) ? 'col-md-6 col-xl-4 col-xxl-3 pe-5' : 'col-12'">
       <div [ngSwitch]="i.type">
-        <app-desc-value *ngSwitchCase="'desc_value'" [item]="i"></app-desc-value>
-        <app-desc-time *ngSwitchCase="'desc_time'" [item]="i"></app-desc-time>
-        <app-desc-date-time *ngSwitchCase="'desc_date_time'" [item]="i"></app-desc-date-time>
-        <app-desc-string *ngSwitchCase="'desc_string'" [item]="i"></app-desc-string>
-        <app-desc-string-big *ngSwitchCase="'desc_string_big'" [item]="i"></app-desc-string-big>
-        <app-desc-string-list *ngSwitchCase="'desc_string_list'" [item]="i"></app-desc-string-list>
-        <app-multi *ngSwitchCase="'multi'" [item]="i"></app-multi>
-        <app-multi-setpoint *ngSwitchCase="'multi_setpoint'" [item]="i"></app-multi-setpoint>
+        <app-value *ngSwitchCase="'value'" [item]="i"></app-value>
         <app-setpoint *ngSwitchCase="'setpoint'" [item]="i"></app-setpoint>
-        <app-string-setpoint *ngSwitchCase="'string_setpoint'" [item]="i"></app-string-setpoint>
-        <app-opnotes *ngSwitchCase="'opnotes'" [item]="i"></app-opnotes>
         <app-uplot *ngSwitchCase="'uplot'" [item]="i"></app-uplot>
         <app-upload *ngSwitchCase="'upload'" [item]="i"></app-upload>
         <app-drawings *ngSwitchCase="'drawings'" [item]="i"></app-drawings>
         <app-dragsheet *ngSwitchCase="'dragsheet'" [item]="i"></app-dragsheet>
         <app-callout *ngSwitchCase="'callout'" [item]="i"></app-callout>
         <app-alarms *ngSwitchCase="'alarms'" [item]="i"></app-alarms>
-        <!-- <app-canvas *ngSwitchCase="'canvas'" [item]="i"></app-canvas> -->
         <div *ngSwitchCase="'h1'"><h1>{{i.desc}}</h1></div>
         <div *ngSwitchCase="'h2'"><h2>{{i.desc}}</h2></div>
         <div *ngSwitchCase="'h3'"><h3>{{i.desc}}</h3></div>

@@ -15,6 +15,7 @@ export interface Tag {
     units: string | null
     multi: string[] | null
     dp: number
+    format: string | null
     age_ms: number
     history: History
     stringhistory: [number, string][]
@@ -39,6 +40,7 @@ export class Tag implements Tag {
         this.units = null
         this.multi = null
         this.dp = 0
+        this.format = null
         this.age_ms = 0
         this.history = []
         this.stringhistory = []
@@ -79,17 +81,29 @@ export class TagSubject {
         if (src.hasOwnProperty('id')) { tag.id = src.id as number } else {return}
         if (src.hasOwnProperty('name')) { tag.name = src.name }
         if (src.hasOwnProperty('desc')) { tag.desc = src.desc }
-        if (src.hasOwnProperty('type')) { tag.type = src.type }
+        if (src.hasOwnProperty('type')) {
+            tag.type = src.type;
+            tag.format = src.type;  // default to type
+        }
         if (src.hasOwnProperty('value')) { tag.value = src.value }
         if (src.hasOwnProperty('time_ms')) { tag.time_ms = src.time_ms }
         if (src.hasOwnProperty('min')) { tag.min = src.min }
         if (src.hasOwnProperty('max')) { tag.max = src.max }
         if (src.hasOwnProperty('units')) { tag.units = src.units }
-        if (src.hasOwnProperty('multi')) { tag.multi = src.multi }
+        if (src.hasOwnProperty('multi')) {
+            tag.multi = src.multi;
+            tag.format = 'multi';  // override int to multi
+        }
         if (src.hasOwnProperty('dp')) { tag.dp = src.dp }
         if (src.hasOwnProperty('age_us')) { tag.age_ms = src.age_us / 1000 }
+        if (src.hasOwnProperty('format')) {
+            tag.format = src.format;  // user override, probably time and date
+        }
         this.tag_by_id[tag.id] = tag
         this.tag_by_name[tag.name] = tag
+        if (!this.subjects.hasOwnProperty(tag.name)) {
+            this.subjects[tag.name] = new BehaviorSubject<Tag>(tag)
+        }
         this.subjects[tag.name].next(this.tag_by_name[tag.name])
         console.log(tag)
     }

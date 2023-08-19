@@ -22,12 +22,7 @@ export class PagesComponent implements OnInit, OnDestroy {
 
     getClass(element: string) {
         switch (element) {
-            case 'desc_value':
-            case 'desc_time':
-            case 'desc_date_time':
-            case 'desc_string':
-            case 'multi':
-            case 'multi_setpoint':
+            case 'value':
             case 'setpoint':
                 return "col-md-6 col-xl-4 col-xxl-3 pe-5"  //  border-bottom rounded-3"
             default:

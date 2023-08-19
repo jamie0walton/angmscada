@@ -67,20 +67,20 @@ export namespace MsForm {
     providedIn: 'root'
 })
 export class FormSubject {
-    filtersubject: Subject<MsForm.Form>
+    formsubject: Subject<MsForm.Form>
     tagsubject: Subject<Tag>
     closesubject: Subject<MsForm.Close>
     requestid: number
 
     constructor() {
-        this.filtersubject = new Subject<MsForm.Form>()
+        this.formsubject = new Subject<MsForm.Form>()
         this.tagsubject = new Subject<Tag>()
         this.closesubject = new Subject<MsForm.Close>()
         this.requestid = 1
     }
 
     showForm(formoptions: MsForm.Form) {
-        this.filtersubject.next(formoptions)
+        this.formsubject.next(formoptions)
     }
 
     showMultiSetpointForm(tag: Tag) {
