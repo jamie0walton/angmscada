@@ -14,16 +14,25 @@
               <div *ngSwitchCase="'description'" class="mb-3">
                 <p>{{c.name}}</p>
               </div>
-              <!-- Filter text entry with a clear field option -->
-              <div *ngSwitchCase="'filter'" class="input-group mb-3">
-                <div appDropdown>
-                  <button class="btn btn-outline-secondary dropdown-toggle" type="button">{{c.name}}</button>
-                  <div class="dropdown-menu">
-                    <a class="dropdown-item bg-light" (click)="patch(c.name,'')">Clear</a>
-                    <a class="dropdown-item" *ngFor="let o of c.options" (click)="patch(c.name,o)">{{o}}</a>
-                  </div>
-                </div>
-                <input type="text" class="form-control" formControlName="{{c.name}}" (click)="$event.stopPropagation()">
+              <!-- float entry -->
+              <div *ngSwitchCase="'float'" class="mb-3">
+                <label>
+                  Enter Floating Point Setpoint:
+                  <input class="form-control" formControlName="{{c.name}}">
+                </label>
+                <p>
+                  <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
+                </p>
+              </div>
+              <!-- int entry -->
+              <div *ngSwitchCase="'int'" class="mb-3">
+                <label>
+                  Enter Integer Setpoint:
+                  <input class="form-control" formControlName="{{c.name}}">
+                </label>
+                <p>
+                  <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
+                </p>
               </div>
               <!-- Multi selector, value as integer -->
               <div *ngSwitchCase="'multi'" class="mb-3">
@@ -34,23 +43,51 @@
                   </select>
                 </label>
               </div>
-              <!-- Setpoint entry -->
-              <div *ngSwitchCase="'setpoint'" class="mb-3">
+              <!-- Time entry -->
+              <div *ngSwitchCase="'time'" class="mb-3">
                 <label>
-                  Enter Setpoint:
-                  <input class="form-control" formControlName="{{c.name}}">
+                  Enter Time:
+                  <input type="time" class="form-control" formControlName="{{c.name}}">
                 </label>
-                <p>
-                  <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
-                </p>
+              </div>
+              <!-- Date entry -->
+              <div *ngSwitchCase="'date'" class="mb-3">
+                <label>
+                  Enter Date:
+                  <input type="date" class="form-control" formControlName="{{c.name}}">
+                </label>
               </div>
               <!-- Date and Time entry -->
               <div *ngSwitchCase="'datetime'" class="mb-3">
-                <input type="datetime-local" class="form-control" formControlName="{{c.name}}">
+                <label>
+                  Enter Date and Time:
+                  <input type="datetime-local" class="form-control" formControlName="{{c.name}}">
+                </label>
+              </div>
+              <!-- String entry -->
+              <div *ngSwitchCase="'str'" class="mb-3">
+                <label>
+                  Enter Text:
+                  <input type="text" class="form-control" formControlName="{{c.name}}">
+                </label>
               </div>
               <!-- Large string entry -->
               <div *ngSwitchCase="'textarea'" class="mb-3">
-                <textarea type="textarea" rows="8" class="form-control" formControlName="{{c.name}}"></textarea>
+                <label>
+                  Enter Text:
+                  <textarea type="textarea" rows="8" class="form-control" formControlName="{{c.name}}"></textarea>
+                </label>
+              </div>
+              <!-- Filter text entry with a clear field option -->
+              <div *ngSwitchCase="'filter'" class="input-group mb-3">
+                <div appDropdown>
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button">{{c.name}}</button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item bg-light" (click)="patch(c.name,'')">Clear</a>
+                    <a class="dropdown-item" *ngFor="let o of c.options" (click)="patch(c.name,o)">{{o}}</a>
+                  </div>
+                </div>
+                <input type="text" class="form-control" formControlName="{{c.name}}" (click)="$event.stopPropagation()">
               </div>
               <!--  -->
             </div>

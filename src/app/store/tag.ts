@@ -83,7 +83,7 @@ export class TagSubject {
         if (src.hasOwnProperty('desc')) { tag.desc = src.desc }
         if (src.hasOwnProperty('type')) {
             tag.type = src.type;
-            tag.format = src.type;  // default to type
+            tag.format = src.type;  // default, may be overwritten below
         }
         if (src.hasOwnProperty('value')) { tag.value = src.value }
         if (src.hasOwnProperty('time_ms')) { tag.time_ms = src.time_ms }

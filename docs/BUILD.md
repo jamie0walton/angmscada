@@ -50,7 +50,7 @@ Migrate copies of components in.
 
 Routine issue, cannot get edge to debug. So ...
 ```
-ng build --configuration development
+ng build --configuration development --watch
 python run wwwserver # debug with wwwserver.yaml with ../angmscada/dist/mscada
 start chrome --remote-debugging-port=9222
 ```

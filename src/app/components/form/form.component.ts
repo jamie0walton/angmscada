@@ -50,15 +50,55 @@ export class FormComponent implements OnInit, OnDestroy {
         for (let i = 0; i < this.controls.length; i++) {
             const control = this.controls[i]
             let value = this.form.controls[control.name].value
-            if(control.hasOwnProperty('numbervalue')) {
-                value = parseFloat(value as string)
-                if(control.min !== undefined && control.max !== undefined) {
-                    if(value < control.min) {value = control.min}
-                    else if(value > control.max) {value = control.max}
-                }
-            }
-            else if(control.hasOwnProperty('optionvalue')) {
-                value = parseInt(value as string)
+            let now = new Date()
+            let ti
+            switch (control.inputtype) {
+                case 'float':
+                    value = parseFloat(value as string)
+                    if(control.min !== undefined && control.max !== undefined) {
+                        if(value < control.min) {value = control.min}
+                        else if(value > control.max) {value = control.max}
+                    }
+                    break
+                case 'int':
+                case 'multi':
+                    value = parseInt(value as string)
+                    if(control.min !== undefined && control.max !== undefined) {
+                        if(value < control.min) {value = control.min}
+                        else if(value > control.max) {value = control.max}
+                    }
+                    break
+                case 'time':
+                    ti = value.split(':')
+                    now.setHours(parseInt(ti[0]))
+                    now.setMinutes(parseInt(ti[1]))
+                    now.setSeconds(0)
+                    now.setMilliseconds(0)
+                    value = now.valueOf() * 1000
+                    break
+                case 'date':
+                    ti = value.split('-')
+                    now.setFullYear(parseInt(ti[0]))
+                    now.setMonth(parseInt(ti[1]) - 1)
+                    now.setDate(parseInt(ti[2]))
+                    now.setHours(0)
+                    now.setMinutes(0)
+                    now.setSeconds(0)
+                    now.setMilliseconds(0)
+                    value = now.valueOf() * 1000
+                    break
+                case 'datetime':
+                    value = new Date(value).valueOf() * 1000
+                    break
+                case 'str':
+                case 'textarea':
+                    value = value
+                    break
+                case 'filter':
+                    value = value
+                    break
+                default:
+                    break
             }
             this.form.value[control.name] = value
         }
@@ -74,26 +114,44 @@ export class FormComponent implements OnInit, OnDestroy {
         let formcontrols: {[key: string]: UntypedFormControl} = {}
         for (let i = 0; i < this.controls.length; i++) {
             const control = this.controls[i]
-            if (control.inputtype == 'setpoint') {
-                let va = control.numbervalue || 0
-                let value = va.toFixed(control.dp)
-                formcontrols[control.name] = new UntypedFormControl(value)
-            }
-            else if (control.inputtype == 'multi') {
-                let value = control.optionvalue || 0
-                formcontrols[control.name] = new UntypedFormControl(value)
-            }
-            else if (control.inputtype == 'filter') {
-                let value = control.stringvalue || ''
-                formcontrols[control.name] = new UntypedFormControl(value)
-            }
-            else if (control.inputtype == 'datetime') {
-                let value = control.stringvalue || ''
-                formcontrols[control.name] = new UntypedFormControl(value)
-            }
-            else if (control.inputtype == 'textarea') {
-                let value = control.stringvalue || ''
-                formcontrols[control.name] = new UntypedFormControl(value)
+            let value
+            switch (control.inputtype) {
+                case 'float':
+                    let va = control.numbervalue || 0
+                    value = va.toFixed(control.dp)
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'int':
+                    value = control.numbervalue || 0
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'multi':
+                    value = control.optionvalue || 0
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'time':
+                    value = control.numbervalue || ''
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'date':
+                    value = control.numbervalue || ''
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'datetime':
+                    value = control.numbervalue || ''
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'str':
+                case 'textarea':
+                    value = control.stringvalue || ''
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                case 'filter':
+                    value = control.stringvalue || ''
+                    formcontrols[control.name] = new UntypedFormControl(value)
+                    break
+                default:
+                    break
             }
         }
         this.form = new UntypedFormGroup(formcontrols)

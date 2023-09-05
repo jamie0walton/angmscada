@@ -12,9 +12,9 @@ export class msMultiPipe implements PipeTransform {
 
 @Pipe({name: 'msTime'})
 export class msTimePipe implements PipeTransform {
-    transform(sec: number, short: boolean = false): string {
-        if (typeof sec == 'number') {
-            const d = new Date(sec * 1000)
+    transform(usec: number, short: boolean = false): string {
+        if (typeof usec == 'number') {
+            const d = new Date(usec / 1000)
             if(short){
                 return d.toLocaleTimeString([], {hour12: false, hour: "2-digit", minute: "2-digit"} as any)
             }
@@ -30,9 +30,9 @@ export class msTimePipe implements PipeTransform {
 
 @Pipe({name: 'msDate'})
 export class msDatePipe implements PipeTransform {
-    transform(sec: number): string {
-        if (typeof sec == 'number') {
-            const d = new Date(sec * 1000)
+    transform(usec: number): string {
+        if (typeof usec == 'number') {
+            const d = new Date(usec / 1000)
             return d.toLocaleDateString([], { day: 'numeric', month: 'numeric' } as any)
         }
         else {

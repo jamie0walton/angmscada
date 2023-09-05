@@ -10,6 +10,8 @@
     //   "port": 9222
     // },
     {
+      // start chrome --remote-debugging-port=9222 --disable-application-cache
+      // ng build --configuration development --watch
       "name": "chrome python",
       "type": "chrome",
       "request": "attach",

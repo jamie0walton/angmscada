@@ -85,39 +85,36 @@ export class BusComponent implements OnInit, OnDestroy {
             let dview = new DataView(e['data'] as ArrayBuffer)
             let id = dview.getUint16(0)
             let type = dview.getUint16(2)
+            let time_us = Number(dview.getBigUint64(4))
+            let value: string | number | null = null
             let times = []
             let values = []
-            let index = 4
-            while (index + 12 <= dview.byteLength) {
-                let time_sec = dview.getUint32(index)
-                let time_us = dview.getUint32(index + 4)
-                let value = null
-                switch (type) {
-                    case INT_TYPE:
-                        value = dview.getInt32(index + 8)
-                        index += 12
-                        break
-                    case FLOAT_TYPE:
-                        value = dview.getFloat32(index + 8)
-                        index += 12
-                        break
-                    case STRING_TYPE:
-                        let dec = new TextDecoder()
-                        value = dec.decode(new Uint8Array(e['data'].slice(index + 8) as ArrayBuffer))
-                        index += 8 + value.length
-                        break
-                    case INT_ARRAY_TYPE:
-                        value = dview.getInt32(index + 8)
-                        index += 12
-                        break
-                    case FLOAT_ARRAY_TYPE:
-                        value = dview.getFloat32(index + 8)
-                        index += 12
-                        break
-                }
-                times.push(time_sec * 1000 + Math.trunc(time_us / 1000))
-                values.push(value)
+            let index = 12
+            switch (type) {
+                case INT_TYPE:
+                    value = Number(dview.getBigInt64(index))
+                  index += 8
+                    break
+                case FLOAT_TYPE:
+                    value = dview.getFloat64(index)
+                    index += 8
+                    break
+                case STRING_TYPE:
+                    let dec = new TextDecoder()
+                    value = dec.decode(new Uint8Array(e['data'].slice(index) as ArrayBuffer))
+                    index += value.length
+                    break
+                case INT_ARRAY_TYPE:
+                    value = dview.getInt32(index)
+                    index += 8
+                    break
+                case FLOAT_ARRAY_TYPE:
+                    value = dview.getFloat32(index)
+                    index += 8
+                    break
             }
+            times.push(Math.trunc(time_us / 1000))
+            values.push(value)
             switch (type) {
                 case INT_TYPE:
                 case FLOAT_TYPE:
