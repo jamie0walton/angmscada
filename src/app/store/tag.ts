@@ -16,6 +16,7 @@ export interface Tag {
     multi: string[] | null
     dp: number
     format: string | null
+    formatext: string[]
     age_ms: number
     history: History
     stringhistory: [number, string][]
@@ -41,6 +42,7 @@ export class Tag implements Tag {
         this.multi = null
         this.dp = 0
         this.format = null
+        this.formatext = []
         this.age_ms = 0
         this.history = []
         this.stringhistory = []
@@ -97,7 +99,9 @@ export class TagSubject {
         if (src.hasOwnProperty('dp')) { tag.dp = src.dp }
         if (src.hasOwnProperty('age_us')) { tag.age_ms = src.age_us / 1000 }
         if (src.hasOwnProperty('format')) {
-            tag.format = src.format;  // user override, probably time and date
+            let f: string[] = src.format.split(' ')
+            tag.format = f[0]  // user override, probably time and date
+            tag.formatext = f.slice(1)
         }
         this.tag_by_id[tag.id] = tag
         this.tag_by_name[tag.name] = tag
@@ -126,26 +130,7 @@ export class TagSubject {
         }
         else if (typeof value === 'object' && value != null) {
             if (value.hasOwnProperty('setpoint') && value.hasOwnProperty('period')) {
-                const plan: Plan = value
-                const time = Math.floor(time_ms) / 1000
-                const start = Math.floor(time - time % 1800)
-                let offset = plan.period[0]
-                let last = offset - 1
-                tag.future = []
-                for (let i = 0; i < plan.setpoint.length; i++) {
-                    const setpt = plan.setpoint[i]
-                    const period = plan.period[i]
-                    if (period < last) {
-                        offset -= last
-                    }
-                    else {
-                        last = period
-                    }
-                    tag.future.push([start + i * 1800, setpt])
-                }
-            }
-            else {
-                let hi = 5
+                // TODO     tag.future.push([start + i * 1800, setpt])
             }
         }
         this.subjects[tag.name].next(tag)

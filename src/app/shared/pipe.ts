@@ -1,12 +1,29 @@
 import { Pipe, PipeTransform } from '@angular/core'
 
+@Pipe({name: 'msSelect'})
+export class msSelectPipe implements PipeTransform {
+    transform(value: number|null, opts: any): string {
+        if (opts.type == 'multi') {
+            if (typeof(value) === 'number' && Array.isArray(opts.multi) && value < opts.multi.length) {
+                return opts.multi[value]
+            }
+        }
+        else if (opts.type == 'float') {
+            if (typeof(value) == 'number') {
+                return value.toFixed(opts.dp)
+            }
+        }
+        return 'INVALID'
+    }
+}
+
 @Pipe({name: 'msMulti'})
 export class msMultiPipe implements PipeTransform {
     transform(value: number|null, multi: string[]|null): string {
         if (typeof(value) === 'number' && Array.isArray(multi) && value < multi.length) {
             return multi[value]
         }
-            return 'INVALID'
+        return 'INVALID'
     }
 }
 
@@ -33,7 +50,7 @@ export class msDatePipe implements PipeTransform {
     transform(usec: number): string {
         if (typeof usec == 'number') {
             const d = new Date(usec / 1000)
-            return d.toLocaleDateString([], { day: 'numeric', month: 'numeric' } as any)
+            return d.toLocaleDateString([], { day: 'numeric', month: 'short' } as any)
         }
         else {
             return ""
