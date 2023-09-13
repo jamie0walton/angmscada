@@ -10,15 +10,12 @@ import { AlarmsComponent } from './components/alarms/alarms.component'
 import { CalloutComponent } from './components/callout/callout.component'
 import { DescStringBigComponent } from './components/desc-string-big/desc-string-big.component'
 import { DescStringListComponent } from './components/desc-string-list/desc-string-list.component'
-import { DrawingsComponent } from './components/drawings/drawings.component'
+import { FilesComponent } from './components/files/files.component'
 import { FormComponent } from './components/form/form.component'
 import { IconComponent } from './components/icon/icon.component'
 import { OpNotesComponent } from './components/opnotes/opnotes.component'
-import { ProgressComponent } from './components/progress/progress.component'
 import { SetpointComponent } from './components/setpoint/setpoint.component'
 import { SelectDictComponent } from './components/selectdict/selectdict.component'
-import { StringSetpointComponent } from './components/string-setpoint/string-setpoint.component'
-import { UploadComponent } from './components/upload/upload.component'
 import { UplotComponent } from './components/uplot/uplot.component'
 import { ValueComponent } from './components/value/value.component'
 import { DndDirective } from './shared/dnd.directive'
@@ -35,15 +32,12 @@ import { msSelectPipe, msMultiPipe, msTimePipe, msDatePipe, msNL2BRPipe } from '
     CalloutComponent,
     DescStringBigComponent,
     DescStringListComponent,
-    DrawingsComponent,
+    FilesComponent,
     FormComponent,
     IconComponent,
     OpNotesComponent,
-    ProgressComponent,
     SetpointComponent,
     SelectDictComponent,
-    StringSetpointComponent,
-    UploadComponent,
     UplotComponent,
     ValueComponent,
     DndDirective,

@@ -1,0 +1,20 @@
+<div class="d-flex">
+  <div class="me-auto">
+    <h3>Files</h3>
+  </div>
+  <div class="mt-1 mb-1">
+    <div class="pt-0 pb-0 btn btn-outline-secondary" (click)="makeForm()">
+      NEW
+    </div>
+  </div>
+</div>
+<div class="container-fluid p-0">
+  <div class="row mt-2 mb-2" *ngIf="tag.value != null">
+    <div class="col-12 col-md-6 col-xl-4" *ngFor="let x of tag.value.dat">
+      <div class="row">
+        <div class="col-2" (click)="makeForm(x)"><app-icon *ngIf="x.mode=='readwrite'" icon="pencil" width="15" height="15"></app-icon></div>
+        <div class="col ms-pad-v-s"><a target="_blank" href="{{x.path}}" class="link-primary">{{x.desc}}</a></div>
+      </div>
+    </div>
+  </div>
+</div>

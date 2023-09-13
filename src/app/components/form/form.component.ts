@@ -4,8 +4,7 @@ import { MsForm, FormSubject } from 'src/app/store/form'
 
 @Component({
     selector: 'app-form',
-    templateUrl: './form.component.html',
-    styleUrls: []
+    templateUrl: './form.component.html'
 })
 export class FormComponent implements OnInit, OnDestroy {
     subs: any = []
@@ -18,6 +17,8 @@ export class FormComponent implements OnInit, OnDestroy {
     filter: string[] = []
     controls: MsForm.Control[] = []
     delete: boolean = false
+    file: File|null = null
+    filename: string = ''
 
     constructor(
         private formstore: FormSubject
@@ -28,6 +29,18 @@ export class FormComponent implements OnInit, OnDestroy {
 
     patch(key: string, value: string) {
         this.form.patchValue({ [key]: value })
+        this.form.markAsDirty()
+    }
+
+    onFilesDropped(files: FileList) {
+        this.file = files[0]
+        this.filename = this.file.name
+        this.form.markAsDirty()
+    }
+
+    onFilesBrowsed(event: any) {
+        this.file = event.target.files[0] as File
+        this.filename = this.file.name
         this.form.markAsDirty()
     }
 
@@ -97,6 +110,9 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'filter':
                     value = value
                     break
+                case 'drag_n_drop':
+                    value = this.file
+                    break
                 default:
                     break
             }
@@ -119,40 +135,26 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'float':
                     let va = control.numbervalue || 0
                     value = va.toFixed(control.dp)
-                    formcontrols[control.name] = new UntypedFormControl(value)
                     break
                 case 'int':
-                    value = control.numbervalue || 0
-                    formcontrols[control.name] = new UntypedFormControl(value)
-                    break
                 case 'multi':
-                    value = control.optionvalue || 0
-                    formcontrols[control.name] = new UntypedFormControl(value)
+                    value = control.numbervalue || 0
                     break
                 case 'time':
-                    value = control.numbervalue || ''
-                    formcontrols[control.name] = new UntypedFormControl(value)
-                    break
                 case 'date':
-                    value = control.numbervalue || ''
-                    formcontrols[control.name] = new UntypedFormControl(value)
-                    break
                 case 'datetime':
                     value = control.numbervalue || ''
-                    formcontrols[control.name] = new UntypedFormControl(value)
                     break
                 case 'str':
                 case 'textarea':
-                    value = control.stringvalue || ''
-                    formcontrols[control.name] = new UntypedFormControl(value)
-                    break
                 case 'filter':
-                    value = control.stringvalue || ''
-                    formcontrols[control.name] = new UntypedFormControl(value)
+                case 'drag_n_drop':
+                    value = control.stringvalue || ''                    
                     break
                 default:
                     break
             }
+            formcontrols[control.name] = new UntypedFormControl(value)
         }
         this.form = new UntypedFormGroup(formcontrols)
         if (config.dirty) {  // allows calling function to require a return value on no change

@@ -15,7 +15,7 @@ export class UploadComponent implements OnInit, OnDestroy {
         private sendfilestore: SendFileSubject
     ) { }
 
-    prepareFilesList(files: Array<any>) {
+    prepareFilesList(files: any ) {  // Array<any>) {
         for (const file of files) {
             let send: SendFile = {
                 action: 'upload',
@@ -30,7 +30,7 @@ export class UploadComponent implements OnInit, OnDestroy {
         this.files.splice(index, 1);
     }
 
-    onFilesDropped(event: File[]) {
+    onFilesDropped(event: string ) { //File[]) {
         this.prepareFilesList(event);
     }
 
