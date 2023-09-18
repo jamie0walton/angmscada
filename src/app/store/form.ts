@@ -3,6 +3,7 @@ import { Subject } from 'rxjs'
 import { Tag } from './tag'
 
 const INPUT = ['', 'description', 'filter', 'multi', 'setpoint', 'int', 'float', 'str', 'textarea', 'time', 'date', 'datetime', 'drag_n_drop'] as const
+const ACTIONS = ['set', 'rqs']
 
 // MobileSCADA form modal.
 export namespace MsForm {
@@ -35,6 +36,7 @@ export namespace MsForm {
         controls: Control[]
         delete: boolean
         dirty: boolean
+        action: typeof ACTIONS[number]
     }
 
     export class Form {
@@ -45,6 +47,7 @@ export namespace MsForm {
             this.controls = []
             this.delete = false
             this.dirty = false  // default to no change == don't send setpoint
+            this.action = 'set'  // Default
         }
     }
 
@@ -79,7 +82,7 @@ export class FormSubject {
         this.requestid = 1
     }
 
-    showForm(formoptions: MsForm.Form) {
+    pubFormOpts(formoptions: MsForm.Form) {
         this.formsubject.next(formoptions)
     }
 

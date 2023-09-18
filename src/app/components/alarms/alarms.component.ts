@@ -76,7 +76,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
     }
 
     showControl() {
-        this.formstore.showForm(this.actionform)
+        this.formstore.pubFormOpts(this.actionform)
     }
 
     formAlarmAction(cmd: MsForm.Close) {
@@ -138,7 +138,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.filterform.controls[0].stringvalue = this.filter[0]
         this.filterform.controls[1].stringvalue = this.filter[1]
         this.filterform.controls[2].stringvalue = this.filter[2]
-        this.formstore.showForm(this.filterform)
+        this.formstore.pubFormOpts(this.filterform)
     }
 
     showMulti(tag: string[]) {
@@ -150,7 +150,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.form.controls = [control]
         this.form.name = tag[0]
         this.form.description = tag[1]
-        this.formstore.showForm(this.form)
+        this.formstore.pubFormOpts(this.form)
     }
 
     formFilterAction(cmd: MsForm.Close) {

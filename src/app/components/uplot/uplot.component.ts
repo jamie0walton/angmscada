@@ -139,7 +139,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                 }
             }
             this.form.controls = controls
-            this.formstore.showForm(this.form)
+            this.formstore.pubFormOpts(this.form)
         }
     }
 

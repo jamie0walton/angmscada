@@ -45,7 +45,7 @@ export class CalloutComponent implements OnInit, OnDestroy {
         this.form.controls = [control]
         this.form.name = name
         this.form.description = number
-        this.formstore.showForm(this.form)
+        this.formstore.pubFormOpts(this.form)
     }
 
     formAction(cmd: MsForm.Close) {

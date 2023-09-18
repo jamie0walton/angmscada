@@ -48,12 +48,17 @@ Migrate copies of components in.
 
 # Debugging
 
-Routine issue, cannot get edge to debug. So ...
-```
-ng build --configuration development --watch
-python run wwwserver # debug with wwwserver.yaml with ../angmscada/dist/mscada
-start chrome --remote-debugging-port=9222
-```
-Net result two VSCode windows, one debugging the python server, the other debugging angular.
-
-More to write on this.
+Assuming a base directory of ```Git``` Open three windows:
+- VSCode with ```Git\pymscada``` open, in three terminals run:
+  - ```pymscada run bus```
+  - ```pymscada run bus```
+  - ```pymscada run bus```
+- VSCode with ```Git\angmscada``` open, in one terminal run:
+  - ```ng build --configuration development --watch```
+- At a command prompt:
+  - ```start chrome --remote-debugging-port=9222```
+- Chrome opens
+  - <Ctrl+Shift+I> and check the cache is disabled
+  - Open [http://localhost:8324]
+  - The demo page should come up in Chrome
+  - in VSCode with angmscada, start debug and restart to confirm the chrome page refreshes

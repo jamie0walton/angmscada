@@ -36,9 +36,11 @@ export class SelectDictComponent extends BaseFormComponent {
             this.control.options = this.item.config.opts.multi || []
             this.control.optionvalue = this.tag.value.values[0]
         }
-        this.showForm(this.tag.name, this.tag.desc, [this.control])
-        this.form.dirty = true  // default is the first setpoint, however even no change == dirty
-        this.formstore.showForm(this.form)
+        this.form.name = this.tag.name
+        this.form.description = this.tag.desc
+        this.form.controls = [this.control]
+        // this.form.dirty = true  // default is the first setpoint, however even no change == dirty
+        this.showForm()
     }
 
     peg(i: number, event: any) {

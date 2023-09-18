@@ -17,46 +17,32 @@ type FileList = {
     styleUrls: []
 })
 export class FilesComponent  extends BaseFormComponent {
-    control: MsForm.Control
-
-    constructor() {
-        super()
-        this.control = new MsForm.Control()
-    }
-
     makeForm(file?: FileList) {
-        let path: MsForm.Control
-        let desc: MsForm.Control
+        let path: MsForm.Control = new MsForm.Control()
+        let desc: MsForm.Control = new MsForm.Control()
         if(file === undefined) {
-            this.form.name = 'Create New File'
-            this.form.description = 'Form Description'
-            this.form.requestid = ''
-            this.form.delete = false
-            path = new MsForm.Control()
+            this.form.description = 'Upload New File'
             path.inputtype = 'drag_n_drop'
             path.name = 'File'
             path.stringvalue = ''
-            desc = new MsForm.Control()
             desc.inputtype = 'textarea'
             desc.name = 'Description'
             desc.stringvalue = 'Enter a description'
         }
         else {
-            this.form.name = 'Edit File Link'
-            this.form.description = 'Form Description'
-            this.form.requestid = file.id
+            this.form.description = 'Edit Existing File'
             this.form.delete = true
-            path = new MsForm.Control()
             path.inputtype = 'description'
             path.name = 'File'
             path.stringvalue = file.path
-            desc = new MsForm.Control()
             desc.inputtype = 'textarea'
             desc.name = 'Description'
             desc.stringvalue = file.desc
         }
-        this.showForm(this.tag.name, this.tag.desc, [path, desc])
-        this.formstore.showForm(this.form)
+        this.form.name = this.tag.name
+        this.form.action = 'rqs'
+        this.form.controls = [path, desc]
+        this.showForm()
     }
 
     // closeForm() {

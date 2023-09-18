@@ -63,7 +63,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.form.controls = [
             this.datecontrol, this.sitecontrol, this.bycontrol, this.textcontrol
         ]
-        this.formstore.showForm(this.form)
+        this.formstore.pubFormOpts(this.form)
     }
 
     asDate(sec: number): Date {

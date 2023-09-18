@@ -18,21 +18,22 @@ export class BaseFormComponent extends BaseComponent {
 
     formAction(cmd: MsForm.Close) {
         // Default action is to write the tag value on the server. May be overridden.
-        if (cmd.action === 'submit' && this.tag.name in cmd.setvalue) {
+        if (cmd.action === 'submit') {
+            let value: any = cmd.setvalue
+            if (this.tag.name in cmd.setvalue) {
+                value = cmd.setvalue[this.tag.name]
+            }
             this.commandstore.command({
-                "type": "set",
+                "type": this.form.action,
                 "tagname": this.tag.name,
-                "value": cmd.setvalue[this.tag.name]
+                "value": value
             })
         }
     }
 
-    showForm(name: string, desc: string, controls: MsForm.Control[]) {
+    showForm() {
         // Create the form based on the controls, start listening to the form
         // and then request the form be shown.
-        this.form.name = name
-        this.form.description = desc
-        this.form.controls = controls
         this.form.requestid = this.formstore.getRequestID()
         this.subs.push(
             this.formstore.closesubject.asObservable().subscribe((cmd: any) => {
@@ -44,6 +45,6 @@ export class BaseFormComponent extends BaseComponent {
                 }
             })
         )
-        this.formstore.showForm(this.form)
+        this.formstore.pubFormOpts(this.form)
     }
 }
