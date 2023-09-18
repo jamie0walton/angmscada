@@ -50,9 +50,9 @@ Migrate copies of components in.
 
 Assuming a base directory of ```Git``` Open three windows:
 - VSCode with ```Git\pymscada``` open, in three terminals run:
-  - ```pymscada run bus```
-  - ```pymscada run bus```
-  - ```pymscada run bus```
+  - ```pymscada run bus --verbose```
+  - ```pymscada run wwwserver --config .\docs\examples\wwwserver.yaml --tags .\docs\examples\tags.yaml --verbose```
+  - ```pymscada run files --config .\docs\examples\files.yaml```
 - VSCode with ```Git\angmscada``` open, in one terminal run:
   - ```ng build --configuration development --watch```
 - At a command prompt:
