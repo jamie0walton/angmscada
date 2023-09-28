@@ -5,7 +5,7 @@ import { Tag, TagSubject } from 'src/app/store/tag'
 import { Page, PageSubject } from 'src/app/store/page'
 import { Menu, MenuSubject } from 'src/app/store/menu'
 import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
-import { Command, OpCommand, CommandSubject } from 'src/app/store/command'
+import { Command, CommandSubject } from 'src/app/store/command' // OpCommand
 
 const INT_TYPE = 1
 const FLOAT_TYPE = 2
@@ -175,9 +175,16 @@ export class BusComponent implements OnInit, OnDestroy {
         }
     }
 
-    sendCommand(cmd: Command | OpCommand) {
+    sendCommand(cmd: Command) { // } | OpCommand) {
         if (cmd != null && this.ws != null) {
-            this.ws.send(JSON.stringify(cmd))
+            if (cmd.value != null && cmd.value.hasOwnProperty('File')) {
+                cmd.value._file_name = cmd.value.File.name
+                this.ws.send(JSON.stringify(cmd))
+                this.ws.send(cmd.value.File)
+            }
+            else {
+                this.ws.send(JSON.stringify(cmd))
+            }
         }
     }
 
