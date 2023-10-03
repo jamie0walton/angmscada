@@ -56,8 +56,8 @@ export class Tag implements Tag {
 export class TagSubject {
     // Tag subject, re-present bus tag values as Behaviour subject.
     private subjects: { [key: string]: BehaviorSubject<Tag> }
-    private tag_by_name: { [key: string]: Tag }
-    private tag_by_id: { [id: number]: Tag }
+    tag_by_name: { [key: string]: Tag }
+    tag_by_id: { [id: number]: Tag }
 
     constructor() {
         this.subjects = {}

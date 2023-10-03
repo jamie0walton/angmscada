@@ -10,8 +10,9 @@ import { Command, CommandSubject } from 'src/app/store/command' // OpCommand
 const INT_TYPE = 1
 const FLOAT_TYPE = 2
 const STRING_TYPE = 3
-const INT_ARRAY_TYPE = 4
-const FLOAT_ARRAY_TYPE = 5
+const BYTES_TYPE = 4
+const INT_ARRAY_TYPE = 5  // TODO delete
+const FLOAT_ARRAY_TYPE = 5  // TODO delete
 
 @Component({
     selector: 'app-bus',
@@ -23,6 +24,7 @@ export class BusComponent implements OnInit, OnDestroy {
     ws: WebSocket | undefined
     wsIdle: number
     config: Config
+    pending_rqs: Command[] = []
 
     constructor(
         private configstore: ConfigSubject,
@@ -32,9 +34,48 @@ export class BusComponent implements OnInit, OnDestroy {
         private sendfilestore: SendFileSubject,
         private commandstore: CommandSubject
     ) {
-        this.source = timer(0, 1000)
+        this.source = timer(500, 1000)
         this.wsIdle = 0
         this.config = this.configstore.get()
+    }
+
+    sub_tags(page: Page) {
+        for (let i = 0; i < page.items.length; i++) {
+            const item = page.items[i]
+            if (item.tagname.length > 0) {
+                this.sendCommand({
+                    type: 'sub',
+                    tagname: item.tagname,
+                    value: null
+                })
+            }
+            else if (item.type == 'uplot') {
+                this.sendCommand({
+                    type: 'sub',
+                    tagname: item.config.ms.tagname,
+                    value: null
+                })
+                for (let i = 0; i < item.config.series.length; i++) {
+                    const element = item.config.series[i]
+                    this.pending_rqs.push({
+                        type: 'rqs',
+                        tagname: item.config.ms.tagname,
+                        value: {
+                            tagname: element.tagname,
+                            range: item.config.ms.age
+                        }
+                    })
+                }
+                for (let i = 0; i < item.config.series.length; i++) {
+                    const element = item.config.series[i]
+                    this.sendCommand({
+                        type: 'sub',
+                        tagname: element.tagname,
+                        value: null
+                    })
+                }
+            }
+        }
     }
 
     WSmessage(e: MessageEvent) {
@@ -61,16 +102,7 @@ export class BusComponent implements OnInit, OnDestroy {
                         name: page.name,
                         parent: page.parent
                     })
-                    for (let i = 0; i < page.items.length; i++) {
-                        const item = page.items[i]
-                        if (item.tagname.length > 0) {
-                            this.sendCommand({
-                                type: 'sub',
-                                tagname: item.tagname,
-                                value: null
-                            })
-                        }
-                    }
+                    this.sub_tags(page)
                 }
                 this.pagestore.load(pages)
                 this.menustore.load(menu)
@@ -87,44 +119,38 @@ export class BusComponent implements OnInit, OnDestroy {
             let type = dview.getUint16(2)
             let time_us = Number(dview.getBigUint64(4))
             let value: string | number | null = null
-            let times = []
-            let values = []
-            let index = 12
-            switch (type) {
-                case INT_TYPE:
-                    value = Number(dview.getBigInt64(index))
-                  index += 8
-                    break
-                case FLOAT_TYPE:
-                    value = dview.getFloat64(index)
-                    index += 8
-                    break
-                case STRING_TYPE:
-                    let dec = new TextDecoder()
-                    value = dec.decode(new Uint8Array(e['data'].slice(index) as ArrayBuffer))
-                    index += value.length
-                    break
-                case INT_ARRAY_TYPE:
-                    value = dview.getInt32(index)
-                    index += 8
-                    break
-                case FLOAT_ARRAY_TYPE:
-                    value = dview.getFloat32(index)
-                    index += 8
-                    break
+            let times: number[] = []
+            let values: number[] = []
+            if (type == INT_TYPE) {
+                value = Number(dview.getBigInt64(12))
+                this.tagstore.update(id, Math.trunc(time_us / 1000), value)
             }
-            times.push(Math.trunc(time_us / 1000))
-            values.push(value)
-            switch (type) {
-                case INT_TYPE:
-                case FLOAT_TYPE:
-                case STRING_TYPE:
-                    this.tagstore.update(id, times[0], values[0])
-                    break
-                case INT_ARRAY_TYPE:
-                case FLOAT_ARRAY_TYPE:
-                    this.tagstore.update_history(id, times, values)
-                    break
+            else if (type == FLOAT_TYPE) {
+                value = dview.getFloat64(12)
+                this.tagstore.update(id, Math.trunc(time_us / 1000), value)
+            }
+            else if (type == STRING_TYPE) {
+                let dec = new TextDecoder()
+                value = dec.decode(new Uint8Array(e['data'].slice(12) as ArrayBuffer))
+                this.tagstore.update(id, Math.trunc(time_us / 1000), value)
+            }
+            else if (type == BYTES_TYPE) {
+                id = dview.getUint16(12)
+                if (id == 0) {return}
+                let tag = this.tagstore.tag_by_id[id]
+                if (tag.type == 'float') {
+                    for (let j = 14; j < dview.byteLength; j += 16) {
+                        times.push(Number(dview.getBigUint64(j)))
+                        values.push(Number(dview.getFloat64(j + 8)))
+                    }
+                }
+                else if (tag.type == 'int') {
+                    for (let j = 14; j < dview.byteLength; j += 16) {
+                        times.push(Number(dview.getBigUint64(j)))
+                        values.push(Number(dview.getBigInt64(j + 8)))
+                    }
+                }
+                this.tagstore.update_history(id, times, values)
             }
         }
     }
@@ -155,6 +181,19 @@ export class BusComponent implements OnInit, OnDestroy {
     }
 
     checkStatus() {
+        if (this.pending_rqs.length > 0) {
+            let still_pending: Command[] = []
+            for (let i = 0; i < this.pending_rqs.length; i++) {
+                const command = this.pending_rqs[i]
+                if (command.tagname in this.tagstore.tag_by_name) {
+                    this.sendCommand(command)
+                }
+                else {
+                    still_pending.push(command)
+                }
+            }
+            this.pending_rqs = still_pending
+        }
         if (this.ws == null || this.ws.readyState != 1) {
             this.wsIdle += 1
             if (this.wsIdle == 60) {
