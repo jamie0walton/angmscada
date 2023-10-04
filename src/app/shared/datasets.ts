@@ -60,8 +60,6 @@ export class DataSet {
     history: Boolean[]
     duration: number
     extend: Boolean
-    // endtime: number
-    // starttime: number
     live: boolean
     updateshow: boolean
 
@@ -75,8 +73,6 @@ export class DataSet {
         this.show = [[]]
         this.history = []
         this.duration = 3600 * 4
-        // this.endtime = 0
-        // this.starttime = this.endtime - this.duration
         this.extend = false
         this.live = true
         this.updateshow = false
@@ -85,7 +81,6 @@ export class DataSet {
     setduration(duration: number) {
         // Set duration in seconds.
         this.duration = duration
-        // this.starttime = this.endtime - this.duration
         this.updateshow = true
     }
 

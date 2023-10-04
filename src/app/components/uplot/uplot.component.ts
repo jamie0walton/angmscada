@@ -143,6 +143,17 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
+    setduration(duration: number) {
+        this.dataset.setduration(duration)
+        for (let index = 0; index < this.series.length; index++) {
+            const trace = this.series[index]
+            const tagid = this.tagstore.tag_by_name[trace.tagname].id
+            if(typeof(tagid) === 'number') {
+                this.tagstore.set_age_ms(tagid, duration * 1000)
+            }
+        }
+    }
+
     formAction(cmd: any) {
         let c = Object.keys(cmd)
         let duration = 0
@@ -187,7 +198,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             }
             let duration: number = parseInt(cmd.duration.slice(0,-1)) * units
             if(!isNaN(duration)){
-                this.dataset.setduration(duration)
+                this.setduration(duration)
                 this.zoomed_x = false
                 this.zoomed_y = false
             }
@@ -377,17 +388,17 @@ export class UplotComponent implements OnInit, OnDestroy {
                     scale: obj.scale,
                     values: [
                     //   tick incr        default          year                         month day                     hour  min           sec   mode
-                        [3600 * 24 * 365, "{YYYY}",        null,                        null, null,                   null, null,         null, 1],
-                        [3600 * 24 * 28,  "{MMM}",         "\n{YYYY}",                  null, null,                   null, null,         null, 1],
-                        [3600 * 24,       "{D}/{M}",       "\n{YYYY}",                  null, null,                   null, null,         null, 1],
-                        [3600,            "{H}:{mm}",      "\n{D}/{MMM}/{YY}",          null, "\n{D}/{MMM}",          null, null,         null, 1],
-                        [60,              "{H}:{mm}",      "\n{D}/{MMM}/{YY}",          null, "\n{D}/{MMM} {H}",      null, null,         null, 1],
-                        [1,               "{mm}:{ss}",     "\n{D}/{MMM}/{YY} {H}",      null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
-                        [0.001,           ":{ss}.{fff}",   "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
+                        [3600 * 24 * 365, "{YYYY}", null, null, null, null, null, null, 1],
+                        [3600 * 24 * 28, "{MMM}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [3600 * 24, "{D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [3600, "{H}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
+                        [60, "{H}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM} {H}", null, null, null, 1],
+                        [1, "{mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
+                        [0.001, ":{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
                     ]
                 })
                 if (obj.hasOwnProperty('range')) {
-                    this.dataset.setduration(obj.range[1] - obj.range[0])
+                    this.setduration(obj.range[1] - obj.range[0])
                 }
             }
             else {  // with scale and possibly side

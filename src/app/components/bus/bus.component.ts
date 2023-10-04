@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { timer, Observable } from 'rxjs'
 import { Config, ConfigSubject } from 'src/app/store/config'
-import { Tag, TagSubject } from 'src/app/store/tag'
+import { TagSubject } from 'src/app/store/tag'
 import { Page, PageSubject } from 'src/app/store/page'
 import { Menu, MenuSubject } from 'src/app/store/menu'
 import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
@@ -11,8 +11,10 @@ const INT_TYPE = 1
 const FLOAT_TYPE = 2
 const STRING_TYPE = 3
 const BYTES_TYPE = 4
-const INT_ARRAY_TYPE = 5  // TODO delete
-const FLOAT_ARRAY_TYPE = 5  // TODO delete
+
+const FUNCTION_TAGS = [
+    '__bus__', '__files__', '__history__', '__opnotes__', '__alarms__'
+]
 
 @Component({
     selector: 'app-bus',
@@ -40,6 +42,13 @@ export class BusComponent implements OnInit, OnDestroy {
     }
 
     sub_tags(page: Page) {
+        FUNCTION_TAGS.forEach(element => {
+            this.sendCommand({
+                type: 'sub',
+                tagname: element,
+                value: null
+            })
+        })
         for (let i = 0; i < page.items.length; i++) {
             const item = page.items[i]
             if (item.tagname.length > 0) {
@@ -50,22 +59,6 @@ export class BusComponent implements OnInit, OnDestroy {
                 })
             }
             else if (item.type == 'uplot') {
-                this.sendCommand({
-                    type: 'sub',
-                    tagname: item.config.ms.tagname,
-                    value: null
-                })
-                for (let i = 0; i < item.config.series.length; i++) {
-                    const element = item.config.series[i]
-                    this.pending_rqs.push({
-                        type: 'rqs',
-                        tagname: item.config.ms.tagname,
-                        value: {
-                            tagname: element.tagname,
-                            range: item.config.ms.age
-                        }
-                    })
-                }
                 for (let i = 0; i < item.config.series.length; i++) {
                     const element = item.config.series[i]
                     this.sendCommand({
@@ -136,18 +129,18 @@ export class BusComponent implements OnInit, OnDestroy {
             }
             else if (type == BYTES_TYPE) {
                 id = dview.getUint16(12)
-                if (id == 0) {return}
-                let tag = this.tagstore.tag_by_id[id]
-                if (tag.type == 'float') {
-                    for (let j = 14; j < dview.byteLength; j += 16) {
-                        times.push(Number(dview.getBigUint64(j)))
-                        values.push(Number(dview.getFloat64(j + 8)))
+                type = dview.getUint16(14)
+                if (id == 0 || type == 0) {return}
+                if (type == INT_TYPE) {
+                    for (let j = 16; j < dview.byteLength; j += 16) {
+                        times.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
+                        values.push(Number(dview.getBigInt64(j + 8)))
                     }
                 }
-                else if (tag.type == 'int') {
-                    for (let j = 14; j < dview.byteLength; j += 16) {
-                        times.push(Number(dview.getBigUint64(j)))
-                        values.push(Number(dview.getBigInt64(j + 8)))
+                else if (type == FLOAT_TYPE) {
+                    for (let j = 16; j < dview.byteLength; j += 16) {
+                        times.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
+                        values.push(Number(dview.getFloat64(j + 8)))
                     }
                 }
                 this.tagstore.update_history(id, times, values)
@@ -202,15 +195,6 @@ export class BusComponent implements OnInit, OnDestroy {
             }
         } else {
             this.wsIdle = 0
-            // if (this.gethist > 1) {
-            //     this.gethist -= 1
-            // }
-            // if (this.gethist == 1) {
-            //     this.gethist = 0
-            //     this.ws.send(JSON.stringify({
-            //         type: 'get_pages'
-            //     }))
-            // }
         }
     }
 

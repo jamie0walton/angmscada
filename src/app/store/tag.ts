@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core'
+import { Injectable, inject } from '@angular/core'
 import { BehaviorSubject } from 'rxjs'
+import { CommandSubject } from './command'
 
 export type History = [number, number][]
 
@@ -58,6 +59,7 @@ export class TagSubject {
     private subjects: { [key: string]: BehaviorSubject<Tag> }
     tag_by_name: { [key: string]: Tag }
     tag_by_id: { [id: number]: Tag }
+    commandstore = inject(CommandSubject)
 
     constructor() {
         this.subjects = {}
@@ -148,6 +150,19 @@ export class TagSubject {
         }
         tag.history.sort((a, b) => a[0] - b[0])
         this.subjects[tag.name].next(tag)
+    }
+
+    set_age_ms(id: number, age_ms: number) {
+        let tag: Tag = this.tag_by_id[id]
+        tag.age_ms = age_ms
+        this.commandstore.command({
+            type: 'rqs',
+            tagname: '__history__',
+            value: {
+                tagname: tag.name,
+                range: age_ms
+            }
+        })
     }
 
     reset() { }
