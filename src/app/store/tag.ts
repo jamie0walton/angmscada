@@ -154,13 +154,20 @@ export class TagSubject {
 
     set_age_ms(id: number, age_ms: number) {
         let tag: Tag = this.tag_by_id[id]
+        if (age_ms < tag.age_ms) {return}
+        let now = Date.now()
+        let start_ms = now - age_ms
+        let end_ms = tag.history[0][0]
+        if (end_ms < start_ms) {return}
         tag.age_ms = age_ms
+
         this.commandstore.command({
             type: 'rqs',
             tagname: '__history__',
             value: {
                 tagname: tag.name,
-                range: age_ms
+                start_ms: start_ms,
+                end_ms: end_ms
             }
         })
     }

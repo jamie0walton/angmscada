@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, Input, ViewChild, HostListener, ElementRe
 import { timer, Observable } from 'rxjs'
 import uPlot from 'uplot'
 import { DataSet } from 'src/app/shared/datasets'
+import { UplotDataSet } from './uplot.dataset'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { name2rgba } from 'src/app/shared/functions'
@@ -56,6 +57,7 @@ export class UplotComponent implements OnInit, OnDestroy {
     bands: any[] = []
     axes: any[] = []
     dataset: DataSet
+    udataset: UplotDataSet
     configrange: { [key: string]: [number, number] } = {}
     currentrange: { [key: string]: [number, number] } = {}
     ranges: { [key: string]: [number, number] } = {}
@@ -67,6 +69,7 @@ export class UplotComponent implements OnInit, OnDestroy {
     ) {
         this.source = timer(0, 500)
         this.dataset = new DataSet()
+        this.udataset = new UplotDataSet()
         this.form = new MsForm.Form()
         this.desc = ''
     }
@@ -145,6 +148,7 @@ export class UplotComponent implements OnInit, OnDestroy {
 
     setduration(duration: number) {
         this.dataset.setduration(duration)
+        this.udataset.set_duration(duration)
         for (let index = 0; index < this.series.length; index++) {
             const trace = this.series[index]
             const tagid = this.tagstore.tag_by_name[trace.tagname].id
@@ -304,9 +308,11 @@ export class UplotComponent implements OnInit, OnDestroy {
 
     getSeries() {
         let series: uPlot.Series[] = [{}]
+        let tags: Tag[] = []
         for (let index = 0; index < this.series.length; index++) {
             const trace = this.series[index]
             this.dataset.addtag(trace.tagname, trace.ms_type || 'default')
+            tags.push(this.tagstore.tag_by_name[trace.tagname])
             // series holds the config of each dataset, such as visibility, styling, labels & value display
             // in the legend, and the scale key along which they should be drawn. Implicit scale keys are x
             // for the data[0] series and y for data[1..N]
@@ -350,6 +356,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                 nolegend: trace.hasOwnProperty('nolegend') ? true : false
             })
         }
+        this.udataset.init_tags(tags)
         return {series: series}
     }
 
@@ -540,12 +547,26 @@ export class UplotComponent implements OnInit, OnDestroy {
                         }
                     }
                 }
+                if (this.udataset.updateshow) {
+                    this.udataset.updateshow = false
+                    if (this.plot != undefined) {
+                        const zoomed = this.zoomed_x || this.zoomed_y
+                        this.udataset.update_show()
+                        // if (zoomed) {
+                        //     this.plot.setData(this.udataset.show, false)
+                        // }
+                        // else {
+                        //     this.plot.setData(this.udataset.show)
+                        // }
+                    }
+                }
             })
         )
         this.dataset.taglist.forEach(tagname => {
             this.subs.push(
-                this.tagstore.subject(tagname).asObservable().subscribe((value: Tag) => {
-                    this.dataset.addtagdata(value)
+                this.tagstore.subject(tagname).asObservable().subscribe((tag: Tag) => {
+                    this.dataset.addtagdata(tag)
+                    this.udataset.update_tag_data(tag)
                 })
             )
         })
