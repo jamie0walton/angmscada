@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, Input, ViewChild, HostListener, ElementRef, inject } from '@angular/core'
 import { timer, Observable } from 'rxjs'
-import uPlot from 'uplot'
-import { DataSet } from 'src/app/shared/datasets'
+import uPlot from 'uplot'  // Uses time in seconds, accepts float.
 import { UplotDataSet } from './uplot.dataset'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
@@ -23,6 +22,36 @@ const COLORS = [  // Set1 and Set3
     'rgb(217,217,217)', 'rgb(188,128,189)', 'rgb(204,235,197)', 'rgb(255,237,111)',
 ]
 
+interface AxisRange {
+    range: [number, number]
+    zoomed: boolean
+    range_zoom: [number, number]
+}
+
+class AxisRange implements AxisRange {
+    constructor() {
+        this.range = [0, 100]
+        this.zoomed = false
+        this.range_zoom = [0, 100]
+    }
+
+    set_range(range: [number, number]) {
+        this.range = range
+        this.zoomed = false
+    }
+
+    check_zoom(min: number | undefined, max: number | undefined) {
+        if (typeof(min) == 'number' && typeof(max) == 'number' && min > this.range[0] && max < this.range[1]) {
+            this.range_zoom = [min, max]
+            this.zoomed = true
+        }
+        else {
+            this.zoomed = false
+        }
+        console.log("scale min "+ min + " max " + max + " zoomed " + this.zoomed)
+    }
+}
+
 @Component({
     selector: 'app-uplot',
     templateUrl: './uplot.component.html',
@@ -42,7 +71,6 @@ export class UplotComponent implements OnInit, OnDestroy {
     legend_show: boolean = true
     time_pos: string = ''
     time_show: boolean = false
-    // duration: number = 172800
     controls: MsForm.Control[] = []
     form: MsForm.Form
     source: Observable<number>
@@ -56,22 +84,17 @@ export class UplotComponent implements OnInit, OnDestroy {
     series: any[] = []
     bands: any[] = []
     axes: any[] = []
-    dataset: DataSet
     udataset: UplotDataSet
-    configrange: { [key: string]: [number, number] } = {}
-    currentrange: { [key: string]: [number, number] } = {}
-    ranges: { [key: string]: [number, number] } = {}
-    zoomed_x: boolean = false
-    zoomed_y: boolean = false
+    axes_ranges: { [key: string]: AxisRange}
     datefmt: string = '{H}:{mm}:{ss}.{fff}'
 
     constructor(
     ) {
         this.source = timer(0, 500)
-        this.dataset = new DataSet()
         this.udataset = new UplotDataSet()
         this.form = new MsForm.Form()
         this.desc = ''
+        this.axes_ranges = {}
     }
 
     arrayMinMax(values: (number | null | undefined)[], minmax: (number | null | undefined)[]) {
@@ -104,7 +127,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                     if(trace.scale in minmax) {
                         lastminmax = minmax[trace.scale]
                     }
-                    let res = this.arrayMinMax(this.dataset.show[i + 1], lastminmax)
+                    let res = this.arrayMinMax(this.udataset.show[i + 1], lastminmax)
                     minmax[trace.scale] = [res[0], res[1]]
                 }
                 minmax[trace.scale] = [Math.trunc(minmax[trace.scale][0] * 100) / 100, Math.trunc(minmax[trace.scale][1] * 100 + 1) / 100]
@@ -126,7 +149,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                         controlmin.inputtype = 'filter'
                         controlmin.name = trace.scale + ' min'
                         controlmin.options = [
-                            this.configrange[trace.scale][0].toString(),
+                            this.axes_ranges[trace.scale].range[0].toString(),
                             minmax[trace.scale][0].toString()
                         ]
                         controls.push(controlmin)
@@ -134,7 +157,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                         controlmax.inputtype = 'filter'
                         controlmax.name = trace.scale + ' max'
                         controlmax.options = [
-                            this.configrange[trace.scale][1].toString(),
+                            this.axes_ranges[trace.scale].range[1].toString(),
                             minmax[trace.scale][1].toString()
                         ]
                         controls.push(controlmax)
@@ -146,90 +169,37 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
-    setduration(duration: number) {
-        this.dataset.setduration(duration)
-        this.udataset.set_duration(duration)
-        for (let index = 0; index < this.series.length; index++) {
-            const trace = this.series[index]
-            const tagid = this.tagstore.tag_by_name[trace.tagname].id
-            if(typeof(tagid) === 'number') {
-                this.tagstore.set_age_ms(tagid, duration * 1000)
-            }
-        }
-    }
-
     formAction(cmd: any) {
         let c = Object.keys(cmd)
-        let duration = 0
         for (let i = 0; i < c.length; i++) {
             const element = c[i]
-            if(cmd[element].length == 0){continue}
+            if(cmd[element].length == 0) { continue }
             if(element === 'duration') {
-                duration = parseFloat(cmd[element])
-                let units: string = cmd[element].slice(-1)
-                if(units == 'm') {duration *= 60}
-                else if(units == 'h') {duration *= 3600}
-                else if(units == 'd') {duration *= 86400}
-                else if(units == 'w') {duration *= 604800}
+                this.udataset.time_range.set_duration_string(cmd['duration'])
             }
             else if(element.endsWith(' min')){
-
+                let tagname = element.slice(0, element.length - 4)
+                if (this.plot && tagname in this.plot.scales) {
+                    let min = parseFloat(cmd[element])
+                    this.axes_ranges[tagname].range[0] = min
+                    this.plot.setScale(tagname, {
+                        min: min,
+                        max: this.axes_ranges[tagname].range[1]
+                    })
+                }
             }
             else if(element.endsWith(' max')){
-
+                let tagname = element.slice(0, element.length - 4)
+                if (this.plot && tagname in this.plot.scales) {
+                    let max = parseFloat(cmd[element])
+                    this.axes_ranges[tagname].range[1] = max
+                    this.plot.setScale(tagname, {
+                        min: this.axes_ranges[tagname].range[1],
+                        max: max
+                    })
+                }
             }
         }
-        if('duration' in cmd) {
-            let units: number
-            switch (cmd.duration.slice(-1)) {
-                case 's':
-                    units = 1
-                    break
-                case 'm':
-                    units = 60
-                    break
-                case 'h':
-                    units = 3600
-                    break
-                case 'd':
-                    units = 86400
-                    break
-                case 'w':
-                    units = 604800
-                    break
-                default:
-                    units = 3600
-            }
-            let duration: number = parseInt(cmd.duration.slice(0,-1)) * units
-            if(!isNaN(duration)){
-                this.setduration(duration)
-                this.zoomed_x = false
-                this.zoomed_y = false
-            }
-        }
-        this.plot?.batch(() => {
-            for (const scale in this.plot?.scales) {
-                if(scale === 'x' || scale === 'y') { continue }
-                const minstr = scale + ' min'
-                if(minstr in cmd) {
-                    let newmin = parseFloat(cmd[minstr])
-                    if(!isNaN(newmin)) {
-                        this.currentrange[scale][0] = newmin
-                    }
-                }
-                const maxstr = scale + ' max'
-                if(maxstr in cmd) {
-                    let newmax = parseFloat(cmd[maxstr])
-                    if(!isNaN(newmax)) {
-                        this.currentrange[scale][1] = newmax
-                    }
-                }
-                this.plot?.setScale(scale, {
-                    min: this.currentrange[scale][0],
-                    max: this.currentrange[scale][1]
-                })
-            }
-        })
     }
 
     initLegend(u: uPlot) {
@@ -302,6 +272,20 @@ export class UplotComponent implements OnInit, OnDestroy {
                 }
                 return hoveredIdx;
             }
+            cursor.bind = {
+                dblclick: (u) => {
+                    return () => {
+                        for (let i in this.axes_ranges) {
+                            this.axes_ranges[i].zoomed = false
+                        }
+                        this.udataset.time_range.zoomed = false
+                        // .redraw does not recheck the scales.
+                        // https://github.com/leeoniya/uPlot/issues/183
+                        u.setScale('x', {min: this.udataset.time_range.start, max: this.udataset.time_range.end})
+                        return null
+                    }
+                }
+            }
         }
         return { cursor: cursor }
     }
@@ -311,7 +295,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         let tags: Tag[] = []
         for (let index = 0; index < this.series.length; index++) {
             const trace = this.series[index]
-            this.dataset.addtag(trace.tagname, trace.ms_type || 'default')
+            // this.dataset.addtag(trace.tagname, trace.ms_type || 'default')
             tags.push(this.tagstore.tag_by_name[trace.tagname])
             // series holds the config of each dataset, such as visibility, styling, labels & value display
             // in the legend, and the scale key along which they should be drawn. Implicit scale keys are x
@@ -325,8 +309,8 @@ export class UplotComponent implements OnInit, OnDestroy {
                 values: (_plot: uPlot, sidx: number, idx: number | null) => {
                     if (idx === null) {return {}}
                     let display
-                    let time = new Date(this.dataset.show[0][idx]! * 1000)
-                    const data_point = this.dataset.show[sidx][idx]
+                    let time = new Date(this.udataset.show[0][idx]! * 1000)
+                    const data_point = this.udataset.show[sidx][idx]
                     if (typeof data_point === 'number') {
                         display = data_point.toFixed(trace.dp) + trace.scale
                     }
@@ -356,7 +340,6 @@ export class UplotComponent implements OnInit, OnDestroy {
                 nolegend: trace.hasOwnProperty('nolegend') ? true : false
             })
         }
-        this.udataset.init_tags(tags)
         return {series: series}
     }
 
@@ -391,21 +374,35 @@ export class UplotComponent implements OnInit, OnDestroy {
             // axes render the ticks, values, labels and grid along their scale. Tick & grid spacing,
             // value granularity & formatting, timezone & DST handling is done here.
             if (obj.scale == 'x') {  // no side, no scale
+                scales[obj.scale] = {
+                    auto: false,
+                    range: (_u, min, max) => {
+                        this.udataset.time_range.check_zoom(min, max)
+                        if (this.udataset.time_range.zoomed) {
+                            min = this.udataset.time_range.start_zoom
+                            max = this.udataset.time_range.end_zoom
+                        }
+                        else {
+                            min = this.udataset.time_range.start
+                            max = this.udataset.time_range.end
+                        }
+                        return [min, max]
+                    }
+                }
                 axes.push({
                     scale: obj.scale,
                     values: [
                     //   tick incr        default          year                         month day                     hour  min           sec   mode
-                        [3600 * 24 * 365, "{YYYY}", null, null, null, null, null, null, 1],
-                        [3600 * 24 * 28, "{MMM}", "\n{YYYY}", null, null, null, null, null, 1],
-                        [3600 * 24, "{D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
-                        [3600, "{H}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
-                        [60, "{H}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM} {H}", null, null, null, 1],
-                        [1, "{mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
-                        [0.001, ":{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
+                        [3600 * 24 * 365, "year {YYYY}", null, null, null, null, null, null, 1],
+                        [3600 * 24 * 28, "month {MMM}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [3600 * 24, "day {D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [60, "{HH}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
+                        [1, "sec {mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
+                        [0.001, "ms :{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
                     ]
                 })
                 if (obj.hasOwnProperty('range')) {
-                    this.setduration(obj.range[1] - obj.range[0])
+                    this.udataset.time_range.set_duration(-obj.range[0])
                 }
             }
             else {  // with scale and possibly side
@@ -413,13 +410,21 @@ export class UplotComponent implements OnInit, OnDestroy {
                 axis.scale = obj.scale
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
                 axes.push(axis)
+                this.axes_ranges[obj.scale] = new AxisRange()
                 if(obj.hasOwnProperty('range')) {
-                    this.configrange[obj.scale] = [obj.range[0], obj.range[1]]
-                    this.currentrange[obj.scale] = [obj.range[0], obj.range[1]]
+                    this.axes_ranges[obj.scale].set_range(obj.range)
                     scales[obj.scale] = {
                         auto: false,
-                        range: (_u, _newMin, _newMax) => {  // current range as var doesn't work
-                            return this.currentrange[obj.scale]
+                        range: (_u, min, max) => {
+                            if (min != null && max != null) {
+                                this.axes_ranges[obj.scale].check_zoom(min, max)
+                            }
+                            if (this.axes_ranges[obj.scale].zoomed) {
+                                return this.axes_ranges[obj.scale].range_zoom
+                            }
+                            else {
+                                return this.axes_ranges[obj.scale].range
+                            }
                         }
                     }
                 }
@@ -436,32 +441,14 @@ export class UplotComponent implements OnInit, OnDestroy {
 
     getHooks(): uPlot.Hooks.Arrays {
         return {
-            init: [u => { // opts are defaulted & merged but data has not been set 
+            init: [u => { // opts default & merged but data not set 
                 this.initLegend(u)
             }],
-            draw: [u => { // fires after everything is drawn
-                // see https://github.com/leeoniya/uPlot/issues/565
-                // compare displayed range with original ranges to see if zoomed.
-                const startime = u.data[0][0]
-                const endtime = u.data[0][u.data[0].length - 1]
+            draw: [u => {
                 for (const scale in u.scales) {
                     let { min, max } = u.scales[scale]
-                    if(scale == 'x'){
-                        if (min === startime && max === endtime) {
-                            this.zoomed_x = false
-                        }
-                        else {
-                            this.zoomed_x = true
-                        }
-                    }
-                    else if(scale in this.currentrange) {
-                        if (this.currentrange[scale][0] === min && this.currentrange[scale][1] === max) {
-                            this.zoomed_y = false
-                        }
-                        else {
-                            this.zoomed_y = true
-                        }
-                    }
+                    if (scale == 'x' || typeof(min) != 'number' || typeof(max) != 'number') { continue }
+                    this.axes_ranges[scale].check_zoom(min, max)
                 }
             }]
         }
@@ -476,6 +463,14 @@ export class UplotComponent implements OnInit, OnDestroy {
             ...this.getAxes(),
             hooks: this.getHooks()
         }
+    }
+
+    initDataset() {
+        for (let index = 0; index < this.series.length; index++) {
+            const trace = this.series[index]
+            this.udataset.add_tagname(this.tagstore.tag_by_name[trace.tagname])
+        }
+        this.udataset.init()
     }
 
     parseConfig() {
@@ -528,45 +523,28 @@ export class UplotComponent implements OnInit, OnDestroy {
     ngOnInit() {
         // -----------initialise from the page config items
         this.parseConfig()
+        this.initDataset()
         this.options = this.getOptions()
-        if (this.maxx == 0) {
-            this.dataset.extend = true
-        }
         this.subs.push(
             this.source.subscribe(() => {
-                if (this.dataset.updateshow) {
-                    this.dataset.updateshow = false
-                    if (this.plot != undefined) {
-                        const zoomed = this.zoomed_x || this.zoomed_y
-                        this.dataset.update()
-                        if (zoomed) {
-                            this.plot.setData(this.dataset.show, false)
-                        }
-                        else {
-                            this.plot.setData(this.dataset.show)
-                        }
-                    }
-                }
+                this.udataset.time_range.update_time()
                 if (this.udataset.updateshow) {
                     this.udataset.updateshow = false
                     if (this.plot != undefined) {
-                        const zoomed = this.zoomed_x || this.zoomed_y
-                        this.udataset.update_show()
-                        // if (zoomed) {
-                        //     this.plot.setData(this.udataset.show, false)
-                        // }
-                        // else {
-                        //     this.plot.setData(this.udataset.show)
-                        // }
+                        if (this.udataset.time_range.zoomed) {
+                            this.plot.setData(this.udataset.show, false)
+                        }
+                        else {
+                            this.plot.setData(this.udataset.show)
+                        }
                     }
                 }
             })
         )
-        this.dataset.taglist.forEach(tagname => {
+        this.udataset.tags.forEach(tag => {
             this.subs.push(
-                this.tagstore.subject(tagname).asObservable().subscribe((tag: Tag) => {
-                    this.dataset.addtagdata(tag)
-                    this.udataset.update_tag_data(tag)
+                this.tagstore.subject(tag.name).asObservable().subscribe((tag: Tag) => {
+                    this.udataset.add_tag_history(tag)
                 })
             )
         })
@@ -595,8 +573,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             ... this.options,
             ... this.getSize(true)
         }
-        this.dataset.update()
-        this.plot = new uPlot(options, this.dataset.show, this.child.nativeElement)
+        this.plot = new uPlot(options, this.udataset.show, this.child.nativeElement)
     }
 
     @HostListener('window:resize')

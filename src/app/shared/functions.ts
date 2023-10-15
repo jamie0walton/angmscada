@@ -1,3 +1,14 @@
+export function bisect(vect: number[], lookup: number): number {
+    let i = 0
+    for (; i < vect.length - 1; i++) {
+        const element = vect[i + 1]
+        if (lookup < element) {
+            break
+        }
+    }
+    return i
+}
+
 export function XOR(a: boolean, b: boolean): boolean {
     // Reduces the number of evaluations to once each
     return (a || b) && !(a && b)
