@@ -21,6 +21,7 @@ export interface Tag {
     format: string | null
     formatext: string[]
     age_ms: number
+    new_history: boolean
     history: History
     stringhistory: StringHistory
     future: History
@@ -47,6 +48,7 @@ export class Tag implements Tag {
         this.format = null
         this.formatext = []
         this.age_ms = 0
+        this.new_history = false
         this.history = {
             times_ms: [],
             values: []
@@ -148,6 +150,7 @@ export class TagSubject {
                 // TODO     tag.future.push([start + i * 1800, setpt])
             }
         }
+        tag.new_history = false
         this.subjects[tag.name].next(tag)
     }
 
@@ -158,6 +161,7 @@ export class TagSubject {
         // history it put into time order
         let tag: Tag = this.tag_by_id[id]
         tag.history = merge_time_series(tag.history, {times_ms: times_ms, values: values})
+        tag.new_history = true
         this.subjects[tag.name].next(tag)
     }
 

@@ -22,36 +22,6 @@ const COLORS = [  // Set1 and Set3
     'rgb(217,217,217)', 'rgb(188,128,189)', 'rgb(204,235,197)', 'rgb(255,237,111)',
 ]
 
-interface AxisRange {
-    range: [number, number]
-    zoomed: boolean
-    range_zoom: [number, number]
-}
-
-class AxisRange implements AxisRange {
-    constructor() {
-        this.range = [0, 100]
-        this.zoomed = false
-        this.range_zoom = [0, 100]
-    }
-
-    set_range(range: [number, number]) {
-        this.range = range
-        this.zoomed = false
-    }
-
-    check_zoom(min: number | undefined, max: number | undefined) {
-        if (typeof(min) == 'number' && typeof(max) == 'number' && min > this.range[0] && max < this.range[1]) {
-            this.range_zoom = [min, max]
-            this.zoomed = true
-        }
-        else {
-            this.zoomed = false
-        }
-        // console.log("scale min "+ min + " max " + max + " zoomed " + this.zoomed)
-    }
-}
-
 @Component({
     selector: 'app-uplot',
     templateUrl: './uplot.component.html',
@@ -75,18 +45,12 @@ export class UplotComponent implements OnInit, OnDestroy {
     controls: MsForm.Control[] = []
     form: MsForm.Form
     source: Observable<number>
-    options: uPlot.Options = {
-        width: 100,
-        height: 100,
-        series: []
-    }
+    options: uPlot.Options
     minx: number = 0
     maxx: number = 0
     series: any[] = []
     bands: any[] = []
-    axes: any[] = []
     udataset: UplotDataSet
-    axes_ranges: { [key: string]: AxisRange}
     datefmt: string = '{H}:{mm}:{ss}.{fff}'
 
     constructor(
@@ -95,7 +59,11 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.udataset = new UplotDataSet()
         this.form = new MsForm.Form()
         this.desc = ''
-        this.axes_ranges = {}
+        this.options = {
+            width: 100,
+            height: 100,
+            series: []
+        }
     }
 
     arrayMinMax(values: (number | null | undefined)[], minmax: (number | null | undefined)[]) {
@@ -149,8 +117,9 @@ export class UplotComponent implements OnInit, OnDestroy {
                         let controlmin = new MsForm.Control()
                         controlmin.inputtype = 'filter'
                         controlmin.name = trace.scale + ' min'
+                        let range = this.udataset.get_axis_range(trace.scale)
                         controlmin.options = [
-                            this.axes_ranges[trace.scale].range[0].toString(),
+                            range[0].toString(),
                             minmax[trace.scale][0].toString()
                         ]
                         controls.push(controlmin)
@@ -158,7 +127,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                         controlmax.inputtype = 'filter'
                         controlmax.name = trace.scale + ' max'
                         controlmax.options = [
-                            this.axes_ranges[trace.scale].range[1].toString(),
+                            range[1].toString(),
                             minmax[trace.scale][1].toString()
                         ]
                         controls.push(controlmax)
@@ -178,25 +147,19 @@ export class UplotComponent implements OnInit, OnDestroy {
             if(element === 'duration') {
                 this.udataset.set_duration_string(cmd['duration'])
             }
-            else if(element.endsWith(' min')){
+            else {
                 let tagname = element.slice(0, element.length - 4)
                 if (this.plot && tagname in this.plot.scales) {
-                    let min = parseFloat(cmd[element])
-                    this.axes_ranges[tagname].range[0] = min
+                    let range = this.udataset.get_axis_range(tagname)
+                    if (element.endsWith(' min')){
+                        range[0] = parseFloat(cmd[element])
+                    }
+                    else if (element.endsWith(' max')){
+                        range[1] = parseFloat(cmd[element])
+                    }
                     this.plot.setScale(tagname, {
-                        min: min,
-                        max: this.axes_ranges[tagname].range[1]
-                    })
-                }
-            }
-            else if(element.endsWith(' max')){
-                let tagname = element.slice(0, element.length - 4)
-                if (this.plot && tagname in this.plot.scales) {
-                    let max = parseFloat(cmd[element])
-                    this.axes_ranges[tagname].range[1] = max
-                    this.plot.setScale(tagname, {
-                        min: this.axes_ranges[tagname].range[1],
-                        max: max
+                        min: range[0],
+                        max: range[1]
                     })
                 }
             }
@@ -223,6 +186,48 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
         else {
             this.plot?.root.classList.replace(this.legend_class, 'ms-uplot-none')
+        }
+    }
+
+    parse_ms() {
+        if(this.item.config.hasOwnProperty('ms')) {
+            const ms = this.item.config.ms
+            if(typeof ms.desc == 'string') {this.desc = ms.desc}
+            if(typeof ms.height === 'number') { this.height = ms.height}
+            if(typeof ms.legend_pos === 'string') {
+                switch(ms.legend_pos) {
+                    case 'left':
+                        this.legend_class = 'ms-uplot-left'
+                        break
+                    case 'right':
+                        this.legend_class = 'ms-uplot-right'
+                        break
+                    case 'after':
+                        this.legend_class = 'ms-uplot-after'
+                        break
+                    default:
+                        this.legend_class = 'ms-uplot-none'
+                }
+            }
+            if(typeof ms.legend_show === 'boolean') { this.legend_show = ms.legend_show}
+            if(typeof ms.time_pos === 'string') { this.time_pos = ms.time_pos}
+            if(typeof ms.time_show === 'boolean') { this.time_show = ms.time_show}
+            switch(ms.time_res) {
+                case 'ms':
+                    this.datefmt = '{mm}:{ss}.{fff}'
+                    break
+                case 's':
+                    this.datefmt = '{H}:{mm}:{ss}'
+                    break
+                case 'm':
+                    this.datefmt = '{D}/{MMM} {H}:{mm}'
+                    break
+                case 'D':
+                    this.datefmt = '{D}/{MMM}/{YY}'
+                    break
+                default:
+                    this.datefmt = '{H}:{mm}:{ss}.{fff}'
+            }
         }
     }
 
@@ -276,13 +281,11 @@ export class UplotComponent implements OnInit, OnDestroy {
             cursor.bind = {
                 dblclick: (u) => {
                     return () => {
-                        for (let i in this.axes_ranges) {
-                            this.axes_ranges[i].zoomed = false
-                        }
-                        this.udataset.zoomed = false
+                        this.udataset.unset_zoom()
+                        let range = this.udataset.zoom_x_axis([null, null])
                         // .redraw does not recheck the scales.
                         // https://github.com/leeoniya/uPlot/issues/183
-                        u.setScale('x', {min: this.udataset.start, max: this.udataset.end})
+                        u.setScale('x', {min: range[0], max: range[1]})
                         return null
                     }
                 }
@@ -296,7 +299,6 @@ export class UplotComponent implements OnInit, OnDestroy {
         let tags: Tag[] = []
         for (let index = 0; index < this.series.length; index++) {
             const trace = this.series[index]
-            // this.dataset.addtag(trace.tagname, trace.ms_type || 'default')
             tags.push(this.tagstore.tag_by_name[trace.tagname])
             // series holds the config of each dataset, such as visibility, styling, labels & value display
             // in the legend, and the scale key along which they should be drawn. Implicit scale keys are x
@@ -370,36 +372,33 @@ export class UplotComponent implements OnInit, OnDestroy {
     getAxes() {
         let axes: uPlot.Axis[] = []
         let scales: uPlot.Scales = {}
-        for (let index = 0; index < this.axes.length; index++) {
-            const obj: any = this.axes[index]
+        for (let index = 0; index < this.item.config.axes.length; index++) {
+            const obj: any = this.item.config.axes[index]
             // axes render the ticks, values, labels and grid along their scale. Tick & grid spacing,
             // value granularity & formatting, timezone & DST handling is done here.
             if (obj.scale == 'x') {  // no side, no scale
+                this.udataset.set_duration(-obj.range[0])
                 scales[obj.scale] = {
                     auto: false,
-                    range: (_u, min, max) => {
-                        this.udataset.check_zoom(min, max)
-                        if (this.udataset.zoomed) {
-                            min = this.udataset.start_zoom
-                            max = this.udataset.end_zoom
+                    range: (u, min, max) => {  // as if auto: true on start :(
+                        if (u.scales['x'].min === null) {
+                            return this.udataset.zoom_x_axis([null, null])
                         }
                         else {
-                            min = this.udataset.start
-                            max = this.udataset.end
+                            return this.udataset.zoom_x_axis([min, max])
                         }
-                        return [min, max]
                     }
                 }
                 axes.push({
                     scale: obj.scale,
                     values: [
                     //   tick incr        default          year                         month day                     hour  min           sec   mode
-                        [3600 * 24 * 365, "year {YYYY}", null, null, null, null, null, null, 1],
-                        [3600 * 24 * 28, "month {MMM}", "\n{YYYY}", null, null, null, null, null, 1],
-                        [3600 * 24, "day {D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [3600 * 24 * 365, "{YYYY}", null, null, null, null, null, null, 1],
+                        [3600 * 24 * 28, "{MMM}", "\n{YYYY}", null, null, null, null, null, 1],
+                        [3600 * 24, "{D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
                         [60, "{HH}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
-                        [1, "sec {mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
-                        [0.001, "ms :{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
+                        [1, "{mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
+                        [0.001, ":{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
                     ]
                 })
             }
@@ -408,26 +407,24 @@ export class UplotComponent implements OnInit, OnDestroy {
                 axis.scale = obj.scale
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
                 axes.push(axis)
-                this.axes_ranges[obj.scale] = new AxisRange()
-                if(obj.hasOwnProperty('range')) {
-                    this.axes_ranges[obj.scale].set_range(obj.range)
-                    scales[obj.scale] = {
-                        auto: false,
-                        range: (_u, min, max) => {
-                            if (min != null && max != null) {
-                                this.axes_ranges[obj.scale].check_zoom(min, max)
+                this.udataset.set_yaxes(obj.scale, obj.range)
+                scales[obj.scale] = {
+                    auto: false,
+                    range: (u, _min, _max) => {  // Ought to be like x, isn't
+                        const axis = this.udataset.axes[obj.scale]
+                        if (axis.unzoom) {
+                            return [axis.range[0], axis.range[1]]
+                        }
+                        else {
+                            const min = u.scales[obj.scale].min
+                            const max = u.scales[obj.scale].max
+                            if (typeof min === 'number' && typeof max === 'number') {
+                                axis.zoomrange[0] = min
+                                axis.zoomrange[1] = max
                             }
-                            if (this.axes_ranges[obj.scale].zoomed) {
-                                return this.axes_ranges[obj.scale].range_zoom
-                            }
-                            else {
-                                return this.axes_ranges[obj.scale].range
-                            }
+                            return [axis.zoomrange[0], axis.zoomrange[1]]
                         }
                     }
-                }
-                else {
-                    scales[obj.scale] = { auto: true }
                 }
             }
         }
@@ -437,8 +434,8 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
-    getHooks(): uPlot.Hooks.Arrays {
-        return {
+    getHooks() {
+        let hooks: uPlot.Hooks.Arrays = {
             init: [u => { // opts default & merged but data not set 
                 this.initLegend(u)
             }],
@@ -446,9 +443,11 @@ export class UplotComponent implements OnInit, OnDestroy {
                 for (const scale in u.scales) {
                     let { min, max } = u.scales[scale]
                     if (scale == 'x' || typeof(min) != 'number' || typeof(max) != 'number') { continue }
-                    this.axes_ranges[scale].check_zoom(min, max)
                 }
             }]
+        }
+        return {
+            hooks: hooks
         }
     }
 
@@ -456,55 +455,15 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.series = this.item.config.series
         this.tags = this.series.map(x => this.tagstore.tag_by_name[x.tagname])
         this.udataset.initialise(this.tags)
-        this.udataset.set_duration(-this.item.config.axes[0].range[0])
         this.bands = this.item.config.hasOwnProperty('bands') ? this.item.config.bands : null
-        this.axes = this.item.config.axes
-        if(this.item.config.hasOwnProperty('ms')) {
-            const ms = this.item.config.ms
-            if(typeof ms.desc == 'string') {this.desc = ms.desc}
-            if(typeof ms.height === 'number') { this.height = ms.height}
-            if(typeof ms.legend_pos === 'string') {
-                switch(ms.legend_pos) {
-                    case 'left':
-                        this.legend_class = 'ms-uplot-left'
-                        break
-                    case 'right':
-                        this.legend_class = 'ms-uplot-right'
-                        break
-                    case 'after':
-                        this.legend_class = 'ms-uplot-after'
-                        break
-                    default:
-                        this.legend_class = 'ms-uplot-none'
-                }
-            }
-            if(typeof ms.legend_show === 'boolean') { this.legend_show = ms.legend_show}
-            if(typeof ms.time_pos === 'string') { this.time_pos = ms.time_pos}
-            if(typeof ms.time_show === 'boolean') { this.time_show = ms.time_show}
-            switch(ms.time_res) {
-                case 'ms':
-                    this.datefmt = '{mm}:{ss}.{fff}'
-                    break
-                case 's':
-                    this.datefmt = '{H}:{mm}:{ss}'
-                    break
-                case 'm':
-                    this.datefmt = '{D}/{MMM} {H}:{mm}'
-                    break
-                case 'D':
-                    this.datefmt = '{D}/{MMM}/{YY}'
-                    break
-                default:
-                    this.datefmt = '{H}:{mm}:{ss}.{fff}'
-            }
-        }
+        this.parse_ms()
         this.options = {
             ...this.getSize(false),
             ...this.getCursor(),
             ...this.getSeries(),
             ...this.getBands(),
             ...this.getAxes(),
-            hooks: this.getHooks()
+            ...this.getHooks()
         }
     }
 
@@ -513,17 +472,12 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.initConfig()
         this.subs.push(
             this.source.subscribe(() => {
-                this.udataset.update_time()
+                if (!this.udataset.received_new_data) { return }
+                this.udataset.received_new_data = false
+                this.udataset.step_x_axis()
                 if (this.udataset.updateshow) {
                     this.udataset.updateshow = false
-                    if (this.plot != undefined) {
-                        if (this.udataset.zoomed) {
-                            this.plot.setData(this.udataset.show, false)
-                        }
-                        else {
-                            this.plot.setData(this.udataset.show)
-                        }
-                    }
+                    this.plot?.setData(this.udataset.show, false)
                 }
             })
         )
