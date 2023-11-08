@@ -11,12 +11,14 @@ export class UplotDataSet {
     updateshow: boolean
     duration: number
     axes: { [key: string]: {
+        configrange: [number, number]
         range: [number, number]
         zoomrange: [number, number]
-        unzoom: boolean
+        reset: boolean
     }}
     received_new_data: boolean
     real_time: boolean
+    reset_scales: boolean
 
     constructor() {
         this.tags = []
@@ -28,6 +30,7 @@ export class UplotDataSet {
         this.axes = {}
         this.received_new_data = false
         this.real_time = true
+        this.reset_scales = true
     }
 
     /**
@@ -38,9 +41,10 @@ export class UplotDataSet {
         let now_sec = new Date().getTime() /1000
         let range: [number, number] = [now_sec - this.duration, now_sec] 
         this.axes['x'] = {
-            range: range,
-            zoomrange: range,
-            unzoom: false
+            configrange: [...range],
+            range: [...range],
+            zoomrange: [...range],
+            reset: true
         }
         let duration_ms = this.duration * 1000
         for (let index = 0; index < this.tags.length; index++) {
@@ -94,25 +98,29 @@ export class UplotDataSet {
      * Might zoom to full range, in which case unzoom.
      * Follow now if current and zoomed.
      */
-    zoom_x_axis(range: [null|number, null|number]): [number, number] {
+    zoom_x(range: [number|null, number|null]): [number, number] {
         const x_axis = this.axes['x']
-        let now_same = false
-        if (typeof(range[0]) === 'number' && typeof(range[1]) === 'number') {
-            if (x_axis.zoomrange[1] == range[1]) {
-                now_same = true
-            }
-            x_axis.zoomrange[1] = range[1]
-            x_axis.zoomrange[0] = range[0]
-        }
-        const zoom_span = x_axis.zoomrange[1] - x_axis.zoomrange[0]
-        const span = x_axis.range[1] - x_axis.range[0]
-        if (this.real_time && now_same || zoom_span === span) {
+        if (x_axis.reset) {  // double-click set the reset
             this.real_time = true
+            x_axis.reset = false
+            x_axis.zoomrange[0] = x_axis.range[0]
             x_axis.zoomrange[1] = x_axis.range[1]
-            x_axis.zoomrange[0] = x_axis.range[1] - zoom_span
+        }
+        else if (typeof range[0] === 'number' && typeof range[1] === 'number') {
+            if (range[1] !== x_axis.zoomrange[1]) {
+                this.real_time = false
+            }
+            if (this.real_time) {
+                x_axis.zoomrange[0] = x_axis.range[1] - (range[1] - range[0])
+                x_axis.zoomrange[1] = x_axis.range[1]
+            }
+            else {
+                x_axis.zoomrange[0] = range[0]
+                x_axis.zoomrange[1] = range[1]
+            }
         }
         else {
-            this.real_time = false
+            console.log("don't expect to get here")
         }
         return x_axis.zoomrange
     }
@@ -123,9 +131,10 @@ export class UplotDataSet {
     set_yaxes(axis: string, range: [number, number]) {
         console.log('set_yaxes set default ' + axis + ' ' + range)
         this.axes[axis] = {
+            configrange: [...range],
             range: [...range],  // must copy the array
             zoomrange: [...range],
-            unzoom: false
+            reset: true
         }
     }
 
@@ -133,47 +142,20 @@ export class UplotDataSet {
      * If null, requesting current range, otherwize zooming.
      * Might zoom to full range, in which case unzoom.
      */
-    zoom_y_axis(axis: string, range: [null|number, null|number]): [number, number] {
-        // console.log('zoom_y_axis ' + axis + ' ' + range[0] + ' ' + range[1])
+    zoom_y(axis: string, range: [number|undefined, number|undefined]): [number, number] {
+        // console.log('zoom_y ' + axis + ' ' + range[0] + ' ' + range[1])
         const y_axis = this.axes[axis]
-        if (typeof(range[0]) === 'number' && typeof(range[1]) === 'number') {
-            if (y_axis.zoomrange[0] !== range[0] && y_axis.zoomrange[1] !== range[1]) {
-                y_axis.zoomrange[1] = range[1]
-                y_axis.zoomrange[0] = range[0]
-            }
+        if (y_axis.reset) {
+            y_axis.reset = false
+            y_axis.zoomrange[0] = y_axis.range[0]
+            y_axis.zoomrange[1] = y_axis.range[1]
+        }
+        else if (typeof range[0] === 'number' && typeof range[1] === 'number') {
+            y_axis.zoomrange[1] = range[1]
+            y_axis.zoomrange[0] = range[0]
         }
         return y_axis.zoomrange
     }
-
-    /**
-     * Set the unzoom flag for the range callbacks.
-     */
-    unset_zoom() {
-        for (let axis in this.axes) {
-            this.axes[axis].unzoom = true
-        }
-    }
-
-    get_axis_range(axis: string): [number, number] {
-        console.log('get_axis_range')
-        const ax = this.axes[axis]
-        return ax.range
-    }
-
-    // /**
-    //  * Work out if the plot is zoomed, set zoomed.
-    //  */
-    // check_zoom(min: number | undefined, max: number | undefined) {
-    //     if (typeof(min) == 'number' && typeof(max) == 'number' && min > this.start && max < this.end) {
-    //         this.start_zoom = min
-    //         this.end_zoom = max
-    //         this.zoomed = true
-    //     }
-    //     else {
-    //         this.zoomed = false
-    //     }
-    //     // console.log("time min "+ min + " max " + max + " zoomed " + this.zoomed)
-    // }
 
     /**
      * Expensive, creates entire array of arrays from scratch
@@ -232,19 +214,28 @@ export class UplotDataSet {
     }
 
     /**
+     * Add an array of tag values
+     */
+    add_tag_history(tag: Tag) {
+        const tag_idx = this.tags.indexOf(tag)
+        const tag_count = this.tags.length
+        for (let i = 0; i < tag.history.times_ms.length; i++) {
+            const time_ms = tag.history.times_ms[i]
+            const value = tag.history.values[i]
+            this.times_ms[time_ms] ??= Array(tag_count).fill(null)
+            this.times_ms[time_ms][tag_idx] = value
+        }
+    }
+
+    /**
      * Add tag values to times_ms dict. Only add tag.history if the
      * tag has not been seen or if the history now has an earlier start.
      */
     add_tag_value(tag: Tag) {
         const tag_idx = this.tags.indexOf(tag)
         const tag_count = this.tags.length
-        if (tag.new_history || this.show.length == 1) {
-            for (let i = 0; i < tag.history.times_ms.length; i++) {
-                const time_ms = tag.history.times_ms[i]
-                const value = tag.history.values[i]
-                this.times_ms[time_ms] ??= Array(tag_count).fill(null)
-                this.times_ms[time_ms][tag_idx] = value
-            }
+        if (tag.new_history) {
+            this.add_tag_history(tag)
             this.populate_show()
         }
         else {
@@ -264,7 +255,7 @@ export class UplotDataSet {
         this.times_ms = {}
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
-            this.add_tag_value(tag)
+            this.add_tag_history(tag)
         }
         this.show = [[]]
         this.populate_show()

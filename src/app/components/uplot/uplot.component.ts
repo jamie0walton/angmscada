@@ -22,6 +22,16 @@ const COLORS = [  // Set1 and Set3
     'rgb(217,217,217)', 'rgb(188,128,189)', 'rgb(204,235,197)', 'rgb(255,237,111)',
 ]
 
+const SCALE = [
+    // tick incr, default, year, month, day, hour, min, sec, mode
+    [3600 * 24 * 365, "{YYYY}", null, null, null, null, null, null, 1],
+    [3600 * 24 * 28, "{MMM}", "\n{YYYY}", null, null, null, null, null, 1],
+    [3600 * 24, "{D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
+    [60, "{HH}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
+    [1, "{ss}s", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
+    [0.001, "{ss}.{fff}s", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
+]
+
 @Component({
     selector: 'app-uplot',
     templateUrl: './uplot.component.html',
@@ -117,7 +127,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                         let controlmin = new MsForm.Control()
                         controlmin.inputtype = 'filter'
                         controlmin.name = trace.scale + ' min'
-                        let range = this.udataset.get_axis_range(trace.scale)
+                        let range = this.udataset.axes[trace.scale].configrange
                         controlmin.options = [
                             range[0].toString(),
                             minmax[trace.scale][0].toString()
@@ -150,7 +160,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             else {
                 let tagname = element.slice(0, element.length - 4)
                 if (this.plot && tagname in this.plot.scales) {
-                    let range = this.udataset.get_axis_range(tagname)
+                    let range = this.udataset.axes[tagname].range
                     if (element.endsWith(' min')){
                         range[0] = parseFloat(cmd[element])
                     }
@@ -162,17 +172,6 @@ export class UplotComponent implements OnInit, OnDestroy {
                         max: range[1]
                     })
                 }
-            }
-        }
-    }
-
-    initLegend(u: uPlot) {
-        u.root.classList.add(this.legend_class)
-        let legends = u.root.querySelectorAll('.u-legend .u-series')
-        for (let i = 0; i < legends.length; i++) {
-            const element = legends[i] as HTMLElement
-            if (u.series[i + 1].nolegend) {
-                element.style.display = 'none'
             }
         }
     }
@@ -231,7 +230,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
-    getSize(afterviewinit: boolean) {
+    setSize(afterviewinit: boolean) {
         // Getting different results for element width which is causing the
         // graph to be overwidth, - 41. HACK.
         let width = window.innerWidth - 41
@@ -247,63 +246,72 @@ export class UplotComponent implements OnInit, OnDestroy {
             }
         }
         // console.log('width', width, 'height', height)
-        return {
-            width: width,
-            height: height
+        this.options.width = width
+        this.options.height = height
+    }
+
+    cursor_dataIdx = (u: uPlot, seriesIdx: any, hoveredIdx: any) => {
+        let seriesData = u.data[seriesIdx]
+        if (seriesData[hoveredIdx] == null) {
+            let non_null_left = hoveredIdx
+            let i = hoveredIdx
+            while (non_null_left == hoveredIdx && i-- > 0)
+                if (seriesData[i] != null)
+                    non_null_left = i
+            return non_null_left
+        }
+        return hoveredIdx;
+    }
+
+    cursor_dblclick(u: uPlot) {
+        return () => {
+            this.udataset.updateshow = true
+            for (let index = 0; index < this.item.config.axes.length; index++) {
+                const series: any = this.item.config.axes[index]
+                this.udataset.axes[series.scale].reset = true
+            }
+            // .redraw does not recheck the scales.
+            // https://github.com/leeoniya/uPlot/issues/183
+            return null
         }
     }
 
-    getCursor() {
-        let cursor: uPlot.Cursor = {}
+    x_scale_range = (u: uPlot, min: number|null, max: number|null) => {
+        return this.udataset.zoom_x([min, max])
+    }
+
+    y_scale_range(obj: any) {
+        return (u: uPlot) => {  // Ought to be like x, isn't
+            const min = u.scales[obj.scale].min
+            const max = u.scales[obj.scale].max
+            return this.udataset.zoom_y(obj.scale, [min, max])
+        }
+    }
+
+    setCursor() {
+        this.options.cursor = {}
         if(this.legend_show == false) {
-            cursor.show = false
+            this.options.cursor.show = false
         }
         else {
             // uni sets the pixels you have to move to infer a zoom
             // Infinity means it will never box zoom
-            cursor.drag = {
-                x: true,
-                y: true,
-                uni: 20
-            }
-            cursor.dataIdx = (u: uPlot, seriesIdx: any, hoveredIdx: any) => {
-                let seriesData = u.data[seriesIdx]
-                if (seriesData[hoveredIdx] == null) {
-                    let non_null_left = hoveredIdx
-                    let i = hoveredIdx
-                    while (non_null_left == hoveredIdx && i-- > 0)
-                        if (seriesData[i] != null)
-                            non_null_left = i
-                    return non_null_left
-                }
-                return hoveredIdx;
-            }
-            cursor.bind = {
-                dblclick: (u) => {
-                    return () => {
-                        this.udataset.unset_zoom()
-                        let range = this.udataset.zoom_x_axis([null, null])
-                        // .redraw does not recheck the scales.
-                        // https://github.com/leeoniya/uPlot/issues/183
-                        u.setScale('x', {min: range[0], max: range[1]})
-                        return null
-                    }
-                }
+            this.options.cursor.drag = {x: true, y: true, uni: 20}
+            this.options.cursor.dataIdx = this.cursor_dataIdx
+            this.options.cursor.bind = {
+                dblclick: (u: uPlot) => {return this.cursor_dblclick(u)}
             }
         }
-        return { cursor: cursor }
     }
 
-    getSeries() {
-        let series: uPlot.Series[] = [{}]
-        let tags: Tag[] = []
+    setSeries() {
+        this.options.series = [{}]
         for (let index = 0; index < this.series.length; index++) {
             const trace = this.series[index]
-            tags.push(this.tagstore.tag_by_name[trace.tagname])
             // series holds the config of each dataset, such as visibility, styling, labels & value display
             // in the legend, and the scale key along which they should be drawn. Implicit scale keys are x
             // for the data[0] series and y for data[1..N]
-            series.push({
+            this.options.series.push({
                 label: trace.label || trace.tagname,
                 scale: trace.scale,
                 // value: (_plot: uPlot, raw: number, _seriesIdx: number, _idx: number) => {
@@ -343,112 +351,77 @@ export class UplotComponent implements OnInit, OnDestroy {
                 nolegend: trace.hasOwnProperty('nolegend') ? true : false
             })
         }
-        return {series: series}
     }
 
-    getBands(): any { // cuPlot.Band {
+    setBands() {
         if(this.item.config.hasOwnProperty('bands')) {
-            let bands = []
+            this.options.bands = []
             for (let i = 0; i < this.item.config.bands.length; i++) {
                 const element = this.item.config.bands[i]
-                const name0 = element.series[0]
-                const name1 = element.series[1]
-                const series0 = this.series.findIndex((s1) => s1.tagname === name0)
-                const series1 = this.series.findIndex((s2) => s2.tagname === name1)
-                let band = {
+                const series0 = this.series.findIndex((s1) => s1.tagname === element.series[0])
+                const series1 = this.series.findIndex((s2) => s2.tagname === element.series[1])
+                let band: uPlot.Band = {
                     series: [series0 + 1, series1 + 1],  // counts from 1 in uplot
                     fill: name2rgba(element.fill[0], element.fill[1]),
                     dir: element.hasOwnProperty('dir') ? element.dir : undefined
                 }
-                bands.push(band)
+                this.options.bands.push(band)
             }
-            return {bands: bands}
-        }
-        else {
-            return {}
         }
     }
 
-    getAxes() {
-        let axes: uPlot.Axis[] = []
-        let scales: uPlot.Scales = {}
+    setAxesScales() {
+        this.options.axes = []
+        this.options.scales = {}
         for (let index = 0; index < this.item.config.axes.length; index++) {
             const obj: any = this.item.config.axes[index]
-            // axes render the ticks, values, labels and grid along their scale. Tick & grid spacing,
-            // value granularity & formatting, timezone & DST handling is done here.
+            // axes render the ticks, values, labels and grid along their
+            // scale. Tick & grid spacing, value granularity & formatting,
+            // timezone & DST handling is done here.
             if (obj.scale == 'x') {  // no side, no scale
                 this.udataset.set_duration(-obj.range[0])
-                scales[obj.scale] = {
+                this.options.scales[obj.scale] = {
                     auto: false,
-                    range: (u, min, max) => {  // as if auto: true on start :(
-                        if (u.scales['x'].min === null) {
-                            return this.udataset.zoom_x_axis([null, null])
-                        }
-                        else {
-                            return this.udataset.zoom_x_axis([min, max])
-                        }
-                    }
+                    range: this.x_scale_range
                 }
-                axes.push({
-                    scale: obj.scale,
-                    values: [
-                    //   tick incr        default          year                         month day                     hour  min           sec   mode
-                        [3600 * 24 * 365, "{YYYY}", null, null, null, null, null, null, 1],
-                        [3600 * 24 * 28, "{MMM}", "\n{YYYY}", null, null, null, null, null, 1],
-                        [3600 * 24, "{D}/{M}", "\n{YYYY}", null, null, null, null, null, 1],
-                        [60, "{HH}:{mm}", "\n{D}/{MMM}/{YY}", null, "\n{D}/{MMM}", null, null, null, 1],
-                        [1, "{mm}:{ss}", "\n{D}/{MMM}/{YY} {H}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1],
-                        [0.001, ":{ss}.{fff}", "\n{D}/{MMM}/{YY} {H}:{mm}", null, "\n{D}/{MMM} {H}:{mm}", null, "\n{H}:{mm}", null, 1]
-                    ]
-                })
+                this.options.axes.push({scale: obj.scale, values: SCALE})
             }
             else {  // with scale and possibly side
                 let axis: uPlot.Axis = {}
                 axis.scale = obj.scale
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
-                axes.push(axis)
+                this.options.axes.push(axis)
                 this.udataset.set_yaxes(obj.scale, obj.range)
-                scales[obj.scale] = {
+                this.options.scales[obj.scale] = {
                     auto: false,
-                    range: (u, _min, _max) => {  // Ought to be like x, isn't
-                        const axis = this.udataset.axes[obj.scale]
-                        if (axis.unzoom) {
-                            return [axis.range[0], axis.range[1]]
-                        }
-                        else {
-                            const min = u.scales[obj.scale].min
-                            const max = u.scales[obj.scale].max
-                            if (typeof min === 'number' && typeof max === 'number') {
-                                axis.zoomrange[0] = min
-                                axis.zoomrange[1] = max
-                            }
-                            return [axis.zoomrange[0], axis.zoomrange[1]]
-                        }
-                    }
+                    range: this.y_scale_range(obj)
                 }
             }
         }
-        return {
-            axes: axes,
-            scales: scales
-        }
     }
 
-    getHooks() {
-        let hooks: uPlot.Hooks.Arrays = {
-            init: [u => { // opts default & merged but data not set 
-                this.initLegend(u)
-            }],
-            draw: [u => {
-                for (const scale in u.scales) {
-                    let { min, max } = u.scales[scale]
-                    if (scale == 'x' || typeof(min) != 'number' || typeof(max) != 'number') { continue }
+    setHooks() {
+        this.options.hooks = {
+            init: [(u: uPlot) => {
+                u.root.classList.add(this.legend_class)
+                let legends = u.root.querySelectorAll('.u-legend .u-series')
+                for (let i = 0; i < legends.length; i++) {
+                    const element = legends[i] as HTMLElement
+                    if (u.series[i + 1].nolegend) {
+                        element.style.display = 'none'
+                    }
                 }
             }]
         }
-        return {
-            hooks: hooks
-        }
+    }
+
+    set_options() {
+        this.setSize(false)
+        this.setCursor()
+        this.setSeries()
+        this.setBands()
+        this.setAxesScales()
+        this.setHooks()
     }
 
     initConfig() {
@@ -457,14 +430,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.udataset.initialise(this.tags)
         this.bands = this.item.config.hasOwnProperty('bands') ? this.item.config.bands : null
         this.parse_ms()
-        this.options = {
-            ...this.getSize(false),
-            ...this.getCursor(),
-            ...this.getSeries(),
-            ...this.getBands(),
-            ...this.getAxes(),
-            ...this.getHooks()
-        }
+        this.set_options()
     }
 
     ngOnInit() {
@@ -477,7 +443,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                 this.udataset.step_x_axis()
                 if (this.udataset.updateshow) {
                     this.udataset.updateshow = false
-                    this.plot?.setData(this.udataset.show, false)
+                    this.plot?.setData(this.udataset.show, this.udataset.reset_scales)
                 }
             })
         )
@@ -509,15 +475,16 @@ export class UplotComponent implements OnInit, OnDestroy {
     }
 
     ngAfterViewInit() {
-        let options: any = {
-            ... this.options,
-            ... this.getSize(true)
-        }
-        this.plot = new uPlot(options, this.udataset.show, this.child.nativeElement)
+        this.setSize(true)
+        this.plot = new uPlot(this.options, this.udataset.show, this.child.nativeElement)
     }
 
     @HostListener('window:resize')
     onResize() {
-        this.plot?.setSize(this.getSize(true))
+        this.setSize(true)
+        this.plot?.setSize({
+            width: this.options.width,
+            height: this.options.height
+        })
     }
 }
