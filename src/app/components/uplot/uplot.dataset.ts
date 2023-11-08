@@ -8,57 +8,44 @@ export class UplotDataSet {
     times_ms: { [key: number]: (number | null)[] }
     raw: (number|null)[][]
     show: [number[], ...(number | null)[][]]
-    last: { [key: number]: {
-        start_ms: number
-        end_ms: number
-    }}
-    seen: { [key: string]: number }
     updateshow: boolean
-    now: boolean
     duration: number
-    start: number
-    end: number
-    zoomed: boolean
-    start_zoom: number
-    end_zoom: number
+    axes: { [key: string]: {
+        configrange: [number, number]
+        range: [number, number]
+        zoomrange: [number, number]
+        reset: boolean
+    }}
+    received_new_data: boolean
+    real_time: boolean
+    reset_scales: boolean
 
     constructor() {
         this.tags = []
         this.times_ms = {}
-        this.seen = {}
-        this.last = {}
         this.raw = [[]]
         this.show = [[]]
         this.updateshow = false
-        // These are timerange attributes
-        let now_sec = new Date().getTime() / 1000
-        let duration_sec = 0  // start at zero, will change
-        this.now = true
-        this.duration = duration_sec
-        this.start = now_sec - duration_sec
-        this.end = now_sec
-        this.zoomed = false
-        this.start_zoom = 0
-        this.end_zoom = 0
+        this.duration = 0
+        this.axes = {}
+        this.received_new_data = false
+        this.real_time = true
+        this.reset_scales = true
     }
 
     /**
      * Sets plot duration in seconds, updates dataset tag.age_ms as well.
      * */
     set_duration(duration_sec: number) {
-        this.zoomed = false
-        // set the duration
-        let now_sec = new Date().getTime() / 1000
-        if (this.now) {
-            this.duration = duration_sec
-            this.start = now_sec - duration_sec
-            this.end = now_sec
+        this.duration = duration_sec
+        let now_sec = new Date().getTime() /1000
+        let range: [number, number] = [now_sec - this.duration, now_sec] 
+        this.axes['x'] = {
+            configrange: [...range],
+            range: [...range],
+            zoomrange: [...range],
+            reset: true
         }
-        else {
-            this.start = this.end - duration_sec
-            this.duration = now_sec - this.start
-        }
-        // make sure the tags know to request long enough history
         let duration_ms = this.duration * 1000
         for (let index = 0; index < this.tags.length; index++) {
             const tag = this.tags[index]
@@ -70,30 +57,8 @@ export class UplotDataSet {
         }
     }
 
-    set_zoom(min: number, max: number) {
-        if (min > this.start && max < this.end) {
-            this.zoomed = true
-            this.start_zoom = min
-            this.end_zoom = max
-        }
-        else {
-            this.zoomed = false
-        }
-    }
-
     /**
-     * updates end to now and start based on duration.
-     */
-    update_time() {
-        let now_sec = new Date().getTime() / 1000
-        this.end = now_sec
-        this.start = now_sec - this.duration
-    }
-
-    /**
-     * Sets plot duration, updates dataset tag.age_ms as well.
-     * 
-     * @param duration_str number then time units [mhdw], seconds by default.
+     * Sets plot duration with time units [mhdw], seconds is none.
      * */
     set_duration_string(duration_str: string) {
         let duration_sec = parseFloat(duration_str)
@@ -115,21 +80,87 @@ export class UplotDataSet {
     }
 
     /**
-     * Work out if the plot is zoomed, set zoomed.
+     * Steps time with clock, or sets a fixed range.
      */
-    check_zoom(min: number | undefined, max: number | undefined) {
-        if (typeof(min) == 'number' && typeof(max) == 'number' && min > this.start && max < this.end) {
-            this.start_zoom = min
-            this.end_zoom = max
-            this.zoomed = true
+    step_x_axis(range?: [number, number]) {
+        // console.log('step_x_axis ' + range)
+        if (range) {
+            this.axes['x'].range = range
         }
         else {
-            this.zoomed = false
+            const now_sec = new Date().getTime() / 1000
+            this.axes['x'].range = [now_sec - this.duration, now_sec]
         }
-        // console.log("time min "+ min + " max " + max + " zoomed " + this.zoomed)
     }
 
-    now_show() {
+    /**
+     * If null, requesting current range, otherwize zooming.
+     * Might zoom to full range, in which case unzoom.
+     * Follow now if current and zoomed.
+     */
+    zoom_x(range: [number|null, number|null]): [number, number] {
+        const x_axis = this.axes['x']
+        if (x_axis.reset) {  // double-click set the reset
+            this.real_time = true
+            x_axis.reset = false
+            x_axis.zoomrange[0] = x_axis.range[0]
+            x_axis.zoomrange[1] = x_axis.range[1]
+        }
+        else if (typeof range[0] === 'number' && typeof range[1] === 'number') {
+            if (range[1] !== x_axis.zoomrange[1]) {
+                this.real_time = false
+            }
+            if (this.real_time) {
+                x_axis.zoomrange[0] = x_axis.range[1] - (range[1] - range[0])
+                x_axis.zoomrange[1] = x_axis.range[1]
+            }
+            else {
+                x_axis.zoomrange[0] = range[0]
+                x_axis.zoomrange[1] = range[1]
+            }
+        }
+        else {
+            console.log("don't expect to get here")
+        }
+        return x_axis.zoomrange
+    }
+
+    /**
+     * Set the Y axes default ranges.
+     */
+    set_yaxes(axis: string, range: [number, number]) {
+        console.log('set_yaxes set default ' + axis + ' ' + range)
+        this.axes[axis] = {
+            configrange: [...range],
+            range: [...range],  // must copy the array
+            zoomrange: [...range],
+            reset: true
+        }
+    }
+
+    /**
+     * If null, requesting current range, otherwize zooming.
+     * Might zoom to full range, in which case unzoom.
+     */
+    zoom_y(axis: string, range: [number|undefined, number|undefined]): [number, number] {
+        // console.log('zoom_y ' + axis + ' ' + range[0] + ' ' + range[1])
+        const y_axis = this.axes[axis]
+        if (y_axis.reset) {
+            y_axis.reset = false
+            y_axis.zoomrange[0] = y_axis.range[0]
+            y_axis.zoomrange[1] = y_axis.range[1]
+        }
+        else if (typeof range[0] === 'number' && typeof range[1] === 'number') {
+            y_axis.zoomrange[1] = range[1]
+            y_axis.zoomrange[0] = range[0]
+        }
+        return y_axis.zoomrange
+    }
+
+    /**
+     * Expensive, creates entire array of arrays from scratch
+     */
+    populate_show() {
         const tag_count = this.tags.length
         this.show = [[]]
         this.tags.forEach(() => this.show.push([]))
@@ -146,24 +177,73 @@ export class UplotDataSet {
     }
 
     /**
+     * Cheaper, appends new values. If needed splices will be close to
+     * the latest time so the short end may be moved.
+     */
+    extend_show(tag_idx: number, time_ms: number, value: number) {
+        const tag_count = this.tags.length
+        let insert_pos = bisect(this.show[0], time_ms)
+        if (insert_pos < this.show[0].length) {
+            if (this.show[0][insert_pos] === time_ms) {
+                // tag values are sometimes set at the same time
+                this.show[tag_idx + 1][insert_pos] = value
+            }
+            else {
+                // values _may_ arrive out of time order
+                this.show[0].splice(insert_pos, 0, time_ms)
+                for (let i = 1; i < this.show.length; i++) {
+                    this.show[i].splice(insert_pos, 0, null)
+                }
+                this.show[tag_idx + 1][insert_pos] = value
+            }
+        }
+        else {
+            // likeliest, in order with different times
+            this.show[0].push(time_ms / 1000)
+            for (let j = 0; j < tag_count; j++) {
+                let yValue = this.show[j + 1] as (number | null)[]
+                if (j == tag_idx) {
+                    yValue.push(value)
+                }
+                else {
+                    yValue.push(null)
+                }
+            }
+        }
+        this.updateshow = true
+    }
+
+    /**
+     * Add an array of tag values
+     */
+    add_tag_history(tag: Tag) {
+        const tag_idx = this.tags.indexOf(tag)
+        const tag_count = this.tags.length
+        for (let i = 0; i < tag.history.times_ms.length; i++) {
+            const time_ms = tag.history.times_ms[i]
+            const value = tag.history.values[i]
+            this.times_ms[time_ms] ??= Array(tag_count).fill(null)
+            this.times_ms[time_ms][tag_idx] = value
+        }
+    }
+
+    /**
      * Add tag values to times_ms dict. Only add tag.history if the
      * tag has not been seen or if the history now has an earlier start.
      */
     add_tag_value(tag: Tag) {
         const tag_idx = this.tags.indexOf(tag)
         const tag_count = this.tags.length
-        if (!this.seen.hasOwnProperty(tag.name) || this.seen[tag.name] !== tag.history.times_ms[0]) {
-            this.seen[tag.name] = tag.history.times_ms[0]
-            for (let i = 0; i < tag.history.times_ms.length; i++) {
-                const time_ms = tag.history.times_ms[i]
-                const value = tag.history.values[i]
-                this.times_ms[time_ms] ??= Array(tag_count).fill(null)
-                this.times_ms[time_ms][tag_idx] = value
-            }
+        if (tag.new_history) {
+            this.add_tag_history(tag)
+            this.populate_show()
         }
-        this.times_ms[tag.time_ms] ??= Array(tag_count).fill(null)
-        this.times_ms[tag.time_ms][tag_idx] = tag.value
-        this.now_show()
+        else {
+            this.times_ms[tag.time_ms] ??= Array(tag_count).fill(null)
+            this.times_ms[tag.time_ms][tag_idx] = tag.value
+            this.extend_show(tag_idx, tag.time_ms, tag.value)
+        }
+        this.received_new_data = true
     }
 
     /**
@@ -175,9 +255,9 @@ export class UplotDataSet {
         this.times_ms = {}
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
-            this.add_tag_value(tag)
+            this.add_tag_history(tag)
         }
         this.show = [[]]
-        this.now_show()
+        this.populate_show()
     }
 }
