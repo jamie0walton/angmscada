@@ -128,17 +128,18 @@ export class BusComponent implements OnInit, OnDestroy {
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
             }
             else if (type == BYTES_TYPE) {
-                id = dview.getUint16(12)
-                type = dview.getUint16(14)
+                let _rqs_id = dview.getUint16(12)
+                id = dview.getUint16(14)
+                type = dview.getUint16(16)
                 if (id == 0 || type == 0) {return}
                 if (type == INT_TYPE) {
-                    for (let j = 16; j < dview.byteLength; j += 16) {
+                    for (let j = 18; j < dview.byteLength; j += 16) {
                         times_ms.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
                         values.push(Number(dview.getBigInt64(j + 8)))
                     }
                 }
                 else if (type == FLOAT_TYPE) {
-                    for (let j = 16; j < dview.byteLength; j += 16) {
+                    for (let j = 18; j < dview.byteLength; j += 16) {
                         times_ms.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
                         values.push(Number(dview.getFloat64(j + 8)))
                     }
