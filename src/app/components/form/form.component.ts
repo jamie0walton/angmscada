@@ -56,9 +56,9 @@ export class FormComponent implements OnInit, OnDestroy {
 
     onSubmit() {
         this.display = 'none'
-        if (!this.form.dirty) {
-            return
-        }
+        // if (!this.form.dirty) {
+        //     return
+        // }
         this.action.action = 'submit'
         for (let i = 0; i < this.controls.length; i++) {
             const control = this.controls[i]
