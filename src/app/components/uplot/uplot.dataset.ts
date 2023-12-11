@@ -19,6 +19,8 @@ export class UplotDataSet {
     received_new_data: boolean
     real_time: boolean
     reset_scales: boolean
+    age: number
+    future: number
 
     constructor() {
         this.tags = []
@@ -31,28 +33,34 @@ export class UplotDataSet {
         this.received_new_data = false
         this.real_time = true
         this.reset_scales = true
+        this.age = 0
+        this.future = 0
     }
 
     /**
      * Sets plot duration in seconds, updates dataset tag.age_ms as well.
      * */
-    set_duration(duration_sec: number) {
-        this.duration = duration_sec
+    set_duration(duration: number|[number, number]) {
+        if (typeof(duration) == 'number') {
+            this.age = -duration
+        }
+        else if (Array.isArray(duration) && typeof(duration[0]) == 'number' && typeof(duration[0]) == 'number') {
+            this.age = -duration[0]
+            this.future = duration[1]
+        }
+        this.duration = this.age + this.future
         let now_sec = new Date().getTime() /1000
-        let range: [number, number] = [now_sec - this.duration, now_sec] 
+        let range: [number, number] = [now_sec - this.age, now_sec + this.future] 
         this.axes['x'] = {
             configrange: [...range],
             range: [...range],
             zoomrange: [...range],
             reset: true
         }
-        let duration_ms = this.duration * 1000
         for (let index = 0; index < this.tags.length; index++) {
             const tag = this.tags[index]
             if(typeof(tag.id) === 'number') {
-                if(this.tagstore.tag_by_id[tag.id].age_ms < duration_ms) {
-                    this.tagstore.set_age_ms(tag.id, duration_ms)
-                }
+                this.tagstore.set_age_ms(tag.id, this.age * 1000, this.future * 1000)
             }
         }
     }
@@ -89,7 +97,7 @@ export class UplotDataSet {
         }
         else {
             const now_sec = new Date().getTime() / 1000
-            this.axes['x'].range = [now_sec - this.duration, now_sec]
+            this.axes['x'].range = [now_sec - this.age, now_sec + this.future]
         }
     }
 

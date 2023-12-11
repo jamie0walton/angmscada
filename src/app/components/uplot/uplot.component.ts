@@ -379,7 +379,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             // scale. Tick & grid spacing, value granularity & formatting,
             // timezone & DST handling is done here.
             if (obj.scale == 'x') {  // no side, no scale
-                this.udataset.set_duration(-obj.range[0])
+                this.udataset.set_duration(obj.range)
                 this.options.scales[obj.scale] = {
                     auto: false,
                     range: this.x_scale_range

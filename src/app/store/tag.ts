@@ -21,10 +21,10 @@ export interface Tag {
     format: string | null
     formatext: string[]
     age_ms: number
+    future_ms: number
     new_history: boolean
     history: History
     stringhistory: StringHistory
-    future: History
 }
 
 export interface Plan {
@@ -48,16 +48,13 @@ export class Tag implements Tag {
         this.format = null
         this.formatext = []
         this.age_ms = 0
+        this.future_ms = 0
         this.new_history = false
         this.history = {
             times_ms: [],
             values: []
         }
         this.stringhistory = {
-            times_ms: [],
-            values: []
-        }
-        this.future = {
             times_ms: [],
             values: []
         }
@@ -145,11 +142,6 @@ export class TagSubject {
                 tag.stringhistory.values.shift()
             }
         }
-        else if (typeof value === 'object' && value != null) {
-            if (value.hasOwnProperty('setpoint') && value.hasOwnProperty('period')) {
-                // TODO     tag.future.push([start + i * 1800, setpt])
-            }
-        }
         tag.new_history = false
         this.subjects[tag.name].next(tag)
     }
@@ -165,13 +157,21 @@ export class TagSubject {
         this.subjects[tag.name].next(tag)
     }
 
-    set_age_ms(id: number, age_ms: number) {
+    set_age_ms(id: number, age_ms: number, future_ms: number=0) {
         let tag: Tag = this.tag_by_id[id]
-        if (age_ms < tag.age_ms) {return}
-        tag.age_ms = age_ms
+        let change = false
+        if (age_ms > tag.age_ms) {
+            tag.age_ms = age_ms
+            change = true
+        }
+        if (future_ms > tag.future_ms) {
+            tag.future_ms = future_ms
+            change = true
+        }
+        if (!change){return}
         let now = Date.now()
-        let start_ms = now - age_ms
-        let end_ms = now
+        let start_ms = now - tag.age_ms
+        let end_ms = now + tag.future_ms
         this.commandstore.command({
             type: 'rqs',
             tagname: '__history__',
