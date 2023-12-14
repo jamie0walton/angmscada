@@ -63,6 +63,7 @@ export class UplotDataSet {
                 this.tagstore.set_age_ms(tag.id, this.age * 1000, this.future * 1000)
             }
         }
+        this.updateshow = true
     }
 
     /**
@@ -72,16 +73,16 @@ export class UplotDataSet {
         let duration_sec = parseFloat(duration_str)
         switch (duration_str.slice(-1)) {
             case 'm':
-                duration_sec *= 60
+                duration_sec *= -60
                 break
             case 'h':
-                duration_sec *= 3600
+                duration_sec *= -3600
                 break
             case 'd':
-                duration_sec *= 86400
+                duration_sec *= -86400
                 break
             case 'w':
-                duration_sec *= 604800
+                duration_sec *= -604800
                 break
         }
         this.set_duration(duration_sec)

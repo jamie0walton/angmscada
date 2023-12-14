@@ -3,23 +3,13 @@
 // The list of file replacements can be found in `angular.json`.
 let wsp = window.location.pathname.split('/')
 wsp.pop()
-let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
+// let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
+let ws = 'ws://172.26.5.100:8324/ws'
 
 export const environment = {
     production: false,
     ws: ws
 };
-
-// let wsp = window.location.pathname.split('/')
-// wsp.pop()
-// // let ws = 'ws://192.168.177.101:1084/ws'  // Dev
-// let ws = 'ws://127.0.0.1:8324/ws'  // MELDEV
-// // let ws = 'ws://Operator:pGen1100@192.168.149.7/private/aniwhenua/ws'  // Ani Prod
-
-// export const environment = {
-//     production: false,
-//     ws: ws
-// }
 
 /*
  * For easier debugging in development mode, you can import the following file
@@ -28,4 +18,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-// import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
+import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
