@@ -438,7 +438,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.initConfig()
         this.subs.push(
             this.source.subscribe(() => {
-                if (!this.udataset.received_new_data) { return }
+                if (!this.udataset.received_new_data && !this.udataset.updateshow) { return }
                 this.udataset.received_new_data = false
                 this.udataset.step_x_axis()
                 if (this.udataset.updateshow) {
