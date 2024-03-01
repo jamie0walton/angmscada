@@ -3,8 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 let wsp = window.location.pathname.split('/')
 wsp.pop()
-// let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
-let ws = 'ws://172.26.5.100:8324/ws'
+let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
+// let ws = 'ws://172.26.3.33:8324/ws'
 
 export const environment = {
     production: false,

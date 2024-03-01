@@ -92,7 +92,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         }, [minmax[0], minmax[1]])
     }
 
-    showForm(e: any) {
+    formScale() {
         this.form.name = 'Configure Plot'
         if(this.plot != undefined) {
             this.form.requestid = 'uplot'
@@ -149,7 +149,7 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
-    formAction(cmd: any) {
+    scaleAction(cmd: any) {
         let c = Object.keys(cmd)
         for (let i = 0; i < c.length; i++) {
             const element = c[i]
@@ -174,6 +174,27 @@ export class UplotComponent implements OnInit, OnDestroy {
                 }
             }
         }
+    }
+
+    formSmooth() {
+        this.form.name = 'Smoothing'
+        if(this.plot != undefined) {
+            this.form.requestid = 'uplot-smooth'
+            this.form.description = 'Plot Config Smoothing'
+            this.form.action = 'update'
+            let controls: MsForm.Control[] = []
+            let control = new MsForm.Control()
+            control.inputtype = 'filter'
+            control.name = 'filter'
+            control.options = ['averaging', 'median', 'savitzky-golay']
+            controls.push(control)
+            this.form.controls = controls
+            this.formstore.pubFormOpts(this.form)
+        }
+    }
+
+    smoothAction(cmd: any) {
+        this.udataset.set_filter(cmd.filter)
     }
 
     toggleLegend() {
@@ -456,9 +477,14 @@ export class UplotComponent implements OnInit, OnDestroy {
         })
         this.subs.push(
             this.formstore.closesubject.asObservable().subscribe((cmd: any) => {
-                if(cmd.requestid === this.form.requestid) {
+                if(cmd.requestid === 'uplot') {
                     if(cmd.action === 'submit'){
-                        this.formAction(cmd.setvalue)
+                        this.scaleAction(cmd.setvalue)
+                    }
+                }
+                else if(cmd.requestid === 'uplot-smooth') {
+                    if(cmd.action === 'submit'){
+                        this.smoothAction(cmd.setvalue)
                     }
                 }
             })

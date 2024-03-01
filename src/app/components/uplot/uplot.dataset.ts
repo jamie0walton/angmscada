@@ -1,12 +1,13 @@
 import { inject } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { bisect } from 'src/app/shared/functions'
+import { raw, average } from 'src/app/shared/smooth'
 
 export class UplotDataSet {
     tagstore = inject(TagSubject)
     tags: Tag[]
+    filters: Function[]
     times_ms: { [key: number]: (number | null)[] }
-    raw: (number|null)[][]
     show: [number[], ...(number | null)[][]]
     updateshow: boolean
     duration: number
@@ -24,8 +25,8 @@ export class UplotDataSet {
 
     constructor() {
         this.tags = []
+        this.filters = []
         this.times_ms = {}
-        this.raw = [[]]
         this.show = [[]]
         this.updateshow = false
         this.duration = 0
@@ -223,14 +224,36 @@ export class UplotDataSet {
     }
 
     /**
+     * Set the smoothing filter, apply on set and keep updating.
+     */
+    set_filter(filter: string) {
+        this.filters = []
+        for (let i = 0; i < this.tags.length; i++) {
+            const tag = this.tags[i]
+            if (['averaging'].includes(filter)) {
+                this.filters.push(average(tag))
+            }
+            else {
+                this.filters.push(raw(tag))
+            }
+        }
+        this.populate_show()
+        this.updateshow = true
+    }
+
+    /**
      * Add an array of tag values
      */
     add_tag_history(tag: Tag) {
         const tag_idx = this.tags.indexOf(tag)
         const tag_count = this.tags.length
+        if (tag_count != this.filters.length) {
+            this.set_filter('averaging')
+        }     
         for (let i = 0; i < tag.history.times_ms.length; i++) {
-            const time_ms = tag.history.times_ms[i]
-            const value = tag.history.values[i]
+            // const time_ms = tag.history.times_ms[i]
+            // const value = tag.history.values[i]
+            const [time_ms, value] = this.filters[tag_idx](i)
             this.times_ms[time_ms] ??= Array(tag_count).fill(null)
             this.times_ms[time_ms][tag_idx] = value
         }
