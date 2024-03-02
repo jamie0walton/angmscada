@@ -38,12 +38,8 @@ export function average(tag: Tag, duration: number = 600000) {
         i = index
         while (true) {
             i++
-            if (i >= times_ms.length) {  // should never be greater
+            if (i >= times_ms.length || times_ms[i] > end_time) {
                 sum += (end_time - times_ms[i - 1]) * values[i - 1]
-                break
-            }
-            else if (times_ms[i] > end_time) {
-                sum += (end_time - times_ms[i]) * values[i]
                 break
             }
             else {
