@@ -1,28 +1,7 @@
+import { bisect } from "./functions"
+
 export type TimeNumberSeries = {times_ms: number[], values: number[]}
 export type TimeStringSeries = {times_ms: number[], values: string[]}
-
-/**
- * Return position of lookup in vect where vect is strictly increasing
- * limits are 0 and length
- */
-export function bisect(vect: number[], lookup: number): number {
-    let left = 0
-    let right = vect.length - 1
-    if (right < 0) { return 0 }
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2)
-        if (vect[mid] === lookup) {
-            return mid
-        }
-        else if (vect[mid] < lookup) {
-            left = mid + 1
-        }
-        else {
-            right = mid - 1
-        }
-    }
-    return left
-}
 
 /**
  * Return the earliest series extended with the latest. Assumes strictly

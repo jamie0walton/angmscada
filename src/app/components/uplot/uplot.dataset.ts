@@ -1,7 +1,8 @@
 import { inject } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { bisect } from 'src/app/shared/functions'
-import { raw, average } from 'src/app/shared/smooth'
+import { raw, average, average_weighted, median } from 'src/app/shared/smooth'
+import { UplotVectors } from 'src/app/shared/aligned_data'
 
 export class UplotDataSet {
     tagstore = inject(TagSubject)
@@ -22,6 +23,8 @@ export class UplotDataSet {
     reset_scales: boolean
     age: number
     future: number
+
+    aligned = new UplotVectors()
 
     constructor() {
         this.tags = []
@@ -231,7 +234,7 @@ export class UplotDataSet {
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             if (['averaging'].includes(filter)) {
-                this.filters.push(average(tag))
+                this.filters.push(median(tag, 30))
             }
             else {
                 this.filters.push(raw(tag))

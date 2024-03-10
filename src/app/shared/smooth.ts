@@ -1,15 +1,43 @@
 import {Tag} from 'src/app/store/tag'
 
 export function raw(tag: Tag) {
-    let return_raw = (i: number) => {
+    return function(i: number) {
         const time_ms = tag.history.times_ms[i]
         const value = tag.history.values[i]
         return [time_ms, value]
     }
-    return return_raw
 }
 
-export function average(tag: Tag, duration: number = 600000) {
+export function median(tag: Tag, samples: number = 3) {
+    return function(index: number) {
+        let times_ms = tag.history.times_ms
+        let values = tag.history.values
+        let start = Math.max(index - samples, 0)
+        let end = Math.min(index + samples, times_ms.length - 1)
+        let set = []
+        for (let i = start; i <= end; i++) {
+            set.push(values[i])
+        }
+        set.sort((a, b) => a - b)
+        return [times_ms[index], set[Math.floor((end - start) / 2)]]
+    }
+}
+
+export function average(tag: Tag, samples: number = 3) {
+    return function(index: number) {
+        let times_ms = tag.history.times_ms
+        let values = tag.history.values
+        let start = Math.max(index - samples, 0)
+        let end = Math.min(index + samples, times_ms.length - 1)
+        let sum = 0
+        for (let i = start; i <= end; i++) {
+            sum += values[i]
+        }
+        return [times_ms[index], sum / (end - start + 1)]
+    }
+}
+
+export function average_weighted(tag: Tag, duration: number = 600000) {
     return function(index: number): [number, number] {
         let times_ms = tag.history.times_ms
         let values = tag.history.values
