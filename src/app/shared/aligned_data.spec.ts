@@ -223,8 +223,49 @@ describe('shared\\aligned_data', () => {
         expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
             3, [1.5, 3, 6, 9, 10.5]
         ])
+
+        v.add_history(22,
+            [960, 980],
+            [  6,   3]
+        )
+        expect(v.traces[22].smooth_from).toBe(0)
+        v.traces[22].smoother()
+        expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
+            5, [4.5, 3, 2, 3, 6, 9, 10.5]
+        ])
+
+        v.add_history(22,
+            [1060, 1080],
+            [  15,   18]
+        )
+        expect(v.traces[22].smooth_from).toBe(5)
+        v.traces[22].smoother()
+        expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
+            7, [4.5, 3, 2, 3, 6, 9, 12, 15, 16.5]
+        ])
+
+        v.add_history(44, [1040], [123])
+        expect(v.traces[22].smooth_from).toBe(7)
+        v.traces[22].smoother()
+        expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
+            7, [4.5, 3, 2, 3, 6, 9, 12, 15, 16.5]
+        ])
+
+        v.add_history(44, [1045], [124])
+        expect(v.traces[22].smooth_from).toBe(8)
+        v.traces[22].smoother()
+        expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
+            8, [4.5, 3, 2, 3, 6, 9, null, 12, 15, 16.5]
+        ])
+
+        v.add_history(44, [1052, 1058, 1078, 1082], [126, 127, 128, 129])
+        expect(v.traces[22].smooth_from).toBe(10)
+        v.traces[22].smoother()
+        expect([v.traces[22].smooth_from, v.traces[22].smooth]).toEqual([
+            10, [4.5, 3, 2, 3, 6, 9, null, 12, null, null, 15, null, 16.5, null]
+        ])
     })
-    /*
+
     it('UplotVectors: averaging smoother', () => {
         let v, r
         v = new UplotVectors()
@@ -246,7 +287,7 @@ describe('shared\\aligned_data', () => {
             [4.5,  6,  9, 12, 15, 16, 15, 12,  9, 7.5]
         ])
         v.add_history(17, [75, 85, 95, 105, 115], [1, 1, 5, 1, 1])
-        expect(v.traces[55].smooth_from).toBe(8)
+        expect(v.traces[55].smooth_from).toBe(9)
         r = v.get_uplot_data()
         expect(v.traces[55].smooth_from).toBe(9)
         expect(r).toEqual([
@@ -265,5 +306,4 @@ describe('shared\\aligned_data', () => {
             [null, null, null, null, null, null, null, null, 1, null, 1, null, 5, null, 1, null, 1, null, null, null]
         ])
     })
-    */
 })

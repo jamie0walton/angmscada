@@ -82,7 +82,10 @@ export class UplotVectors {
             // FORWARD FILL
             while(true) {
                 const ival = trace.values[i] ?? null
-                if (ival != null) {
+                if (ival == null) {
+                    i++
+                }
+                else {
                     samples.push(ival)
                     indices.push(i)
                     forward++
@@ -133,6 +136,7 @@ export class UplotVectors {
                     write_index++
                 }
             }
+            return trace.smooth
         }
     }
 
