@@ -5,7 +5,7 @@
 import { bisect } from "./functions"
 
 export class UplotVectors {
-    times_ms: number[]
+    times: number[]
     trace_by_col: number[]
     traces: {[trace_id: number]: {
         values: (number|null)[]
@@ -14,12 +14,21 @@ export class UplotVectors {
         smoother: Function
         smoothing: boolean
     }}
-
+    filters: {
+        options: string[] 
+        selected: number
+        factor: number
+    }
 
     constructor(){
-        this.times_ms = []
+        this.times = []
         this.trace_by_col = []
         this.traces = {}
+        this.filters = {
+            options: ['raw', 'average', 'median', 'savitzky-golay'],
+            selected: 0,
+            factor: 0
+        }
     }
 
     /**
@@ -62,7 +71,7 @@ export class UplotVectors {
         const side_count = Math.floor((count - 1) / 2)
         return () => {
             const trace = this.traces[trace_id]
-            trace.smooth.push(...Array(this.times_ms.length - trace.smooth.length).fill(null))
+            trace.smooth.push(...Array(this.times.length - trace.smooth.length).fill(null))
             let samples: number[] = []
             let indices: number[] = []
             let i = trace.smooth_from
@@ -141,76 +150,6 @@ export class UplotVectors {
     }
 
     /**
-     * Return average of count samples, centred (non-causal)
-     */
-    smoother_average2(trace_id: number, count: number) {
-        this.traces[trace_id].smoothing = true
-        return () => {
-            const trace = this.traces[trace_id]
-            trace.smooth.push(...Array(this.times_ms.length - trace.smooth.length).fill(0))
-            let samples: number[] = []
-            let indices: number[] = []
-            let side_count = Math.floor((count - 1) / 2) + 1
-            let index = 0
-            let i = trace.smooth_from
-            while(true){
-                i--
-                if (i < 0) { break }
-                const value = trace.values[i] || null
-                if (value == null) { continue }
-                samples.unshift(value)
-                indices.unshift(i)
-                if (samples.length == side_count) {
-                    index = indices.length - 1
-                    break
-                }
-            }
-            let rolling = false
-            let writing = false
-            i = trace.smooth_from
-            while(true) {
-                const value = trace.values[i] || null
-                if (value == null) {
-                    i++
-                    if (i > this.times_ms.length) {
-                        trace.smooth_from = indices[index] || 0
-                        while(samples.length > side_count) {
-                            samples.shift()
-                            indices.shift()
-                            const sum = samples.reduce((sum, current) => sum + current, 0)
-                            trace.smooth[indices[index]] = sum / samples.length
-                        }
-                        break
-                    }
-                    continue
-                }
-                samples.push(value)
-                indices.push(i)
-                i++
-                if (rolling) {
-                    samples.shift()
-                    indices.shift()
-                }
-                else if (samples.length == side_count) {
-                    writing = true
-                }
-                else if (samples.length == count) {
-                    writing = true
-                    rolling = true
-                }
-                if (writing) {
-                    const sum = samples.reduce((sum, current) => sum + current, 0)
-                    trace.smooth[indices[index]] = sum / samples.length
-                    if (!rolling) {
-                        index++
-                    }
-                }
-            }
-            return trace.smooth
-        }
-    }
-
-    /**
      * Select a smoother for a trace, smoother is one of: raw, median,
      * average, savitzky-golay. factor is smoothing factor, 10 is set
      * to be good for many real-time traces.
@@ -218,9 +157,12 @@ export class UplotVectors {
     smoother_choose(trace_id: number, smoother: string, factor?: number) {
         if (smoother == 'raw') {
             this.traces[trace_id].smoother = this.smoother_raw(trace_id)
+            this.filters.factor = 0
         }
         else if (smoother == 'average' && typeof(factor) == 'number') {
             this.traces[trace_id].smoother = this.smoother_average(trace_id, factor)
+            this.traces[trace_id].smooth_from = 0
+            this.filters.factor = factor
         }
         else if (smoother == 'tester') {
             this.traces[trace_id].smoother = this.smoother_tester(trace_id)
@@ -230,13 +172,13 @@ export class UplotVectors {
     /**
      * Return a dataset suitable for uplot
      */
-    get_uplot_data() {
+    get_uplot_data(): [number[], ...(number|null)[][]] {
         let traces: (number|null)[][] = []
         for (let i = 0; i < this.trace_by_col.length; i++) {
             traces[i] = this.traces[this.trace_by_col[i]].smoother()
         }
         return [
-            this.times_ms,
+            this.times,
             ...traces
         ]
     }
@@ -245,7 +187,8 @@ export class UplotVectors {
      * Add history
      */
     add_history(trace_id: number, times_ms: number[], values: (number | null)[]) {
-        const exist_len = this.times_ms.length
+        let times = times_ms.map((x) => x / 1000)
+        const exist_len = this.times.length
         // New trace, create a default null alignment first
         if (!(trace_id in this.traces)) {
             this.trace_by_col.push(trace_id)
@@ -257,10 +200,10 @@ export class UplotVectors {
                 smoother: this.smoother_raw(trace_id),
             }
         }
-        const add_new_len = times_ms.length
+        const add_new_len = times.length
         // Earliest new time is after latest this time, append and return
-        if (this.times_ms[exist_len - 1] < times_ms[0]) {
-            this.times_ms.push(...times_ms)
+        if (this.times[exist_len - 1] < times[0]) {
+            this.times.push(...times)
             for (let i = 0; i < this.trace_by_col.length; i++) {
                 const do_id = this.trace_by_col[i]
                 const do_trace = this.traces[do_id]
@@ -278,7 +221,7 @@ export class UplotVectors {
             return
         }
         // No more easy options so do generalised stitching into empty arrays
-        let new_times_ms: number[] = []
+        let new_times: number[] = []
         let new_values: {[trace_id: number]: (number|null)[]} = {}
         let new_smooth: {[trace_id: number]: (number|null)[]} = {}
         for (let i = 0; i < this.trace_by_col.length; i++) {
@@ -290,10 +233,10 @@ export class UplotVectors {
         let new_pos = 0
         while (true) {
             // Index exist_pos and new_pos until at the end of both existing and new
-            if (exist_pos == this.times_ms.length) {
+            if (exist_pos == this.times.length) {
                 // At the end of existing data, append new
-                const new_remain_len = times_ms.length - new_pos
-                new_times_ms.push(...times_ms.slice(new_pos))
+                const new_remain_len = times.length - new_pos
+                new_times.push(...times.slice(new_pos))
                 for (let i = 0; i < this.trace_by_col.length; i++) {
                     const do_id = this.trace_by_col[i]
                     const do_trace = this.traces[do_id]
@@ -311,10 +254,10 @@ export class UplotVectors {
                 }
                 break
             }
-            if (new_pos == times_ms.length) {
+            if (new_pos == times.length) {
                 // At the end of new data, append existing
-                const exist_remain_len = this.times_ms.length - exist_pos
-                new_times_ms.push(...this.times_ms.slice(exist_pos))
+                const exist_remain_len = this.times.length - exist_pos
+                new_times.push(...this.times.slice(exist_pos))
                 for (let i = 0; i < this.trace_by_col.length; i++) {
                     const do_id = this.trace_by_col[i]
                     const do_trace = this.traces[do_id]
@@ -332,11 +275,11 @@ export class UplotVectors {
                 }
                 break
             }
-            const exist_time = this.times_ms[exist_pos]
-            const new_time = times_ms[new_pos]
+            const exist_time = this.times[exist_pos]
+            const new_time = times[new_pos]
             if (exist_time == new_time) {
                 // Times match, copy the individual values into new arrays
-                new_times_ms.push(times_ms[new_pos])
+                new_times.push(times[new_pos])
                 for (let i = 0; i < this.trace_by_col.length; i++) {
                     const do_id = this.trace_by_col[i]
                     const do_trace = this.traces[do_id]
@@ -365,8 +308,8 @@ export class UplotVectors {
             }
             else if (exist_time < new_time){
                 // next lot of data is existing
-                const add_in_this = bisect(this.times_ms, new_time)
-                new_times_ms.push(...this.times_ms.slice(exist_pos, add_in_this))
+                const add_in_this = bisect(this.times, new_time)
+                new_times.push(...this.times.slice(exist_pos, add_in_this))
                 for (let i = 0; i < this.trace_by_col.length; i++) {
                     const do_id = this.trace_by_col[i]
                     const do_trace = this.traces[do_id]
@@ -380,9 +323,9 @@ export class UplotVectors {
                 exist_pos = add_in_this
             }
             else { // must be new_time < exist_time
-                const exist_in_new = bisect(times_ms, exist_time)
+                const exist_in_new = bisect(times, exist_time)
                 const add_new_len = exist_in_new - new_pos
-                new_times_ms.push(...times_ms.slice(new_pos, exist_in_new))
+                new_times.push(...times.slice(new_pos, exist_in_new))
                 for (let i = 0; i < this.trace_by_col.length; i++) {
                     const do_id = this.trace_by_col[i]
                     const do_trace = this.traces[do_id]
@@ -413,7 +356,7 @@ export class UplotVectors {
             }
         }
         // Finally replace the existing arrays with new arrays
-        this.times_ms = new_times_ms
+        this.times = new_times
         for (let i = 0; i < this.trace_by_col.length; i++) {
             const do_id = this.trace_by_col[i]
             this.traces[do_id].values = new_values[do_id]

@@ -1,14 +1,11 @@
 import { inject } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
-import { bisect } from 'src/app/shared/functions'
-import { raw, average, average_weighted, median } from 'src/app/shared/smooth'
 import { UplotVectors } from 'src/app/shared/aligned_data'
 
 export class UplotDataSet {
     tagstore = inject(TagSubject)
     tags: Tag[]
-    filters: Function[]
-    times_ms: { [key: number]: (number | null)[] }
+    aligned: UplotVectors
     show: [number[], ...(number | null)[][]]
     updateshow: boolean
     duration: number
@@ -24,12 +21,10 @@ export class UplotDataSet {
     age: number
     future: number
 
-    aligned = new UplotVectors()
 
     constructor() {
         this.tags = []
-        this.filters = []
-        this.times_ms = {}
+        this.aligned = new UplotVectors()
         this.show = [[]]
         this.updateshow = false
         this.duration = 0
@@ -67,6 +62,7 @@ export class UplotDataSet {
                 this.tagstore.set_age_ms(tag.id, this.age * 1000, this.future * 1000)
             }
         }
+        this.show = this.aligned.get_uplot_data()
         this.updateshow = true
     }
 
@@ -171,95 +167,15 @@ export class UplotDataSet {
     }
 
     /**
-     * Expensive, creates entire array of arrays from scratch
-     */
-    populate_show() {
-        const tag_count = this.tags.length
-        this.show = [[]]
-        this.tags.forEach(() => this.show.push([]))
-        let times_ms = Object.keys(this.times_ms).sort().map(parseFloat)
-        for (let i = 0; i < times_ms.length; i++) {
-            const time_ms = times_ms[i]
-            this.show[0].push(time_ms / 1000)
-            for (let j = 0; j < tag_count; j++) {
-                let yValue = this.show[j + 1] as (number | null)[]
-                yValue.push(this.times_ms[time_ms][j])
-            }
-        }
-        this.updateshow = true
-    }
-
-    /**
-     * Cheaper, appends new values. If needed splices will be close to
-     * the latest time so the short end may be moved.
-     */
-    extend_show(tag_idx: number, time_ms: number, value: number) {
-        const tag_count = this.tags.length
-        let insert_pos = bisect(this.show[0], time_ms)
-        if (insert_pos < this.show[0].length) {
-            if (this.show[0][insert_pos] === time_ms) {
-                // tag values are sometimes set at the same time
-                this.show[tag_idx + 1][insert_pos] = value
-            }
-            else {
-                // values _may_ arrive out of time order
-                this.show[0].splice(insert_pos, 0, time_ms)
-                for (let i = 1; i < this.show.length; i++) {
-                    this.show[i].splice(insert_pos, 0, null)
-                }
-                this.show[tag_idx + 1][insert_pos] = value
-            }
-        }
-        else {
-            // likeliest, in order with different times
-            this.show[0].push(time_ms / 1000)
-            for (let j = 0; j < tag_count; j++) {
-                let yValue = this.show[j + 1] as (number | null)[]
-                if (j == tag_idx) {
-                    yValue.push(value)
-                }
-                else {
-                    yValue.push(null)
-                }
-            }
-        }
-        this.updateshow = true
-    }
-
-    /**
      * Set the smoothing filter, apply on set and keep updating.
      */
-    set_filter(filter: string) {
-        this.filters = []
+    set_filter(filter: number, factor: number) {
+        this.aligned.filters.selected = filter
         for (let i = 0; i < this.tags.length; i++) {
-            const tag = this.tags[i]
-            if (['averaging'].includes(filter)) {
-                this.filters.push(median(tag, 30))
-            }
-            else {
-                this.filters.push(raw(tag))
-            }
+            this.aligned.smoother_choose(i, this.aligned.filters.options[filter], factor)
         }
-        this.populate_show()
+        this.show = this.aligned.get_uplot_data()
         this.updateshow = true
-    }
-
-    /**
-     * Add an array of tag values
-     */
-    add_tag_history(tag: Tag) {
-        const tag_idx = this.tags.indexOf(tag)
-        const tag_count = this.tags.length
-        if (tag_count != this.filters.length) {
-            this.set_filter('averaging')
-        }     
-        for (let i = 0; i < tag.history.times_ms.length; i++) {
-            // const time_ms = tag.history.times_ms[i]
-            // const value = tag.history.values[i]
-            const [time_ms, value] = this.filters[tag_idx](i)
-            this.times_ms[time_ms] ??= Array(tag_count).fill(null)
-            this.times_ms[time_ms][tag_idx] = value
-        }
     }
 
     /**
@@ -270,14 +186,13 @@ export class UplotDataSet {
         const tag_idx = this.tags.indexOf(tag)
         const tag_count = this.tags.length
         if (tag.new_history) {
-            this.add_tag_history(tag)
-            this.populate_show()
+            this.aligned.add_history(tag_idx, tag.history.times_ms, tag.history.values)
         }
         else {
-            this.times_ms[tag.time_ms] ??= Array(tag_count).fill(null)
-            this.times_ms[tag.time_ms][tag_idx] = tag.value
-            this.extend_show(tag_idx, tag.time_ms, tag.value)
+            this.aligned.add_history(tag_idx, [tag.time_ms], [tag.value])
         }
+        this.show = this.aligned.get_uplot_data()
+        this.updateshow = true
         this.received_new_data = true
     }
 
@@ -287,12 +202,11 @@ export class UplotDataSet {
      */
     initialise(tags: Tag[]) {
         this.tags = tags
-        this.times_ms = {}
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
-            this.add_tag_history(tag)
+            this.aligned.add_history(i, [tag.time_ms], [tag.value])
         }
-        this.show = [[]]
-        this.populate_show()
+        this.show = this.aligned.get_uplot_data()
+        this.updateshow = true
     }
 }

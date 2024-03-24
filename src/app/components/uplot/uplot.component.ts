@@ -178,23 +178,37 @@ export class UplotComponent implements OnInit, OnDestroy {
 
     formSmooth() {
         this.form.name = 'Smoothing'
+        let active = this.udataset.aligned.filters
         if(this.plot != undefined) {
             this.form.requestid = 'uplot-smooth'
             this.form.description = 'Plot Config Smoothing'
             this.form.action = 'update'
             let controls: MsForm.Control[] = []
-            let control = new MsForm.Control()
-            control.inputtype = 'filter'
-            control.name = 'filter'
-            control.options = ['averaging', 'median', 'savitzky-golay']
-            controls.push(control)
+            let filter = new MsForm.Control()
+            filter.inputtype = 'multi'
+            filter.name = 'filter'
+            filter.options = active.options
+            filter.numbervalue = active.selected
+            controls.push(filter)
+            let factor = new MsForm.Control()
+            factor.inputtype = 'int'
+            factor.name = 'factor'
+            factor.min = 3
+            factor.max = 101
+            if (active.factor < 3) {
+                factor.numbervalue = 15
+            }
+            else {
+                factor.numbervalue = active.factor
+            }
+            controls.push(factor)
             this.form.controls = controls
             this.formstore.pubFormOpts(this.form)
         }
     }
 
     smoothAction(cmd: any) {
-        this.udataset.set_filter(cmd.filter)
+        this.udataset.set_filter(cmd.filter, cmd.factor)
     }
 
     toggleLegend() {
