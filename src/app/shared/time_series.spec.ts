@@ -1,4 +1,5 @@
-import { bisect, merge_time_series, TimeNumberSeries } from "./time_series"
+import { bisect } from "./functions"
+import { merge_time_series, TimeNumberSeries } from "./time_series"
 
 describe('shared\\time_series bisect', () => {
     it('should return the index if lookup exists', () => {

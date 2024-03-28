@@ -1,32 +1,38 @@
+/**
+ * Return position of lookup in vect where vect is strictly increasing
+ * limits are 0 and length
+ */
 export function bisect(vect: number[], lookup: number): number {
-    // return position of lookup in vect where vect is strictly increasing
-    // limits are 0 and length
     let left = 0
     let right = vect.length - 1
-
     if (right < 0) { return 0 }
-
     while (left <= right) {
-      const mid = Math.floor((left + right) / 2)
-      if (vect[mid] === lookup) {
-        return mid;
-      } else if (vect[mid] < lookup) {
-        left = mid + 1;
-      } else {
-        right = mid - 1;
-      }
+        const mid = Math.floor((left + right) / 2)
+        if (vect[mid] === lookup) {
+            return mid
+        }
+        else if (vect[mid] < lookup) {
+            left = mid + 1
+        }
+        else {
+            right = mid - 1
+        }
     }
     return left
 }
 
+/**
+ * Either one or other, not both.
+ */
 export function XOR(a: boolean, b: boolean): boolean {
-    // Reduces the number of evaluations to once each
     return (a || b) && !(a && b)
 }
 
+/**
+ * Return an ipv4 address array, if it makes sense to
+ * test valid return with array.length == 4
+ */
 export function ip(a: any): number[] {
-    // Return an ipv4 address array, if it makes sense to
-    // test valid return with array.length == 4
     if (typeof (a) == 'string') {
         let vals: string[] = a.split('.')
         if (vals.length != 4) {
@@ -50,8 +56,10 @@ export function ip(a: any): number[] {
 
 let re = /^(-?\d+)(y|mo|d|h|mi|s)/i;
 
-// Can't extend Date as a class, some magic breaks it
-// https://stackoverflow.com/questions/6075231/how-to-extend-the-javascript-date-object/30882416#30882416
+/**
+ * Can't extend Date as a class, some magic breaks it
+ * https://stackoverflow.com/questions/6075231/how-to-extend-the-javascript-date-object/30882416#30882416
+ */
 export function XDate(a?: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any) {
     var x: any
     switch (arguments.length) {
@@ -276,6 +284,9 @@ let colors: { [key: string]: number[] } = {
     yellowgreen: [154,205,5]
 }
 
+/**
+ * Return [R,G,B, alpha] for a well known colour name.
+ */
 export function name2rgba(name: string, alpha: number): string {
     if (name.toLowerCase() in colors) {
         return 'rgba(' + [...colors[name], alpha].join() + ')'
