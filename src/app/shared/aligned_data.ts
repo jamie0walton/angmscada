@@ -67,12 +67,36 @@ export class UplotVectors {
         }
     }
 
+    // calc_average(trace_id: number) {
+    //     let trace = this.traces[trace_id]
+    //     return (write_index: number, indices: number[], samples: number[]) => {
+    //         const sum = samples.reduce((sum, current) => sum + current, 0)
+    //         trace.smooth[indices[write_index]] = sum / samples.length
+    //     }
+    // }
+
+    // calc_median(trace_id: number) {
+    //     let trace = this.traces[trace_id]
+    //     let sorted_samples: number[] = []
+    //     return (write_index: number, indices: number[], samples: number[]) => {
+    //         sorted_samples = [...samples].sort((a, b) => a - b)
+    //         trace.smooth[indices[write_index]] = sorted_samples[samples.length >> 1]
+    //     }
+    // }
+
     /**
      * Return average of count samples, centred (non-causal)
      */
     smoother(trace_id: number, count: number, s_type: number) {
         this.traces[trace_id].smoothing = true
         const side_count = Math.floor((count - 1) / 2)
+        // let calc_smooth = (a: number, b: number[], c: number[]) => {}
+        // if (s_type == AVERAGE) {
+        //     calc_smooth = this.calc_average(trace_id)
+        // }
+        // else if (s_type == MEDIAN) {
+        //     calc_smooth = this.calc_median(trace_id)
+        // }
         return () => {
             const trace = this.traces[trace_id]
             for (let i = trace.smooth.length; i < this.times.length; i++) {
@@ -88,7 +112,7 @@ export class UplotVectors {
                 const ival = trace.values[i] || null
                 if (ival == null) { continue }
                 samples.unshift(ival)
-                indices.unshift(0)  // don't use!
+                indices.unshift(i)  // don't use!
                 if (samples.length == side_count) { break }
             }
             i = trace.smooth_from
@@ -116,13 +140,14 @@ export class UplotVectors {
             }
             // WRITE
             while(samples.length > side_count) {
+                // calc_smooth(write_index, indices, samples)
                 if (s_type == AVERAGE) {
                     const sum = samples.reduce((sum, current) => sum + current, 0)
-                    trace.smooth[indices[write_index]] = sum / samples.length
+                    this.traces[trace_id].smooth[indices[write_index]] = sum / samples.length
                 }
                 else if (s_type == MEDIAN) {
                     const sorted_samples = [...samples].sort((a, b) => a - b)
-                    trace.smooth[indices[write_index]] = sorted_samples[samples.length >> 1]
+                    this.traces[trace_id].smooth[indices[write_index]] = sorted_samples[samples.length >> 1]
                 }
                 while(true){
                     const ival = trace.values[i] ?? null

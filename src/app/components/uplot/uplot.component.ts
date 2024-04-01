@@ -194,7 +194,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             factor.inputtype = 'int'
             factor.name = 'factor'
             factor.min = 3
-            factor.max = 101
+            factor.max = 50
             if (active.factor < 3) {
                 factor.numbervalue = 15
             }
@@ -372,15 +372,13 @@ export class UplotComponent implements OnInit, OnDestroy {
                 spanGaps: trace.hasOwnProperty('spanGaps') ? trace.spanGaps : true,
                 dash: trace.hasOwnProperty('dash') ? trace.dash : undefined,
                 fill: trace.hasOwnProperty('fill') ? name2rgba(trace.fill[0], trace.fill[1]) : undefined,
-                // paths: typeof uPlot.paths.stepped != 'undefined' ? uPlot.paths.stepped({align:  1}) : undefined
+                // assume that stepped, linear and spline are always defined in uPlot despite the ? in the library
                 paths: (
-                    (!trace.hasOwnProperty('linestyle') || trace.linestyle == 'stepped') ?
-                    (typeof uPlot.paths.stepped != 'undefined' ? uPlot.paths.stepped({ align: 1 }) : undefined)
-                    : trace.linestyle == 'linear' ?
-                    (typeof uPlot.paths.linear != 'undefined' ? uPlot.paths.linear() : undefined)
-                    : trace.linestyle == 'spline' ?
-                    (typeof uPlot.paths.spline != 'undefined' ? uPlot.paths.spline() : undefined)
-                    : undefined
+                    (!trace.hasOwnProperty('linestyle') || trace.linestyle == 'stepped') ? uPlot.paths.stepped!({ align: 1 }) : (
+                        trace.linestyle == 'linear' ? uPlot.paths.linear!() : (
+                            trace.linestyle == 'spline' ? uPlot.paths.spline!() : undefined
+                        )
+                    )
                 ),
                 points: trace.hasOwnProperty('points') ? {show: trace.points} : undefined,
                 nolegend: trace.hasOwnProperty('nolegend') ? true : false

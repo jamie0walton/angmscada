@@ -204,7 +204,7 @@ export class UplotDataSet {
         this.tags = tags
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
-            this.aligned.add_history(i, [tag.time_ms], [tag.value])
+            this.aligned.add_history(i, tag.history.times_ms, tag.history.values)
         }
         this.show = this.aligned.get_uplot_data()
         this.updateshow = true
