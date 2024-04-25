@@ -417,11 +417,18 @@ export class UplotComponent implements OnInit, OnDestroy {
                     auto: false,
                     range: this.x_scale_range
                 }
-                this.options.axes.push({scale: obj.scale, values: SCALE})
+                let axis: uPlot.Axis = {
+                    scale: obj.scale,
+                    values: SCALE,
+                    grid: {stroke: "#999", width: 0.5}
+                }
+                this.options.axes.push(axis)
             }
             else {  // with scale and possibly side
-                let axis: uPlot.Axis = {}
-                axis.scale = obj.scale
+                let axis: uPlot.Axis = {
+                    scale: obj.scale,
+                    grid: {stroke: "#999", width: 0.5}
+                }
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
                 this.options.axes.push(axis)
                 this.udataset.set_yaxes(obj.scale, obj.range)

@@ -4,8 +4,8 @@
 // let wsp = window.location.pathname.split('/')
 // wsp.pop()
 // let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
-let ws = 'ws://172.26.3.33:8324/ws'
-// let ws = 'ws://127.0.0.1:8324/ws'
+// let ws = 'ws://172.26.3.33:8324/ws'
+let ws = 'ws://127.0.0.1:8324/ws'
 
 export const environment = {
     production: false,
