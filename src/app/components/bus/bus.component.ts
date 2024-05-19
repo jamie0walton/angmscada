@@ -26,7 +26,7 @@ export class BusComponent implements OnInit, OnDestroy {
     ws: WebSocket | undefined
     wsIdle: number
     config: Config
-    pending_rqs: Command[] = []
+    pending_rta: Command[] = []
 
     constructor(
         private configstore: ConfigSubject,
@@ -128,7 +128,7 @@ export class BusComponent implements OnInit, OnDestroy {
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
             }
             else if (type == BYTES_TYPE) {
-                let _rqs_id = dview.getUint16(12)
+                let _rta_id = dview.getUint16(12)
                 id = dview.getUint16(14)
                 type = dview.getUint16(16)
                 if (id == 0 || type == 0) {return}
@@ -175,10 +175,10 @@ export class BusComponent implements OnInit, OnDestroy {
     }
 
     checkStatus() {
-        if (this.pending_rqs.length > 0) {
+        if (this.pending_rta.length > 0) {
             let still_pending: Command[] = []
-            for (let i = 0; i < this.pending_rqs.length; i++) {
-                const command = this.pending_rqs[i]
+            for (let i = 0; i < this.pending_rta.length; i++) {
+                const command = this.pending_rta[i]
                 if (command.tagname in this.tagstore.tag_by_name) {
                     this.sendCommand(command)
                 }
@@ -186,7 +186,7 @@ export class BusComponent implements OnInit, OnDestroy {
                     still_pending.push(command)
                 }
             }
-            this.pending_rqs = still_pending
+            this.pending_rta = still_pending
         }
         if (this.ws == null || this.ws.readyState != 1) {
             this.wsIdle += 1

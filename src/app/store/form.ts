@@ -3,7 +3,7 @@ import { Subject } from 'rxjs'
 import { Tag } from './tag'
 
 const INPUT = ['', 'description', 'filter', 'multi', 'setpoint', 'int', 'float', 'str', 'textarea', 'time', 'date', 'datetime', 'drag_n_drop'] as const
-const ACTIONS = ['set', 'rqs']
+const ACTIONS = ['set', 'rta']
 
 // MobileSCADA form modal.
 export namespace MsForm {

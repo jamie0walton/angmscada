@@ -103,7 +103,7 @@ export class FilesComponent implements OnInit, OnDestroy {
     //         desc.stringvalue = file.desc
     //     }
     //     this.form.name = this.tag.name
-    //     this.form.action = 'rqs'
+    //     this.form.action = 'rta'
     //     this.form.controls = [path, desc]
     //     this.showForm()
     // }

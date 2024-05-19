@@ -173,7 +173,7 @@ export class TagSubject {
         let start_ms = now - tag.age_ms
         let end_ms = now + tag.future_ms
         this.commandstore.command({
-            type: 'rqs',
+            type: 'rta',
             tagname: '__history__',
             value: {
                 tagname: tag.name,
