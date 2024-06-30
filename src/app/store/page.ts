@@ -43,6 +43,10 @@ export class PageSubject {
     }
 
     private make_item(src: any) {
+        /*
+        TODO have a look at reworking this, restructuring of dict is
+        not obvious.
+        */
         let item: Page_Item = {
             type: "",
             desc: "",
@@ -63,11 +67,21 @@ export class PageSubject {
             delete item.config.tagname
         }
 
-        if (src.hasOwnProperty('style')) { item.style = src.style }
-        if (src.hasOwnProperty('colors')) { item.colors = src.colors }
-        if (src.hasOwnProperty('trend')) { item.trend = src.trend }
-        if (src.hasOwnProperty('sites')) { item.sites = src.sites }
-        if (src.hasOwnProperty('by')) { item.by = src.by }
+        if (src.hasOwnProperty('style')) {
+            item.style = src.style
+        }
+        if (src.hasOwnProperty('colors')) {
+            item.colors = src.colors
+        }
+        if (src.hasOwnProperty('trend')) {
+            item.trend = src.trend
+        }
+        if (src.hasOwnProperty('sites')) {
+            item.sites = src.sites
+        }
+        if (src.hasOwnProperty('by')) {
+            item.by = src.by
+        }
         return item
     }
 

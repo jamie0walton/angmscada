@@ -89,31 +89,35 @@ export class OpNotesComponent implements OnInit, OnDestroy {
 
     formAction(cmd: MsForm.Close) {
         let editid: number | undefined = parseInt(cmd.requestid.substring(this.tag.name.length + 1))
-        let action = 'update'
+        let action = 'MODIFY'
         if(editid === -1){
             editid = undefined
-            action = 'insert'
+            action = 'ADD'
         }
         if(cmd.action === 'submit') {
+            let date = Math.round(Date.now() / 1000)
+            if (cmd.setvalue['date'] == cmd.setvalue['date']) {
+                date = Math.round(new Date(cmd.setvalue['date']).getTime() / 1000)
+            }
             this.commandstore.command({
-                "type": "set",
-                "tagname": this.item.tagname[1],
-                "value": {
+                'type': 'rta',
+                'tagname': this.item.tagname,
+                'value': {
                     'action': action,
                     'id': editid,
                     'by': cmd.setvalue['by'],
                     'site': cmd.setvalue['site'],
-                    'date': Math.round(new Date(cmd.setvalue['date']).getTime() / 1000),
+                    'date': date,
                     'note': cmd.setvalue['text']
                 }
             })
         }
         else if (cmd.action === 'delete'){
             this.commandstore.command({
-                "type": "set",
-                "tagname": this.item.tagname[1],
-                "value": {
-                    'action': 'delete',
+                'type': 'rta',
+                'tagname': this.item.tagname,
+                'value': {
+                    'action': 'DELETE',
                     'id': editid
                 }
             })
@@ -122,7 +126,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.subs.push(
-            this.tagstore.subject(this.item.tagname[0]).asObservable().subscribe((tag: any) => {
+            this.tagstore.subject(this.item.tagname).asObservable().subscribe((tag: any) => {
                 if (this.tag.id === null) {
                     this.tag = tag
                 }
