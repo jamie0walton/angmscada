@@ -37,6 +37,13 @@ When pymscada-wwwserver service is running (and a few others) open a command
 window and ```start chrome --remote-debugging-port=9222``` inside chrome
 <Ctrl+Shift+I>, go to the Network tab and turn on ```Disable cache```.
 
+```bat command prompt
+start chrome --incognito --remote-debugging-port=9222 https://192.168.73.43/pymscada/
+```
+```bash
+ng build --configuration development --watch
+```
+
 Back in VSCode, Run and Debug, select ```chrome python``` and the debugger
 should connect at which point you can Restart the page and follow through
 with the debugging tool.

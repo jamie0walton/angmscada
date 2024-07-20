@@ -27,6 +27,7 @@ export class BusComponent implements OnInit, OnDestroy {
     wsIdle: number
     config: Config
     pending_rta: Command[] = []
+    seen_tagnames: Set<string>
 
     constructor(
         private configstore: ConfigSubject,
@@ -39,33 +40,30 @@ export class BusComponent implements OnInit, OnDestroy {
         this.source = timer(500, 1000)
         this.wsIdle = 0
         this.config = this.configstore.get()
+        this.seen_tagnames = new Set()
+    }
+
+    sub_if_not_seen(tagname: string) {
+        if (!this.seen_tagnames.has(tagname)) {
+            this.sendCommand({
+                type: 'sub',
+                tagname: tagname,
+                value: null
+            })
+            this.seen_tagnames.add(tagname)
+        }
     }
 
     sub_tags(page: Page) {
-        FUNCTION_TAGS.forEach(element => {
-            this.sendCommand({
-                type: 'sub',
-                tagname: element,
-                value: null
-            })
-        })
         for (let i = 0; i < page.items.length; i++) {
             const item = page.items[i]
             if (item.tagname.length > 0) {
-                this.sendCommand({
-                    type: 'sub',
-                    tagname: item.tagname,
-                    value: null
-                })
+                this.sub_if_not_seen(item.tagname)
             }
             else if (item.type == 'uplot') {
                 for (let i = 0; i < item.config.series.length; i++) {
                     const element = item.config.series[i]
-                    this.sendCommand({
-                        type: 'sub',
-                        tagname: element.tagname,
-                        value: null
-                    })
+                    this.sub_if_not_seen(element.tagname)
                 }
             }
         }
@@ -158,16 +156,21 @@ export class BusComponent implements OnInit, OnDestroy {
         this.ws.binaryType = 'arraybuffer'
         this.ws.onopen = () => {
             this.configstore.set_connected(true)
+            FUNCTION_TAGS.forEach((element: string) => {
+                this.sub_if_not_seen(element)
+            })
             if(this.ws == null) {
                 console.log('websocket is closed on opening?')
             }
         }
         this.ws.onmessage = (msg) => this.WSmessage(msg)
-        this.ws.onerror = () => {
+        this.ws.onerror = (e) => {
+            console.log('WS error:', e)
             if (this.ws)
                 this.ws.close()
         }
-        this.ws.onclose = () => {
+        this.ws.onclose = (msg) => {
+            console.log('WS closed (note aiohttp has a 5 minute inactivity timeout):', msg)
             delete this.ws
             this.configstore.set_connected(false)
             this.configstore.set_reload(true)

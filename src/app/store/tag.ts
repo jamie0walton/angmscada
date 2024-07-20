@@ -61,6 +61,14 @@ export class Tag implements Tag {
     }
 }
 
+interface OpNote {
+    id: number
+    date_ms: number
+    by: string
+    site: string
+    note: string
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -124,8 +132,7 @@ export class TagSubject {
         console.log(tag)
     }
 
-    update(id: number, time_ms: number, value: any) {
-        let tag: Tag = this.tag_by_id[id]
+    update_tag(tag: Tag, time_ms: number, value: any) {
         tag.time_ms = time_ms
         tag.value = value
         if (typeof value === 'number') {
@@ -135,6 +142,7 @@ export class TagSubject {
             }
         }
         else if (typeof value === 'string') {
+            console.log(time_ms, value)
             tag.stringhistory.times_ms.push(time_ms)
             tag.stringhistory.values.push(value)
             while (tag.stringhistory.times_ms.length > 20) {
@@ -143,6 +151,77 @@ export class TagSubject {
             }
         }
         tag.new_history = false
+    }
+
+    update_opnotes(tag: Tag, value: any) {
+        // TODO depend on hard coded tags, not sure if this is right.
+        if (!Array.isArray(tag.value) || !value.hasOwnProperty('id')) {
+            tag.value = []
+        }
+        let opnotes: OpNote[] = tag.value
+        if (value.hasOwnProperty('id')) {
+            const index = opnotes.findIndex((obj) => obj.id === value.id);
+            if (value.hasOwnProperty('date_ms')) {  // assume has all properties
+                if (index === -1) {  // not present, insert in descending order
+                    const insertIndex = opnotes.findIndex((obj) => obj.date_ms < value.date_ms);
+                    if (insertIndex !== -1) {
+                        opnotes.splice(insertIndex, 0, value)
+                    } else {
+                        opnotes.push(value);
+                    }
+                } else {  // or replace
+                    opnotes[index] = value;
+                    // After replacing, we need to ensure the array is still in descending order
+                    opnotes.sort((a, b) => b.date_ms - a.date_ms)
+                }
+            } else {  // assume only has .id
+                if (index !== -1) {  // if present, delete
+                    opnotes.splice(index, 1);
+                }
+            }
+        }
+        else if (value.hasOwnProperty('data')) {
+            let startidx: {[key: number]: number} = {}
+            for (let i = 0; i < opnotes.length; i++) {
+                startidx[opnotes[i].id] = i
+            }
+            for (let i = 0; i < value.data.length; i++) {
+                const rec = value.data[i]
+                let update = {
+                    id: rec[0],
+                    date_ms: rec[1],
+                    site: rec[2],
+                    by: rec[3],
+                    note: rec[4]
+                }
+                if (rec[0] in startidx) {
+                    opnotes[startidx[rec[0]]] = update
+                }
+                else {
+                    opnotes.push(update)
+                }
+            }
+            opnotes.sort((a, b) => b.date_ms - a.date_ms)
+        }
+    }
+
+    update_alarms(tag: Tag, time_ms: number, value: any) {
+
+    }
+
+    update_files(tag: Tag, time_ms: number, value: any) {
+
+    }
+
+    update(id: number, time_ms: number, value: any) {
+        let tag: Tag = this.tag_by_id[id]
+        switch (tag.name) {
+            case '__opnotes__':
+                this.update_opnotes(tag, value)
+                break
+            default:
+                this.update_tag(tag, time_ms, value)
+        }
         this.subjects[tag.name].next(tag)
     }
 

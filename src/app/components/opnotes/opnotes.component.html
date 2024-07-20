@@ -1,39 +1,51 @@
 <!-- List the notes on the screen -->
-<div class="d-flex">
-  <div class="me-auto">
+<div class="d-flex justify-content-between">
+  <div class="flex-grow-1">
     <h3>Operator Notes</h3>
   </div>
-  <div class="mt-1 mb-1">
-    <div class="pt-0 pb-0 btn btn-outline-secondary" (click)="showForm(-1)">
-      NEW
+  <div *ngFor="let g of site_groups; index as i" class="d-flex justify-content-center">
+    <div (click)="checkbox(i)" class="pe-4">
+      <input type="checkbox" [checked]="g.checked">&nbsp;{{g.name}}
+    </div>
+  </div>
+  <div class="d-flex justify-content-end flex-grow-1">
+    <div class="pe-4" (click)="downloadcsv()">
+      <app-icon icon="download" width="20" height="20"></app-icon>
+    </div>
+    <div class="pe-4">
+      <div class="pt-0 pb-0 btn btn-outline-secondary" (click)="formAdd(-1)">
+        NEW
+      </div>
     </div>
   </div>
 </div>
-<div class="row bg-primary text-light border-bottom-0">
-  <div class="col-12 col-md-3 mt-0 mb-0">
+<div class="row bg-primary text-light border-bottom-0" (click)="formFilter()">
+  <div class="col-12 col-md-4 mt-0 mb-0">
     <div class="row">
-      <div class="col-4 mt-1 mb-1">Site</div>
-      <div class="col-5 mt-1 mb-1">Operator</div>
-      <div class="col-3 mt-1 mb-1">Time</div>
+      <div class="col-4 mt-1 mb-1" style="display:inline-flex">
+        <app-icon icon="filter" width="16" height="16"></app-icon>&nbsp;Site
+      </div>
+      <div class="col-4 mt-1 mb-1">Operator</div>
+      <div class="col-4 mt-1 mb-1">Time</div>
     </div>
   </div>
   <div class="col-12 col-md-8 mt-1 mb-1">Note</div>
 </div>
-<div class="row" *ngFor="let x of tag.value; index as i" [ngStyle]="{'background-color': (i%2 == 0 ? '#f0f0f0' : '')}"
-  (click)="showForm(i)">
-  <div class="col-12 col-md-3 small">
+<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{'background-color': (i%2 == 0 ? '#d0d0d0' : '')}"
+  (click)="formAdd(i)">
+  <div class="col-12 col-md-4 small">
     <div class="row">
       <div class="col-4">
-        <p>{{x[1]}}</p>
+        <p>{{x.site}}</p>
       </div>
-      <div class="col-5">
-        <p>{{x[2]}}</p>
+      <div class="col-4">
+        <p>{{x.by}}</p>
       </div>
-      <div class="col-3">
-        <p>{{x[3] | msTime:true}} {{x[3] | msDate}}</p>
+      <div class="col-4">
+        <p>{{x.date_ms | date:'d-MMM-yy h:mma'}}</p>
       </div>
     </div>
   </div>
-  <div class="col-12 col-md-8" [innerHTML]="x[4] | msNL2BR">
+  <div class="col-12 col-md-8" [innerHTML]="x.note | msNL2BR">
   </div>
 </div>

@@ -3,6 +3,51 @@ import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { CommandSubject } from 'src/app/store/command'
 
+interface OpNote {
+    id: number
+    date_ms: number
+    site: string
+    by: string
+    note: string
+}
+
+function pad(number: number) {
+    if (number < 10) {
+        return '0' + number;
+    }
+    return number;
+}
+
+function datestring(d: Date) {
+    // new Date().toISOString().substring(0, 16),
+    let now = d.getFullYear() +
+        '-' + pad(d.getMonth() + 1) +
+        '-' + pad(d.getDate())
+    return now
+}
+
+function datetimestring(d: Date) {
+    // new Date().toISOString().substring(0, 16),
+    let now = d.getFullYear() +
+        '-' + pad(d.getMonth() + 1) +
+        '-' + pad(d.getDate()) +
+        'T' + pad(d.getHours()) +
+        ':' + pad(d.getMinutes()) +
+        ':' + pad(d.getSeconds())
+    return now
+}
+
+function csvdatetimestring(d: Date) {
+    // new Date().toISOString().substring(0, 16),
+    let now = pad(d.getDate()) +
+        '/' + pad(d.getMonth() + 1) +
+        '/' + d.getFullYear() +
+        ' ' + pad(d.getHours()) +
+        ':' + pad(d.getMinutes()) +
+        ':' + pad(d.getSeconds())
+    return now
+}
+
 @Component({
     selector: 'app-opnotes',
     templateUrl: './opnotes.component.html',
@@ -12,10 +57,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     subs: any = []
     @Input() item: any
     tag: Tag
-    datecontrol: MsForm.Control
-    sitecontrol: MsForm.Control
-    bycontrol: MsForm.Control
-    textcontrol: MsForm.Control
+    show: OpNote[]
+    site_groups: {name: string, sites: string[], checked: boolean}[]
+    filter: {date: number, sites: string[]}
     form: MsForm.Form
 
     constructor(
@@ -24,70 +68,190 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         private formstore: FormSubject
     ) {
         this.tag = new Tag()
+        this.show = []
+        this.site_groups = []
+        this.filter = {date: Number(Date.now()), sites: []}
         this.form = new MsForm.Form()
-        this.datecontrol = new MsForm.Control()
-        this.datecontrol.inputtype = 'datetime'
-        this.datecontrol.name = 'date'
-        this.sitecontrol = new MsForm.Control()
-        this.sitecontrol.inputtype = 'filter'
-        this.sitecontrol.name = 'site'
-        this.bycontrol = new MsForm.Control()
-        this.bycontrol.inputtype = 'filter'
-        this.bycontrol.name = 'by'
-        this.textcontrol = new MsForm.Control()
-        this.textcontrol.inputtype = 'textarea'
-        this.textcontrol.name = 'text'
+   }
+
+    downloadcsv() {
+        /*
+        15 Jul 2024, Excel is now so broken, nothing reasonable worked
+        Eventually gave up on the basis that when Microsoft abandoned import of
+        CSV as a file the Get Data version of loading CSV is semi-functional
+        this would be easier if relative imports work (they don't) and the
+        change to OneDrive URLs is only partially implemented in the CSV query.
+
+        Far too much time on this for something that should (and used to) just
+        work.
+        */
+        let csv = 'id,date,site,by,note\n'
+        for (let i = 0; i < this.show.length; i++) {
+            const e = this.show[i]
+            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.site + ',' + e.by + ',"' + e.note.replace(/"/g, '""') + '"\n'
+        }
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = 'opnotes.csv'
+        link.click()
+        URL.revokeObjectURL(link.href)
     }
 
-    showForm(index: number) {
-        this.sitecontrol.options = this.item.sites
-        this.bycontrol.options = this.item.by
+    // downloadxls() {
+    //     let xls = '<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><style><!--br {mso-data-placement:same-cell;}--></style></head><body><table>'
+    //     xls += '<tr><td>id</td><td>date</td><td>site</td><td>by</td><td>note</td></tr>'
+    //     for (let i = 0; i < this.show.length; i++) {
+    //         const e = this.show[i]
+    //         xls += '<tr><td>' + e.id + '</td>' + '<td>' + this.csvdatetimestring(new Date(e.date_ms)) + '</td>' + '<td>' + e.site + '</td>' + '<td>' + e.by + '</td>' + '<td style="white-space:normal">' + e.note.replace(/\n/g, '<br/>') + '</td></tr>'
+    //     }
+    //     xls += '</table></body></html>'
+    //     const blob = new Blob([xls], { type: 'application/vnd.ms-excel' });
+    //     const link = document.createElement('a')
+    //     link.href = URL.createObjectURL(blob)
+    //     link.download = 'opnotes.xls'
+    //     link.click()
+    //     URL.revokeObjectURL(link.href)
+    // }
+
+    updateage() {
+        let requested_age = Date.now() - this.filter.date
+        if (requested_age > this.tag.age_ms) {
+            this.tag.age_ms = requested_age
+            this.commandstore.command({
+                type: 'rta',
+                tagname: this.tag.name,
+                value: {
+                    action: 'BULK HISTORY',
+                    date_ms: this.filter.date
+                }
+            })
+        }
+    }
+
+    updatesitegroups() {
+        for (let i = 0; i < this.site_groups.length; i++) {
+            const group = this.site_groups[i]
+            group.checked = true
+            for (let j = 0; j < group.sites.length; j++) {
+                const site = group.sites[j]
+                if (this.filter.sites.indexOf(site) == -1) {
+                    group.checked = false
+                    break
+                }
+            }
+        }
+    }
+
+    updateshow() {
+        this.show = []
+        for (let i = 0; i < this.tag.value.length; i++) {
+            const e = this.tag.value[i]
+            let note: OpNote = {
+                id: e.id,
+                date_ms: e.date_ms,
+                site: e.site,
+                by: e.by,
+                note: e.note
+            }
+            if (this.filter.sites.indexOf(e.site) !== -1) {
+                this.show.push(note)
+            }
+        }
+    }
+
+    checkbox(gid: number) {
+        this.site_groups[gid].checked = !this.site_groups[gid].checked
+        for (let i = 0; i < this.site_groups[gid].sites.length; i++) {
+            const site = this.site_groups[gid].sites[i]
+            const filterindex = this.filter.sites.indexOf(site)
+            if (this.site_groups[gid].checked) {
+                if (filterindex === -1) {
+                    this.filter.sites.push(site)
+                }
+            }
+            else if (filterindex !== -1) {
+                this.filter.sites.splice(filterindex, 1)
+            }
+        }
+        this.updateshow()
+    }
+
+    formFilter() {
+        // create the form controls
+        let start = new MsForm.Control()
+        start.name = 'start'
+        start.inputtype = 'date'
+        start.stringvalue = datestring(new Date(this.filter.date))
+        let site = new MsForm.Control()
+        site.name = 'site'
+        site.inputtype = 'multi'
+        site.options = ['', ...this.item.config.site]
+        // TODO 
+        // site.optionvalue = site.options.indexOf(this.filter.site)
+        // setup the form
+        this.form.requestid = 'opnotes filter'
+        this.form.name = "Set Site and Start Time"
+        this.form.delete = false
+        this.form.controls = [start, site]
+        this.formstore.pubFormOpts(this.form)
+    }
+
+    formFilterAction(cmd: MsForm.Close) {
+        if (cmd.action == 'submit') {
+            if (typeof(cmd.setvalue['start']) === 'number') {
+                this.filter.date = cmd.setvalue['start']
+                this.updateage()
+            }
+            if (typeof(cmd.setvalue['site']) === 'number' && cmd.setvalue['site'] > 0) {
+                this.filter.sites = [['', ...this.item.config.site][cmd.setvalue['site']]]
+                this.updatesitegroups()
+            }
+            this.updateshow()
+        }
+    }
+
+    formAdd(index: number) {
+        // create the form controls
+        let site = new MsForm.Control()
+        site.name = 'site'
+        site.inputtype = 'filter'
+        site.options = this.item.config.site
+        let by = new MsForm.Control()
+        by.name = 'by'
+        by.inputtype = 'filter'
+        by.options = this.item.config.by
+        let date_ms = new MsForm.Control()
+        date_ms.name = 'date_ms'
+        date_ms.inputtype = 'datetime'
+        let note = new MsForm.Control()
+        note.name = 'note'
+        note.inputtype = 'textarea'
+        // setup the form
         if(index === -1) {
             this.form.requestid = this.tag.name + " -1"
             this.form.name = "Add Note"
             this.form.delete = false
-            this.sitecontrol.stringvalue = "Select site"
-            this.bycontrol.stringvalue = "Enter author"
-            this.datecontrol.stringvalue = this.datetimestring(new Date())
-            this.textcontrol.stringvalue = "Describe"
+            site.stringvalue = "Select site"
+            by.stringvalue = "Enter author"
+            date_ms.stringvalue = datetimestring(new Date())
+            note.stringvalue = "Describe"
         }
         else {
-            this.form.requestid = this.tag.name + " " + this.tag.value[index][0]
+            const editnote = this.tag.value[index]
+            this.form.requestid = this.tag.name + " " + editnote.id
             this.form.name = "Edit Note"
             this.form.delete = true
-            this.sitecontrol.stringvalue = this.tag.value[index][1]
-            this.bycontrol.stringvalue = this.tag.value[index][2]
-            this.datecontrol.stringvalue = this.datetimestring(this.asDate(this.tag.value[index][3]))
-            this.textcontrol.stringvalue = this.tag.value[index][4]
+            site.stringvalue = editnote.site
+            by.stringvalue = editnote.by
+            date_ms.stringvalue = datetimestring(new Date(editnote.date_ms))
+            note.stringvalue = editnote.note
         }
-        this.form.controls = [
-            this.datecontrol, this.sitecontrol, this.bycontrol, this.textcontrol
-        ]
+        this.form.controls = [date_ms, site, by, note]
         this.formstore.pubFormOpts(this.form)
     }
 
-    asDate(sec: number): Date {
-        return new Date(sec * 1000)
-    }
-
-    datetimestring(d: Date) {
-        // new Date().toISOString().substring(0, 16),
-        function pad(number: number) {
-            if (number < 10) {
-                return '0' + number;
-            }
-            return number;
-        }
-        let now = d.getFullYear() +
-            '-' + pad(d.getMonth() + 1) +
-            '-' + pad(d.getDate()) +
-            'T' + pad(d.getHours()) +
-            ':' + pad(d.getMinutes()) +
-            ':' + pad(d.getSeconds())
-        return now
-    }
-
-    formAction(cmd: MsForm.Close) {
+    formAddAction(cmd: MsForm.Close) {
         let editid: number | undefined = parseInt(cmd.requestid.substring(this.tag.name.length + 1))
         let action = 'MODIFY'
         if(editid === -1){
@@ -95,27 +259,27 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             action = 'ADD'
         }
         if(cmd.action === 'submit') {
-            let date = Math.round(Date.now() / 1000)
-            if (cmd.setvalue['date'] == cmd.setvalue['date']) {
-                date = Math.round(new Date(cmd.setvalue['date']).getTime() / 1000)
+            let date_ms = Date.now()
+            if (cmd.setvalue['date_ms'] == cmd.setvalue['date_ms']) {
+                date_ms = Number(cmd.setvalue['date_ms'])
             }
             this.commandstore.command({
                 'type': 'rta',
-                'tagname': this.item.tagname,
+                'tagname': '__opnotes__',
                 'value': {
                     'action': action,
                     'id': editid,
                     'by': cmd.setvalue['by'],
                     'site': cmd.setvalue['site'],
-                    'date': date,
-                    'note': cmd.setvalue['text']
+                    'date_ms': date_ms,
+                    'note': cmd.setvalue['note']
                 }
             })
         }
         else if (cmd.action === 'delete'){
             this.commandstore.command({
                 'type': 'rta',
-                'tagname': this.item.tagname,
+                'tagname': '__opnotes__',
                 'value': {
                     'action': 'DELETE',
                     'id': editid
@@ -125,19 +289,36 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.filter.date = Date.now() - (this.item.config?.filter?.age_d || 30) * 24 * 3600 * 1000
+        this.filter.sites = [] // [...this.item.config.site]
+        const groups = Object.keys(this.item.config?.filter?.site_groups)
+        for (let i = 0; i < groups.length; i++) {
+            const group = groups[i]
+            this.site_groups.push({
+                name: group,
+                sites: this.item.config.filter.site_groups[group],
+                checked: false
+            })
+        }
+        this.updatesitegroups()
         this.subs.push(
-            this.tagstore.subject(this.item.tagname).asObservable().subscribe((tag: any) => {
+            this.tagstore.subject('__opnotes__').asObservable().subscribe((tag: any) => {
                 if (this.tag.id === null) {
                     this.tag = tag
+                    this.updateage()
                 }
                 else {
                     this.tag.value = tag.value
                     this.tag.time_ms = tag.time_ms
                 }
+                this.updateshow()
             }),
             this.formstore.closesubject.asObservable().subscribe(cmd => {
                 if (cmd.requestid.startsWith(this.tag.name)) {
-                    this.formAction(cmd)
+                    this.formAddAction(cmd)
+                }
+                else if (cmd.requestid === 'opnotes filter') {
+                    this.formFilterAction(cmd)
                 }
             })
         )

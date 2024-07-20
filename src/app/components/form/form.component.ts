@@ -87,7 +87,7 @@ export class FormComponent implements OnInit, OnDestroy {
                     now.setMinutes(parseInt(ti[1]))
                     now.setSeconds(0)
                     now.setMilliseconds(0)
-                    value = now.valueOf() * 1000
+                    value = now.valueOf()
                     break
                 case 'date':
                     ti = value.split('-')
@@ -98,10 +98,10 @@ export class FormComponent implements OnInit, OnDestroy {
                     now.setMinutes(0)
                     now.setSeconds(0)
                     now.setMilliseconds(0)
-                    value = now.valueOf() * 1000
+                    value = now.valueOf()
                     break
                 case 'datetime':
-                    value = new Date(value).valueOf() * 1000
+                    value = new Date(value).valueOf()
                     break
                 case 'str':
                 case 'textarea':
@@ -143,7 +143,7 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'time':
                 case 'date':
                 case 'datetime':
-                    value = control.numbervalue || ''
+                    value = control.stringvalue || ''
                     break
                 case 'str':
                 case 'textarea':

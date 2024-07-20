@@ -5,7 +5,10 @@ so I ran a debian vm and it worked.
 
 ## Config and commands
 
-On a terminal run google-chrome --remote-debugging-port=9222
+On a terminal run 
+```cmd
+start chrome --remote-debugging-port=9222
+```
 
 Open localhost:8324 in chrome to access the running pymscada wwwserver
 
