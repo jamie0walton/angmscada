@@ -59,7 +59,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     tag: Tag
     show: OpNote[]
     site_groups: {name: string, sites: string[], checked: boolean}[]
-    filter: {date: number, sites: string[]}
+    filter: {date: number, site: string, note: string}
     form: MsForm.Form
 
     constructor(
@@ -70,20 +70,13 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.tag = new Tag()
         this.show = []
         this.site_groups = []
-        this.filter = {date: Number(Date.now()), sites: []}
+        this.filter = {date: Number(Date.now()), site: '', note: ''}
         this.form = new MsForm.Form()
    }
 
     downloadcsv() {
         /*
-        15 Jul 2024, Excel is now so broken, nothing reasonable worked
-        Eventually gave up on the basis that when Microsoft abandoned import of
-        CSV as a file the Get Data version of loading CSV is semi-functional
-        this would be easier if relative imports work (they don't) and the
-        change to OneDrive URLs is only partially implemented in the CSV query.
-
-        Far too much time on this for something that should (and used to) just
-        work.
+        15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
         */
         let csv = 'id,date,site,by,note\n'
         for (let i = 0; i < this.show.length; i++) {
@@ -97,22 +90,6 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         link.click()
         URL.revokeObjectURL(link.href)
     }
-
-    // downloadxls() {
-    //     let xls = '<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><style><!--br {mso-data-placement:same-cell;}--></style></head><body><table>'
-    //     xls += '<tr><td>id</td><td>date</td><td>site</td><td>by</td><td>note</td></tr>'
-    //     for (let i = 0; i < this.show.length; i++) {
-    //         const e = this.show[i]
-    //         xls += '<tr><td>' + e.id + '</td>' + '<td>' + this.csvdatetimestring(new Date(e.date_ms)) + '</td>' + '<td>' + e.site + '</td>' + '<td>' + e.by + '</td>' + '<td style="white-space:normal">' + e.note.replace(/\n/g, '<br/>') + '</td></tr>'
-    //     }
-    //     xls += '</table></body></html>'
-    //     const blob = new Blob([xls], { type: 'application/vnd.ms-excel' });
-    //     const link = document.createElement('a')
-    //     link.href = URL.createObjectURL(blob)
-    //     link.download = 'opnotes.xls'
-    //     link.click()
-    //     URL.revokeObjectURL(link.href)
-    // }
 
     updateage() {
         let requested_age = Date.now() - this.filter.date
@@ -132,10 +109,14 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     updatesitegroups() {
         for (let i = 0; i < this.site_groups.length; i++) {
             const group = this.site_groups[i]
+            if (this.filter.site === '') {
+                group.checked = false
+                break
+            }
             group.checked = true
             for (let j = 0; j < group.sites.length; j++) {
                 const site = group.sites[j]
-                if (this.filter.sites.indexOf(site) == -1) {
+                if (site.search(this.filter.site) == -1) {
                     group.checked = false
                     break
                 }
@@ -144,11 +125,17 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     }
 
     updateshow() {
-        if (this.filter.sites.length === 0) {
+        if (this.filter.site.length === 0 && this.filter.note.length === 0) {
             this.show = this.tag.value
             return
         }
         this.show = []
+        let dosite = false
+        let sitere: RegExp = new RegExp(this.filter.site, 'i')
+        if (this.filter.site.length > 0) {dosite = true}
+        let donote = false
+        let notere: RegExp = new RegExp(this.filter.note, 'i')
+        if (this.filter.note.length > 0) {donote = true}
         for (let i = 0; i < this.tag.value.length; i++) {
             const e = this.tag.value[i]
             let note: OpNote = {
@@ -158,25 +145,41 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 by: e.by,
                 note: e.note
             }
-            if (this.filter.sites.indexOf(e.site) !== -1) {
-                this.show.push(note)
+            if (dosite && donote) {
+                if (sitere.test(e.site) && notere.test(e.note)) {
+                    this.show.push(note)
+                }
+            }
+            else if (dosite) {
+                if (sitere.test(e.site)) {
+                    this.show.push(note)
+                }
+            }
+            else if (donote) {
+                if (notere.test(e.note)) {
+                    this.show.push(note)
+                }
             }
         }
     }
 
     checkbox(gid: number) {
         this.site_groups[gid].checked = !this.site_groups[gid].checked
-        for (let i = 0; i < this.site_groups[gid].sites.length; i++) {
-            const site = this.site_groups[gid].sites[i]
-            const filterindex = this.filter.sites.indexOf(site)
-            if (this.site_groups[gid].checked) {
-                if (filterindex === -1) {
-                    this.filter.sites.push(site)
+        let glist: string[] = []
+        for (let i = 0; i < this.site_groups.length; i++) {
+            const group = this.site_groups[i]
+            if (group.checked) {
+                for (let j = 0; j < group.sites.length; j++) {
+                    const site = group.sites[j]
+                    glist.push(site)
                 }
             }
-            else if (filterindex !== -1) {
-                this.filter.sites.splice(filterindex, 1)
-            }
+        }
+        if (glist.length > 0) {
+            this.filter.site = glist.join('|')
+        }
+        else {
+            this.filter.site = ''
         }
         this.updateshow()
     }
@@ -189,15 +192,20 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         start.stringvalue = datestring(new Date(this.filter.date))
         let site = new MsForm.Control()
         site.name = 'site'
-        site.inputtype = 'multi'
-        site.options = ['', ...this.item.config.site]
+        site.inputtype = 'filter'
+        site.options = this.item.config.site
+        site.stringvalue = this.filter.site
+        let note = new MsForm.Control()
+        note.name = 'note'
+        note.inputtype = 'str'
+        note.stringvalue = this.filter.note
         // TODO 
         // site.optionvalue = site.options.indexOf(this.filter.site)
         // setup the form
         this.form.requestid = 'opnotes filter'
-        this.form.name = "Set Site and Start Time"
+        this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, site]
+        this.form.controls = [start, site, note]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -207,9 +215,12 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 this.filter.date = cmd.setvalue['start']
                 this.updateage()
             }
-            if (typeof(cmd.setvalue['site']) === 'number' && cmd.setvalue['site'] > 0) {
-                this.filter.sites = [['', ...this.item.config.site][cmd.setvalue['site']]]
+            if (typeof(cmd.setvalue['site']) === 'string') {
+                this.filter.site = cmd.setvalue['site']
                 this.updatesitegroups()
+            }
+            if (typeof(cmd.setvalue['note']) === 'string') {
+                this.filter.note = cmd.setvalue['note']
             }
             this.updateshow()
         }
@@ -242,7 +253,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             note.stringvalue = "Describe"
         }
         else {
-            const editnote = this.tag.value[index]
+            const editnote = this.show[index]
             this.form.requestid = this.tag.name + " " + editnote.id
             this.form.name = "Edit Note"
             this.form.delete = true
@@ -294,7 +305,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.filter.date = Date.now() - (this.item.config?.filter?.age_d || 30) * 24 * 3600 * 1000
-        this.filter.sites = [] // [...this.item.config.site]
+        // this.filter.sites = [] // [...this.item.config.site]
         const groups = Object.keys(this.item.config?.filter?.site_groups)
         for (let i = 0; i < groups.length; i++) {
             const group = groups[i]
