@@ -133,6 +133,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     }
 
     updateshow() {
+        if(this.tag.value === null) {
+            return
+        }
         if (this.filter.site.length === 0 && this.filter.note.length === 0) {
             this.show = this.tag.value
             return
