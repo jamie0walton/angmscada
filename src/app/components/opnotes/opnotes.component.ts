@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core'
+import { Config, ConfigSubject } from 'src/app/store/config'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { CommandSubject } from 'src/app/store/command'
@@ -56,6 +57,7 @@ function csvdatetimestring(d: Date) {
 export class OpNotesComponent implements OnInit, OnDestroy {
     subs: any = []
     @Input() item: any
+    config: Config
     tag: Tag
     show: OpNote[]
     site_groups: {name: string, sites: string[], checked: boolean}[]
@@ -63,14 +65,20 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     form: MsForm.Form
 
     constructor(
+        private configstore: ConfigSubject,
         private tagstore: TagSubject,
         private commandstore: CommandSubject,
         private formstore: FormSubject
     ) {
+        this.config = this.configstore.get()
         this.tag = new Tag()
         this.show = []
         this.site_groups = []
-        this.filter = {date: Number(Date.now()), site: '', note: ''}
+        this.filter = {
+            date: Number(Date.now()),
+            site: this.config.site || '',
+            note: ''
+        }
         this.form = new MsForm.Form()
    }
 

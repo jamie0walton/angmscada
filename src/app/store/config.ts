@@ -8,6 +8,8 @@ export interface Config {
     page: number
     connected: boolean
     reload: boolean
+    site?: string
+    yaml?: string
 }
 
 @Injectable({
@@ -52,6 +54,14 @@ export class ConfigSubject {
     set_page(page: number) {
         this.config.page = page
         this.subject.next(this.config)
+    }
+
+    set_site(site: string) {
+        this.config.site = site
+    }
+
+    set_yaml(yaml: string) {
+        this.config.yaml = yaml
     }
 
     set_saved(name: string, data: any) {
