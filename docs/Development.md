@@ -1,13 +1,11 @@
 # Development Environment
 
-This project initially started in Debian, when I started the open source version
-I did the initial work up to this point in Windows. At a certain point the lack
-of systemd become a compelling factor and I switched back.
+Run on Debian. Use VSCode (on windows) using Remote SSH connection.
 
 ## Debian
 ### Setup
 
-Started with a headless Debian 12 with ssh and apache2 added (and git and git-docs).
+Started with a headless Debian 12 with ssh, apache2, git and git-docs.
 During install also:
 
 ```bash
@@ -47,10 +45,6 @@ ng build --configuration development --watch
 Back in VSCode, Run and Debug, select ```chrome python``` and the debugger
 should connect at which point you can Restart the page and follow through
 with the debugging tool.
-
-## Windows
-
-This is incomplete
 
 ### Setup
 

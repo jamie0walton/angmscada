@@ -49,12 +49,16 @@ export class FilesComponent implements OnInit, OnDestroy {
                 })
                 last = element.path
             }
+            let desc = element.desc
+            if (desc.length === 0) {
+                desc = element.name
+            }
             this.files.push({
                 type: 'link',
                 wide: false,
                 path: element.path,
                 name: element.name,
-                desc: element.desc,
+                desc: desc,
                 mode: element.mode
             })
         }

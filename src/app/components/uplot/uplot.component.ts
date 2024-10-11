@@ -72,7 +72,11 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.options = {
             width: 100,
             height: 100,
-            series: []
+            series: [],
+            hooks: {},
+            axes: [],
+            scales: {},
+            plugins: []
         }
     }
 
@@ -386,6 +390,65 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
+    bgGradientPlugin(background: {'xpos': string|number, 'color': string}[]) {
+        // Initialise plugin background
+        let bg: {'xpos': number, 'color': string}[] = []
+        let offset = 0
+        for (let i = 0; i < background.length; i++) {
+            let xpos = background[i].xpos
+            const color = background[i].color
+            if (typeof(xpos) == 'string') {
+                offset = Date.now() / 1000
+                xpos = 0
+            }
+            bg.push({'xpos': xpos + offset, 'color': color})
+        }
+
+        function drawBg(u: uPlot) {
+            let x = u.scales['x']
+            if (x.min === undefined || x.max === undefined) {
+                return
+            }
+            let { left, top, width, height } = u.bbox
+            let working_left = left
+            let working_bg = []
+            for (let i = 0; i < bg.length; i++) {
+                let xpos = bg[i].xpos
+                const color = bg[i].color
+                if (xpos <= x.min) {
+                    working_bg[0] = {xpos: working_left, color: color}
+                }
+                else if (xpos < x.max) {
+                    working_left = left + (xpos - x.min) / (x.max - x.min) * width
+                    working_bg.push({xpos: working_left, color: color})
+                }
+            }
+
+            if (working_bg.length > 0) {
+                u.ctx.save()
+                for (let i = 0; i < working_bg.length; i++) {
+                    const xpos = working_bg[i].xpos
+                    let working_width = width - (xpos - left)
+                    if (i + 1 < working_bg.length) {
+                        working_width = width - (xpos - left)
+                    }
+                    const color = working_bg[i].color
+                    u.ctx.fillStyle = color
+                    u.ctx.fillRect(xpos, top, working_width, height)
+                }
+                u.ctx.restore()
+            }
+        }
+
+        return {hooks: {drawClear: drawBg}}
+    }
+
+    setPlugins() {
+        if(this.item.config.ms?.hasOwnProperty('bghighlight')) {
+            this.options.plugins!.push(this.bgGradientPlugin(this.item.config.ms.bghighlight))
+        }
+    }
+
     setBands() {
         if(this.item.config.hasOwnProperty('bands')) {
             this.options.bands = []
@@ -404,8 +467,6 @@ export class UplotComponent implements OnInit, OnDestroy {
     }
 
     setAxesScales() {
-        this.options.axes = []
-        this.options.scales = {}
         for (let index = 0; index < this.item.config.axes.length; index++) {
             const obj: any = this.item.config.axes[index]
             // axes render the ticks, values, labels and grid along their
@@ -413,7 +474,7 @@ export class UplotComponent implements OnInit, OnDestroy {
             // timezone & DST handling is done here.
             if (obj.scale == 'x') {  // no side, no scale
                 this.udataset.set_duration(obj.range)
-                this.options.scales[obj.scale] = {
+                this.options.scales![obj.scale] = {
                     auto: false,
                     range: this.x_scale_range
                 }
@@ -422,7 +483,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                     values: SCALE,
                     grid: {stroke: "#999", width: 0.5}
                 }
-                this.options.axes.push(axis)
+                this.options.axes!.push(axis)
             }
             else {  // with scale and possibly side
                 let axis: uPlot.Axis = {
@@ -430,9 +491,9 @@ export class UplotComponent implements OnInit, OnDestroy {
                     grid: {stroke: "#999", width: 0.5}
                 }
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
-                this.options.axes.push(axis)
+                this.options.axes!.push(axis)
                 this.udataset.set_yaxes(obj.scale, obj.range)
-                this.options.scales[obj.scale] = {
+                this.options.scales![obj.scale] = {
                     auto: false,
                     range: this.y_scale_range(obj)
                 }
@@ -441,24 +502,23 @@ export class UplotComponent implements OnInit, OnDestroy {
     }
 
     setHooks() {
-        this.options.hooks = {
-            init: [(u: uPlot) => {
-                u.root.classList.add(this.legend_class)
-                let legends = u.root.querySelectorAll('.u-legend .u-series')
-                for (let i = 0; i < legends.length; i++) {
-                    const element = legends[i] as HTMLElement
-                    if (u.series[i + 1].nolegend) {
-                        element.style.display = 'none'
-                    }
+        this.options.hooks!.init = [(u: uPlot) => {
+            u.root.classList.add(this.legend_class)
+            let legends = u.root.querySelectorAll('.u-legend .u-series')
+            for (let i = 0; i < legends.length; i++) {
+                const element = legends[i] as HTMLElement
+                if (u.series[i + 1].nolegend) {
+                    element.style.display = 'none'
                 }
-            }]
-        }
+            }
+        }]
     }
 
     set_options() {
         this.setSize(false)
         this.setCursor()
         this.setSeries()
+        this.setPlugins()
         this.setBands()
         this.setAxesScales()
         this.setHooks()

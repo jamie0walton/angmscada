@@ -317,7 +317,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.filter.date = Date.now() - (this.item.config?.filter?.age_d || 30) * 24 * 3600 * 1000
         // this.filter.sites = [] // [...this.item.config.site]
-        const groups = Object.keys(this.item.config?.filter?.site_groups)
+        const groups = Object.keys(this.item.config?.filter?.site_groups || [])
         for (let i = 0; i < groups.length; i++) {
             const group = groups[i]
             this.site_groups.push({
