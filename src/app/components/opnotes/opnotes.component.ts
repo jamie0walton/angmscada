@@ -3,6 +3,7 @@ import { Config, ConfigSubject } from 'src/app/store/config'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { CommandSubject } from 'src/app/store/command'
+import { datestring, datetimestring, csvdatetimestring } from 'src/app/shared/datetime'
 
 interface OpNote {
     id: number
@@ -10,43 +11,6 @@ interface OpNote {
     site: string
     by: string
     note: string
-}
-
-function pad(number: number) {
-    if (number < 10) {
-        return '0' + number;
-    }
-    return number;
-}
-
-function datestring(d: Date) {
-    // new Date().toISOString().substring(0, 16),
-    let now = d.getFullYear() +
-        '-' + pad(d.getMonth() + 1) +
-        '-' + pad(d.getDate())
-    return now
-}
-
-function datetimestring(d: Date) {
-    // new Date().toISOString().substring(0, 16),
-    let now = d.getFullYear() +
-        '-' + pad(d.getMonth() + 1) +
-        '-' + pad(d.getDate()) +
-        'T' + pad(d.getHours()) +
-        ':' + pad(d.getMinutes()) +
-        ':' + pad(d.getSeconds())
-    return now
-}
-
-function csvdatetimestring(d: Date) {
-    // new Date().toISOString().substring(0, 16),
-    let now = pad(d.getDate()) +
-        '/' + pad(d.getMonth() + 1) +
-        '/' + d.getFullYear() +
-        ' ' + pad(d.getHours()) +
-        ':' + pad(d.getMinutes()) +
-        ':' + pad(d.getSeconds())
-    return now
 }
 
 @Component({
@@ -86,11 +50,13 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         /*
         15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
         */
+        // Make CSV
         let csv = 'id,date,site,by,note\n'
         for (let i = 0; i < this.show.length; i++) {
             const e = this.show[i]
             csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.site + ',' + e.by + ',"' + e.note.replace(/"/g, '""') + '"\n'
         }
+        // Deliver CSV
         const blob = new Blob([csv], { type: 'text/csv' });
         const link = document.createElement('a')
         link.href = URL.createObjectURL(blob)

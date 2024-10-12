@@ -5,6 +5,7 @@ import { UplotDataSet } from './uplot.dataset'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { name2rgba } from 'src/app/shared/functions'
+import { csvdatetimestring_ms } from 'src/app/shared/datetime'
 
 // Typescript Module Augmentation, allows adding a field that doesn't exist. Cool!
 declare module 'uplot' {
@@ -78,6 +79,31 @@ export class UplotComponent implements OnInit, OnDestroy {
             scales: {},
             plugins: []
         }
+    }
+
+    downloadcsv() {
+        /*
+        15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
+        */
+        // Make CSV
+        const headers = ['time', ...this.udataset.tags.map(t => t.name)]
+        let csvRows = [headers.join(',')]
+        const numRows = this.udataset.show[0].length
+        for (let i = 0; i < numRows; i++) {
+            const row: [string, ...(number | null)[]] = [csvdatetimestring_ms(new Date(this.udataset.show[0][i] * 1000))]
+            for (let j = 1; j < this.udataset.show.length; j++) {
+                row.push(this.udataset.show[j][i])
+            }
+            csvRows.push(row.join(','))
+        }
+        let csv = csvRows.join('\n')
+        // Deliver CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = 'trend.csv'
+        link.click()
+        URL.revokeObjectURL(link.href)
     }
 
     arrayMinMax(values: (number | null | undefined)[], minmax: (number | null | undefined)[]) {
@@ -391,24 +417,25 @@ export class UplotComponent implements OnInit, OnDestroy {
     }
 
     bgGradientPlugin(background: {'xpos': string|number, 'color': string}[]) {
-        // Initialise plugin background
-        let bg: {'xpos': number, 'color': string}[] = []
-        let offset = 0
-        for (let i = 0; i < background.length; i++) {
-            let xpos = background[i].xpos
-            const color = background[i].color
-            if (typeof(xpos) == 'string') {
-                offset = Date.now() / 1000
-                xpos = 0
-            }
-            bg.push({'xpos': xpos + offset, 'color': color})
-        }
-
         function drawBg(u: uPlot) {
+            // check the scales are defined
             let x = u.scales['x']
             if (x.min === undefined || x.max === undefined) {
                 return
             }
+            // redo the time offset so that it moves
+            let bg: {'xpos': number, 'color': string}[] = []
+            let offset = 0
+            for (let i = 0; i < background.length; i++) {
+                let xpos = background[i].xpos
+                const color = background[i].color
+                if (typeof(xpos) == 'string') {
+                    offset = Date.now() / 1000
+                    xpos = 0
+                }
+                bg.push({'xpos': xpos + offset, 'color': color})
+            }
+            // now work out where to highlight
             let { left, top, width, height } = u.bbox
             let working_left = left
             let working_bg = []
@@ -423,7 +450,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                     working_bg.push({xpos: working_left, color: color})
                 }
             }
-
+            // do highlighting
             if (working_bg.length > 0) {
                 u.ctx.save()
                 for (let i = 0; i < working_bg.length; i++) {
