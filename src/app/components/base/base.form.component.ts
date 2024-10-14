@@ -4,11 +4,11 @@ import { MsForm, FormSubject } from 'src/app/store/form'
 import { CommandSubject } from 'src/app/store/command'
 
 @Component({ template: "" })
-export class BaseFormComponent extends BaseComponent {
-    formstore = inject(FormSubject)
-    commandstore = inject(CommandSubject)
-    form: MsForm.Form
-    requestid: number
+export abstract class BaseFormComponent extends BaseComponent {
+    protected formstore = inject(FormSubject)
+    protected commandstore = inject(CommandSubject)
+    protected form: MsForm.Form
+    protected requestid: number
 
     constructor() {
         super()
@@ -16,7 +16,9 @@ export class BaseFormComponent extends BaseComponent {
         this.requestid = 0
     }
 
-    formAction(cmd: MsForm.Close) {
+    abstract makeForm(): void
+
+    protected formAction(cmd: MsForm.Close) {
         // Default action is to write the tag value on the server. May be overridden.
         if (cmd.action === 'submit') {
             let value: any = cmd.setvalue
@@ -31,7 +33,7 @@ export class BaseFormComponent extends BaseComponent {
         }
     }
 
-    showForm() {
+    protected showForm() {
         // Create the form based on the controls, start listening to the form
         // and then request the form be shown.
         this.form.requestid = this.formstore.getRequestID()

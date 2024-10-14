@@ -2,18 +2,21 @@ import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
 
 @Component({ template: "" })
-export class BaseComponent implements OnInit, OnDestroy {
-    tagstore: TagSubject = inject(TagSubject)
+export abstract class BaseComponent implements OnInit, OnDestroy {
+    protected tagstore: TagSubject = inject(TagSubject)
     @Input() item: any
-    subs: any
-    tag: Tag
+    protected subs: any[]
+    protected tag: Tag
 
     constructor() {
         this.subs = []
         this.tag = new Tag()
     }
 
-    tagAction() { /* Intended to be overridden. */ }
+    // Optional method with empty default implementation
+    protected tagAction(): void {
+        // Default empty implementation
+    }
 
     ngOnInit() {
         this.subs.push(

@@ -18,7 +18,7 @@
               <div *ngSwitchCase="'float'" class="mb-3">
                 <label class="w-100">
                   Enter Floating Point Setpoint:
-                  <input class="form-control" formControlName="{{c.name}}">
+                  <input class="form-control" [formControlName]="c.name">
                 </label>
                 <p>
                   <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
@@ -28,7 +28,7 @@
               <div *ngSwitchCase="'int'" class="mb-3">
                 <label class="w-100">
                   Enter Integer Setpoint:
-                  <input class="form-control" formControlName="{{c.name}}">
+                  <input class="form-control" [formControlName]="c.name">
                 </label>
                 <p>
                   <small class="form-text text-muted fw-lighter">{{c.min}} to {{c.max}}{{c.units}}</small>
@@ -38,7 +38,7 @@
               <div *ngSwitchCase="'multi'" class="mb-3">
                 <label class="w-100">
                   Enter Selection:
-                  <select class="form-select" formControlName="{{c.name}}">
+                  <select class="form-select" [formControlName]="c.name">
                     <option *ngFor="let o of c.options; let i = index" [ngValue]="i">{{o}}</option>
                   </select>
                 </label>
@@ -47,35 +47,35 @@
               <div *ngSwitchCase="'time'" class="mb-3">
                 <label class="w-100">
                   Enter Time:
-                  <input type="time" class="form-control" formControlName="{{c.name}}">
+                  <input type="time" class="form-control" [formControlName]="c.name">
                 </label>
               </div>
               <!-- Date entry -->
               <div *ngSwitchCase="'date'" class="mb-3">
                 <label class="w-100">
                   Enter Date:
-                  <input type="date" class="form-control" formControlName="{{c.name}}">
+                  <input type="date" class="form-control" [formControlName]="c.name">
                 </label>
               </div>
               <!-- Date and Time entry -->
               <div *ngSwitchCase="'datetime'" class="mb-3">
                 <label class="w-100">
                   Enter Date and Time:
-                  <input type="datetime-local" class="form-control" formControlName="{{c.name}}">
+                  <input type="datetime-local" class="form-control" [formControlName]="c.name">
                 </label>
               </div>
               <!-- String entry -->
               <div *ngSwitchCase="'str'" class="mb-3">
                 <label class="w-100">
                   Enter Text:
-                  <input type="text" class="form-control" formControlName="{{c.name}}">
+                  <input type="text" class="form-control" [formControlName]="c.name">
                 </label>
               </div>
               <!-- Large string entry -->
               <div *ngSwitchCase="'textarea'" class="mb-3">
                 <label class="w-100">
                   Enter Text:
-                  <textarea type="textarea" rows="8" class="form-control" formControlName="{{c.name}}"></textarea>
+                  <textarea type="textarea" rows="8" class="form-control" [formControlName]="c.name"></textarea>
                 </label>
               </div>
               <!-- Filter text entry with a clear field option -->
@@ -87,7 +87,7 @@
                     <a class="dropdown-item" *ngFor="let o of c.options" (click)="patch(c.name,o)">{{o}}</a>
                   </div>
                 </div>
-                <input type="text" class="form-control" formControlName="{{c.name}}" (click)="$event.stopPropagation()">
+                <input type="text" class="form-control" [formControlName]="c.name" (click)="$event.stopPropagation()">
               </div>
               <!-- Filter text entry with a clear field option -->
               <div *ngSwitchCase="'drag_n_drop'" class="mb-3">
