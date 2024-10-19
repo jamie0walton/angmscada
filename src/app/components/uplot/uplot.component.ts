@@ -541,7 +541,12 @@ export class UplotComponent implements OnInit, OnDestroy {
         }]
     }
 
-    set_options() {
+    initConfig() {
+        this.series = this.item.config.series
+        this.tags = this.item.config.tags.map((x: any) => this.tagstore.tag_by_name[x.tagname])
+        this.udataset.initialise(this.tags)
+        this.bands = this.item.config.hasOwnProperty('bands') ? this.item.config.bands : null
+        this.parse_ms()
         this.setSize(false)
         this.setCursor()
         this.setSeries()
@@ -549,15 +554,6 @@ export class UplotComponent implements OnInit, OnDestroy {
         this.setBands()
         this.setAxesScales()
         this.setHooks()
-    }
-
-    initConfig() {
-        this.series = this.item.config.series
-        this.tags = this.series.map(x => this.tagstore.tag_by_name[x.tagname])
-        this.udataset.initialise(this.tags)
-        this.bands = this.item.config.hasOwnProperty('bands') ? this.item.config.bands : null
-        this.parse_ms()
-        this.set_options()
     }
 
     ngOnInit() {

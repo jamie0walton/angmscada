@@ -18,10 +18,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   })
 
-  it(`should have as title 'angmscada'`, () => {
+  it(`should have as title 'pymscada'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('angmscada');
+    expect(app.title).toEqual('pymscada');
   })
 
   it('should render title', () => {

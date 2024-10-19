@@ -43,7 +43,7 @@ export class UplotDataSet {
         if (typeof(duration) == 'number') {
             this.age = -duration
         }
-        else if (Array.isArray(duration) && typeof(duration[0]) == 'number' && typeof(duration[0]) == 'number') {
+        else if (Array.isArray(duration) && typeof(duration[0]) == 'number') {
             this.age = -duration[0]
             this.future = duration[1]
         }

@@ -231,212 +231,184 @@ export class UplotVectors {
     add_history(trace_id: number, times_ms: number[], values: (number | null)[]) {
         let times = times_ms.map(x => x / 1000)
         const exist_len = this.times.length
-        // New trace, create a default null alignment first
         if (!(trace_id in this.traces)) {
-            this.trace_by_col.push(trace_id)
-            this.traces[trace_id] = {
-                values: Array(exist_len).fill(null) as Array<null>,
-                smooth: [],
-                smooth_from: 0,
-                smoothing: false,
-                smoother: this.smoother_raw(trace_id),
-            }
+            this.initializeNewTrace(trace_id, exist_len)
         }
-        const add_new_len = times.length
-        // Earliest new time is after latest this time, append and return
-        if (this.times[exist_len - 1] < times[0]) {
-            for (let i = 0; i < times.length; i++) {
-                this.times.push(times[i]) 
-            }
-            for (let i = 0; i < this.trace_by_col.length; i++) {
-                const do_id = this.trace_by_col[i]
-                const do_trace = this.traces[do_id]
-                if (do_id == trace_id) {
-                    for (let i = 0; i < values.length; i++) {
-                        do_trace.values.push(values[i])
-                    }
-                }
-                else {
-                    for (let i = 0; i < add_new_len; i++) {
-                        do_trace.values.push(null)
-                    }
-                }
-                // No existing smoothed results to keep, add nulls
-                if (do_trace.smoothing) {
-                    for (let i = 0; i < add_new_len; i++) {
-                        do_trace.smooth.push(null)
-                    }
-                }
-            }
+        if (this.canSimplyAppend(times)) {
+            this.appendNewData(trace_id, times, values)
             return
         }
-        // No more easy options so do generalised stitching into empty arrays
-        let new_times: number[] = []
+        this.mergeData(trace_id, times, values)
+    }
+
+    private initializeNewTrace(trace_id: number, exist_len: number) {
+        this.trace_by_col.push(trace_id)
+        this.traces[trace_id] = {
+            values: Array(exist_len).fill(null),
+            smooth: [],
+            smooth_from: 0,
+            smoothing: false,
+            smoother: this.smoother_raw(trace_id),
+        }
+    }
+
+    private canSimplyAppend(times: number[]): boolean {
+        return this.times.length === 0 || this.times[this.times.length - 1] < times[0]
+    }
+
+    private appendNewData(trace_id: number, times: number[], values: (number | null)[]) {
+        this.times.push(...times);
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_id === trace_id) {
+                do_trace.values.push(...values)
+            } else {
+                do_trace.values.push(...Array(times.length).fill(null))
+            }
+            if (do_trace.smoothing) {
+                do_trace.smooth.push(...Array(times.length).fill(null))
+            }
+        }
+    }
+
+    private mergeData(trace_id: number, times: number[], values: (number | null)[]) {
+        let new_times: number[] = [];
         let new_values: {[trace_id: number]: (number|null)[]} = {}
         let new_smooth: {[trace_id: number]: (number|null)[]} = {}
-        for (let i = 0; i < this.trace_by_col.length; i++) {
-            const t_id = this.trace_by_col[i]
+        this.initializeNewArrays(new_values, new_smooth)
+        let exist_pos = 0
+        let new_pos = 0
+        while (exist_pos < this.times.length || new_pos < times.length) {
+            if (exist_pos === this.times.length) {
+                this.appendRemainingNewData(new_times, new_values, new_smooth, trace_id, times, values, new_pos)
+                break
+            }
+            if (new_pos === times.length) {
+                this.appendRemainingExistingData(new_times, new_values, new_smooth, trace_id, exist_pos)
+                break
+            }
+            if (this.times[exist_pos] === times[new_pos]) {
+                this.mergeDataPoint(new_times, new_values, new_smooth, trace_id, times, values, exist_pos, new_pos)
+                exist_pos++
+                new_pos++
+            } else if (this.times[exist_pos] < times[new_pos]) {
+                exist_pos = this.handleExistingDataPoint(new_times, new_values, new_smooth, exist_pos, times[new_pos])
+            } else {
+                new_pos = this.handleNewDataPoint(new_times, new_values, new_smooth, trace_id, times, values, new_pos, this.times[exist_pos])
+            }
+        }
+        this.updateDataArrays(new_times, new_values, new_smooth)
+    }
+
+    private initializeNewArrays(new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}) {
+        for (const t_id of this.trace_by_col) {
             new_values[t_id] = []
             new_smooth[t_id] = []
         }
-        let exist_pos = 0
-        let new_pos = 0
-        while (true) {
-            // Index exist_pos and new_pos until at the end of both existing and new
-            if (exist_pos == this.times.length) {
-                // At the end of existing data, append new
-                const new_remain_len = times.length - new_pos
-                for (let i = new_pos; i < times.length; i++) {
-                    new_times.push(times[i])
-                }
-                for (let i = 0; i < this.trace_by_col.length; i++) {
-                    const do_id = this.trace_by_col[i]
-                    const do_trace = this.traces[do_id]
-                    // No smoothing has been done for new appended data
-                    if (do_trace.smoothing) {
-                        new_smooth[do_id].push(...Array(new_remain_len).fill(null))
-                    }
-                    // Only nulls available for existing data
-                    if (do_id == trace_id) {
-                        for (let i = new_pos; i < values.length; i++) {
-                            new_values[do_id].push(values[i])                                
-                        }
-                    }
-                    else {
-                        for (let i = 0; i < new_remain_len; i++) {
-                            new_values[do_id].push(null)                                
-                        }
-                    }
-                }
-                break
+    }
+
+    private appendRemainingNewData(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, times: number[], values: (number | null)[], new_pos: number) {
+        const new_remain_len = times.length - new_pos
+        new_times.push(...times.slice(new_pos))
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_trace.smoothing) {
+                new_smooth[do_id].push(...Array(new_remain_len).fill(null))
             }
-            if (new_pos == times.length) {
-                // At the end of new data, append existing
-                const exist_remain_len = this.times.length - exist_pos
-                for (let i = exist_pos; i < this.times.length; i++) {
-                    new_times.push(this.times[i])
-                }
-                for (let i = 0; i < this.trace_by_col.length; i++) {
-                    const do_id = this.trace_by_col[i]
-                    const do_trace = this.traces[do_id]
-                    // smooth_from will increase for unchanged data because of added nulls
-                    if (do_trace.smoothing) {
-                        if (do_id == trace_id) {
-                            for (let i = 0; i < exist_remain_len; i++) {
-                                new_smooth[do_id].push(null)                                
-                            }
-                        }
-                        else {
-                            for (let i = exist_pos; i < do_trace.smooth.length; i++) {
-                                new_smooth[do_id].push(do_trace.smooth[i])                                
-                            }
-                        }
-                    }
-                    // Added trace data either has values or nulls, so all the same
-                    for (let i = exist_pos; i < do_trace.values.length; i++) {
-                        new_values[do_id].push(do_trace.values[i])                                
-                    }
-                }
-                break
-            }
-            const exist_time = this.times[exist_pos]
-            const new_time = times[new_pos]
-            if (exist_time == new_time) {
-                // Times match, copy the individual values into new arrays
-                new_times.push(times[new_pos])
-                for (let i = 0; i < this.trace_by_col.length; i++) {
-                    const do_id = this.trace_by_col[i]
-                    const do_trace = this.traces[do_id]
-                    // reset smooth_from to new value if needed
-                    if (do_trace.smoothing) {
-                        if (do_id == trace_id) {
-                            if (do_trace.smooth_from > new_smooth[do_id].length){
-                                do_trace.smooth_from = new_smooth[do_id].length
-                            }
-                            new_smooth[do_id].push(null)
-                        }
-                        else {
-                            new_smooth[do_id].push(do_trace.smooth[exist_pos])
-                        }
-                    }
-                    // new values might replace existing, nulls or values
-                    if (do_id == trace_id) {
-                        new_values[do_id].push(values[new_pos])
-                    }
-                    else {
-                        new_values[do_id].push(do_trace.values[exist_pos])
-                    }
-                }
-                exist_pos += 1
-                new_pos += 1
-            }
-            else if (exist_time < new_time){
-                // next lot of data is existing
-                const add_in_this = bisect(this.times, new_time)
-                for (let i = exist_pos; i < add_in_this; i++) {
-                    new_times.push(this.times[i])
-                }
-                for (let i = 0; i < this.trace_by_col.length; i++) {
-                    const do_id = this.trace_by_col[i]
-                    const do_trace = this.traces[do_id]
-                    // smooth_from should not change as keeping existing
-                    if (do_trace.smoothing) {
-                        for (let i = exist_pos; i < add_in_this; i++) {
-                            new_smooth[do_id].push(do_trace.smooth[i])
-                        }
-                    }
-                    // all values already exist, none are new
-                    for (let i = exist_pos; i < add_in_this; i++) {
-                        new_values[do_id].push(do_trace.values[i])
-                    }
-                }
-                exist_pos = add_in_this
-            }
-            else { // must be new_time < exist_time
-                const exist_in_new = bisect(times, exist_time)
-                const add_new_len = exist_in_new - new_pos
-                for (let i = new_pos; i < exist_in_new; i++) {
-                    new_times.push(times[i])
-                }
-                for (let i = 0; i < this.trace_by_col.length; i++) {
-                    const do_id = this.trace_by_col[i]
-                    const do_trace = this.traces[do_id]
-                    // Inserting new values will offset any smooth_from not yet reached
-                    if (do_trace.smoothing) {
-                        if (do_id == trace_id) {
-                            if (do_trace.smooth_from > new_smooth[do_id].length){
-                                do_trace.smooth_from = new_smooth[do_id].length
-                            }
-                            new_smooth[do_id].push(...Array(add_new_len).fill(null))
-                        }
-                        else {
-                            if (do_trace.smooth_from >= new_smooth[do_id].length){
-                                do_trace.smooth_from += add_new_len
-                            }
-                            new_smooth[do_id].push(...Array(add_new_len).fill(null))
-                        }
-                    }
-                    // Only have values for new data, add nulls for rest
-                    if (do_id == trace_id) {
-                        for (let i = new_pos; i < exist_in_new; i++) {
-                            new_values[do_id].push(values[i])
-                        }
-                    }
-                    else {
-                        for (let i = 0; i < add_new_len; i++) {
-                            new_values[do_id].push(null)
-                        }
-                    }
-                }
-                new_pos = exist_in_new
+            if (do_id === trace_id) {
+                new_values[do_id].push(...values.slice(new_pos))
+            } else {
+                new_values[do_id].push(...Array(new_remain_len).fill(null))
             }
         }
-        // Finally replace the existing arrays with new arrays
+    }
+
+    private appendRemainingExistingData(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, exist_pos: number) {
+        const exist_remain_len = this.times.length - exist_pos
+        new_times.push(...this.times.slice(exist_pos))
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_trace.smoothing) {
+                if (do_id === trace_id) {
+                    new_smooth[do_id].push(...Array(exist_remain_len).fill(null))
+                } else {
+                    new_smooth[do_id].push(...do_trace.smooth.slice(exist_pos))
+                }
+            }
+            new_values[do_id].push(...do_trace.values.slice(exist_pos))
+        }
+    }
+
+    private mergeDataPoint(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, times: number[], values: (number | null)[], exist_pos: number, new_pos: number) {
+        new_times.push(times[new_pos])
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_trace.smoothing) {
+                if (do_id === trace_id) {
+                    if (do_trace.smooth_from > new_smooth[do_id].length) {
+                        do_trace.smooth_from = new_smooth[do_id].length
+                    }
+                    new_smooth[do_id].push(null)
+                } else {
+                    new_smooth[do_id].push(do_trace.smooth[exist_pos])
+                }
+            }
+            if (do_id === trace_id) {
+                new_values[do_id].push(values[new_pos])
+            } else {
+                new_values[do_id].push(do_trace.values[exist_pos])
+            }
+        }
+    }
+
+    private handleExistingDataPoint(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, exist_pos: number, next_new_time: number): number {
+        const add_in_this = bisect(this.times, next_new_time)
+        new_times.push(...this.times.slice(exist_pos, add_in_this))
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_trace.smoothing) {
+                new_smooth[do_id].push(...do_trace.smooth.slice(exist_pos, add_in_this))
+            }
+            new_values[do_id].push(...do_trace.values.slice(exist_pos, add_in_this))
+        }
+        return add_in_this
+    }
+
+    private handleNewDataPoint(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, times: number[], values: (number | null)[], new_pos: number, next_exist_time: number): number {
+        const exist_in_new = bisect(times, next_exist_time)
+        const add_new_len = exist_in_new - new_pos
+        new_times.push(...times.slice(new_pos, exist_in_new))
+        for (const do_id of this.trace_by_col) {
+            const do_trace = this.traces[do_id]
+            if (do_trace.smoothing) {
+                if (do_id === trace_id) {
+                    if (do_trace.smooth_from > new_smooth[do_id].length) {
+                        do_trace.smooth_from = new_smooth[do_id].length
+                    }
+                    new_smooth[do_id].push(...Array(add_new_len).fill(null))
+                } else {
+                    if (do_trace.smooth_from >= new_smooth[do_id].length) {
+                        do_trace.smooth_from += add_new_len
+                    }
+                    new_smooth[do_id].push(...Array(add_new_len).fill(null))
+                }
+            }
+            if (do_id === trace_id) {
+                new_values[do_id].push(...values.slice(new_pos, exist_in_new))
+            } else {
+                new_values[do_id].push(...Array(add_new_len).fill(null))
+            }
+        }
+        return exist_in_new
+    }
+
+    private updateDataArrays(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}) {
         this.times = new_times
-        for (let i = 0; i < this.trace_by_col.length; i++) {
-            const do_id = this.trace_by_col[i]
+        for (const do_id of this.trace_by_col) {
             this.traces[do_id].values = new_values[do_id]
-            this.traces[do_id].smooth = new_smooth[do_id]
+            if (this.traces[do_id].smoothing) {
+                this.traces[do_id].smooth = new_smooth[do_id]
+            }
         }
     }
 }
