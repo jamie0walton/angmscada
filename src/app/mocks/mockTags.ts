@@ -69,6 +69,20 @@ export function setupMockTags(tagStore: TagSubject) {
         future_ms: 30000
     })
 
+    tagStore.add_tag({
+        id: 6,
+        name: 'TestValue',
+        desc: 'Test Description',
+        type: 'float',
+        value: 123.45,
+        time_ms: mockNow,
+        min: 0,
+        max: 200,
+        units: 'units',
+        dp: 2,
+        future_ms: 30000
+    })
+
     tagStore.update(1, mockNow - 60000, 21.5)
     tagStore.update(1, mockNow - 30000, 22.0)
     tagStore.update(1, mockNow, 22.5)
@@ -84,4 +98,8 @@ export function setupMockTags(tagStore: TagSubject) {
     tagStore.update(5, mockNow - 60000, 40.0)
     tagStore.update(5, mockNow - 30000, 45.0)
     tagStore.update(5, mockNow, 50.0)
+
+    tagStore.update(6, mockNow - 60000, 120.45)
+    tagStore.update(6, mockNow - 30000, 122.45)
+    tagStore.update(6, mockNow, 123.45)
 }

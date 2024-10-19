@@ -4,7 +4,7 @@ import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
 @Component({
     selector: 'app-upload',
     templateUrl: './upload.component.html',
-    styleUrls: ['./upload.component.scss']
+    styleUrls: []
 })
 export class UploadComponent implements OnInit, OnDestroy {
     subs: any = []
