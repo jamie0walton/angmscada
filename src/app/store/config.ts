@@ -36,6 +36,11 @@ export class ConfigSubject {
         return this.config
     }
 
+    set_ws(ws: string) {
+        this.config.ws = ws
+        this.subject.next(this.config)
+    }
+
     set_connected(update: boolean) {
         this.config.connected = update
         this.subject.next(this.config)

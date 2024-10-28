@@ -1,0 +1,37 @@
+bus_ip: 127.0.0.1
+bus_port: 9324
+ip: 0.0.0.0
+port: 9325
+get_path: /home/jamie/angmscada/dist/angmscada
+serve_path: /home/jamie/angmscada/dist/angmscada
+pages:
+- name: TestServer
+  parent:
+  items:
+  - {desc: Default tags, type: h1}
+  - {tagname: IntSet, type: setpoint}
+  - {tagname: IntVal, type: value}
+  - {tagname: FloatSet, type: setpoint}
+  - {tagname: FloatVal, type: value}
+  - {tagname: MultiSet, type: setpoint}
+  - {tagname: MultiVal, type: value}
+  - {tagname: StringSet, type: setpoint}
+  - {tagname: StringVal, type: value}
+  - {tagname: TimeSet, type: setpoint}
+  - {tagname: TimeVal, type: value}
+  - {tagname: DateSet, type: setpoint}
+  - {tagname: DateVal, type: value}
+  - {tagname: DateTimeSet, type: setpoint}
+  - {tagname: DateTimeVal, type: value}
+  - type: selectdict
+    tagname: MultiSelect
+    opts:
+      type: multi
+      multi:
+      - Zero
+      - One
+      - Two
+      - Three
+      - Four
+      - Five
+  - {tagname: FloatSelect, type: selectdict, opts: {type: float, dp: 2}}

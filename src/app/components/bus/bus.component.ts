@@ -5,15 +5,20 @@ import { TagSubject } from 'src/app/store/tag'
 import { Page, PageSubject } from 'src/app/store/page'
 import { Menu, MenuSubject } from 'src/app/store/menu'
 import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
-import { Command, CommandSubject } from 'src/app/store/command' // OpCommand
+import { Command, CommandSubject } from 'src/app/store/command'
 
+// These type codes are used by pymscada wwwserver for sending data
 const INT_TYPE = 1
 const FLOAT_TYPE = 2
 const STRING_TYPE = 3
 const BYTES_TYPE = 4
 
-const FUNCTION_TAGS = [
-    '__bus__', '__files__', '__history__', '__opnotes__', '__alarms__'
+const SYS_TAGS = [
+    '__history__',  // required for tagstore to get history
+    // '__bus__',  // 
+    // '__files__',  // 
+    // '__opnotes__',  // 
+    // '__alarms__',  // 
 ]
 
 @Component({
@@ -23,10 +28,10 @@ const FUNCTION_TAGS = [
 export class BusComponent implements OnInit, OnDestroy {
     subs: any = []
     source: Observable<number>
-    ws: WebSocket | undefined
+    ws: WebSocket | null
     wsIdle: number
     config: Config
-    pending_rta: Command[] = []
+    pending_cmd: Command[] = []
     seen_tagnames: Set<string>
 
     constructor(
@@ -38,6 +43,7 @@ export class BusComponent implements OnInit, OnDestroy {
         private commandstore: CommandSubject
     ) {
         this.source = timer(500, 1000)
+        this.ws = null
         this.wsIdle = 0
         this.config = this.configstore.get()
         this.seen_tagnames = new Set()
@@ -45,7 +51,7 @@ export class BusComponent implements OnInit, OnDestroy {
 
     sub_if_not_seen(tagname: string) {
         if (!this.seen_tagnames.has(tagname)) {
-            this.sendCommand({
+            this.pending_cmd.push({
                 type: 'sub',
                 tagname: tagname,
                 value: null
@@ -67,66 +73,55 @@ export class BusComponent implements OnInit, OnDestroy {
                 }
             }
         }
+        this.processCommands()
     }
 
-    WSmessage(e: MessageEvent) {
-        if (typeof e['data'] == 'string') {
-            let msg: any = JSON.parse(e['data'])
-            let type: any = msg['type']
-            let data: any = msg['payload']
-            if (type == 'tag') {  // json for dict and some lists
+    StringMessage(message: string) {
+        const msg: any = JSON.parse(message)
+        const type: any = msg['type']
+        const data: any = msg['payload']
+        switch (type) {
+            case 'tag':  // json for dict and some lists
                 this.tagstore.update(data.tagid, Math.trunc(data.time_us / 1000), data.value)
-            }
-            else if (type == 'tag_info') {
+                break
+            case 'tag_info':
                 this.tagstore.add_tag(data)
-            }
-            else if (type == 'pages') {
-                this.reset_stores()
-                let pages: Page[] = []
-                let menu: Menu[] = []
-                for (let page_no = 0; page_no < data.length; page_no++) {
-                    const element = data[page_no]
-                    let page = this.pagestore.make_page(element, page_no)
-                    pages.push(page)
-                    menu.push({
-                        id: page.id,
-                        name: page.name,
-                        parent: page.parent
-                    })
-                    this.sub_tags(page)
-                }
-                this.pagestore.load(pages)
-                this.menustore.load(menu)
-                this.configstore.set_page(0)
-            }
-            else if (type == 'file') {
+                break
+            case 'pages':
+                this.init_pages(data)
+                break
+            case 'file':
                 this.sendfilestore.fromWs(data)
-            }
+                break
+            default:
+                console.warn('StringMessage unknown type', type)
         }
-        else {
-            // console.log(new Uint8Array(e['data'] as ArrayBuffer))
-            let dview = new DataView(e['data'] as ArrayBuffer)
-            let id = dview.getUint16(0)
-            let type = dview.getUint16(2)
-            let time_us = Number(dview.getBigUint64(4))
-            let value: string | number | null = null
-            let times_ms: number[] = []
-            let values: number[] = []
-            if (type == INT_TYPE) {
+    }
+
+    BinaryMessage(msg: any) {
+        let dview = new DataView(msg as ArrayBuffer)
+        let id = dview.getUint16(0)
+        let type = dview.getUint16(2)
+        let time_us = Number(dview.getBigUint64(4))
+        let value: string | number | null = null
+        let times_ms: number[] = []
+        let values: number[] = []
+        switch (type) {
+            case INT_TYPE:
                 value = Number(dview.getBigInt64(12))
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
-            }
-            else if (type == FLOAT_TYPE) {
+                break
+            case FLOAT_TYPE:
                 value = dview.getFloat64(12)
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
-            }
-            else if (type == STRING_TYPE) {
+                break
+            case STRING_TYPE:
                 let dec = new TextDecoder()
-                value = dec.decode(new Uint8Array(e['data'].slice(12) as ArrayBuffer))
+                value = dec.decode(new Uint8Array(msg.slice(12) as ArrayBuffer))
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
-            }
-            else if (type == BYTES_TYPE) {
-                let _rta_id = dview.getUint16(12)
+                break
+            case BYTES_TYPE:
+                // let _rta_id = dview.getUint16(12)  deprecated
                 id = dview.getUint16(14)
                 type = dview.getUint16(16)
                 if (id == 0 || type == 0) {return}
@@ -143,76 +138,69 @@ export class BusComponent implements OnInit, OnDestroy {
                     }
                 }
                 this.tagstore.update_history(id, times_ms, values)
-            }
+                break
+            default:
+                console.warn('BinaryMessage unknown type', type)
         }
-    }
-
-    initClient() {
-        this.config = this.configstore.get()
     }
 
     makeWSConnection() {
         this.ws = new WebSocket(this.config.ws)
         this.ws.binaryType = 'arraybuffer'
         this.ws.onopen = () => {
+            console.log('makeWSConnection success', this.config.ws, this.ws?.readyState)
             this.configstore.set_connected(true)
-            FUNCTION_TAGS.forEach((element: string) => {
+            SYS_TAGS.forEach((element: string) => {
                 this.sub_if_not_seen(element)
             })
-            if(this.ws == null) {
-                console.log('websocket is closed on opening?')
+        }
+        this.ws.onmessage = (msg) => {
+            if (typeof msg['data'] == 'string') {
+                this.StringMessage(msg['data'])
+            }
+            else {
+                this.BinaryMessage(msg['data'])
             }
         }
-        this.ws.onmessage = (msg) => this.WSmessage(msg)
         this.ws.onerror = (e) => {
-            console.log('WS error:', e)
+            console.error('makeWSConnection error', e)
             if (this.ws)
                 this.ws.close()
         }
         this.ws.onclose = (msg) => {
             console.log('WS closed (note aiohttp has a 5 minute inactivity timeout):', msg)
-            delete this.ws
+            this.ws = null  // didn't like delete
             this.configstore.set_connected(false)
             this.configstore.set_reload(true)
         }
     }
 
-    checkStatus() {
-        if (this.pending_rta.length > 0) {
-            let still_pending: Command[] = []
-            for (let i = 0; i < this.pending_rta.length; i++) {
-                const command = this.pending_rta[i]
-                if (command.tagname in this.tagstore.tag_by_name) {
-                    this.sendCommand(command)
-                }
-                else {
-                    still_pending.push(command)
-                }
-            }
-            this.pending_rta = still_pending
-        }
-        if (this.ws == null || this.ws.readyState != 1) {
+    tick() {
+        if (this.ws == null || this.ws.readyState != WebSocket.OPEN) {
             this.wsIdle += 1
             if (this.wsIdle == 60) {
                 this.wsIdle = 0
+                this.pending_cmd = []
                 this.makeWSConnection()
             }
         } else {
             this.wsIdle = 0
+            if (this.pending_cmd) {
+                this.processCommands()
+            }
         }
     }
 
-    sendCommand(cmd: Command) { // } | OpCommand) {
-        if (cmd != null && this.ws != null) {
-            if (cmd.value != null && cmd.value.hasOwnProperty('File')) {
-                cmd.value._file_name = cmd.value.File.name
-                this.ws.send(JSON.stringify(cmd))
-                this.ws.send(cmd.value.File)
-            }
-            else {
-                this.ws.send(JSON.stringify(cmd))
-            }
+    processCommands() { // } | OpCommand) {
+        while(this.pending_cmd.length && this.ws?.readyState == WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(this.pending_cmd.shift()))
         }
+// TODO change the protocol for this so that its one message
+//        if (cmd.value != null && cmd.value.hasOwnProperty('File')) {
+//            cmd.value._file_name = cmd.value.File.name
+//            this.ws.send(JSON.stringify(cmd))
+//            this.ws.send(cmd.value.File)
+//        }
     }
 
     sendFile(sendfiles: SendFile[]) {
@@ -230,23 +218,42 @@ export class BusComponent implements OnInit, OnDestroy {
         }
     }
 
-    reset_stores() {
+    init_pages(data: any) {
         this.configstore.reset()
         this.tagstore.reset()
         this.pagestore.reset()
         this.menustore.reset()
         this.commandstore.reset()
+        let pages: Page[] = []
+        let menu: Menu[] = []
+        for (let page_no = 0; page_no < data.length; page_no++) {
+            const element = data[page_no]
+            let page = this.pagestore.make_page(element, page_no)
+            pages.push(page)
+            menu.push({
+                id: page.id,
+                name: page.name,
+                parent: page.parent
+            })
+            this.sub_tags(page)
+        }
+        this.pagestore.load(pages)
+        this.menustore.load(menu)
+        this.configstore.set_page(0)
     }
 
     ngOnInit() {
-        this.initClient()
+        this.config = this.configstore.get()
         this.makeWSConnection()
         this.subs.push(
             this.source.subscribe(() => {
-                this.checkStatus()
+                this.tick()
             }),
             this.commandstore.subject.asObservable().subscribe(cmd => {
-                this.sendCommand(cmd)
+                if (cmd != null) {
+                    this.pending_cmd.push(cmd)
+                    this.processCommands()
+                }
             }),
             this.sendfilestore.subject.asObservable().subscribe(sendfile => {
                 this.sendFile(sendfile)

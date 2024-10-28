@@ -13,7 +13,7 @@ class TestHostComponent {
     item = { style: 'test-style', tagname: 'TestValue' }
 }
 
-describe('ValueComponent', () => {
+describe('components\\value', () => {
     let hostComponent: TestHostComponent
     let valueComponent: ValueComponent
     let fixture: ComponentFixture<TestHostComponent>

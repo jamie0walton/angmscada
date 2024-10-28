@@ -12,33 +12,31 @@
     {
       // start chrome --remote-debugging-port=9222 --disable-application-cache
       // ng build --configuration development --watch
-      "name": "chrome python",
+      "name": "manual chrome",
       "type": "chrome",
       "request": "attach",
       "port": 9222
     },
     {
-      "name": "ng serve",
-      "type": "chrome",
+/*
+      Set up for karma tests.
+      Webserver serving dist/angmscada is on dev @ 192.168.1.28:8324
+      node and ng and karma are on dev
+      vscode/cursor is on a windows client, connected to dev with remote ssh
+      chromium is installed on dev and can run --headless
+      vscode automatically presents port 9876 for me to connect to karma
+      set up so that this starts ng test automatically
+*/
+      "name": "headless chromium",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
-    },
-    {
-      "name": "ng test",
-      "type": "chrome",
-      "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
-    },
-    {
-      "name": "Karma Attach",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:9876/debug.html",
-      "webRoot": "${workspaceFolder}",
-      "pathMapping": {
-        "/_karma_webpack_/": "${workspaceRoot}/"
+      "program": "${workspaceFolder}/node_modules/@angular/cli/bin/ng",
+      "args": ["test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "CHROME_BIN": "/usr/bin/chromium"
       }
     }
   ]

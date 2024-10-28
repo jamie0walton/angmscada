@@ -1,68 +1,64 @@
-# Development Environment
+This needs testing, incrementally got here and haven't installed clean
+for a while.
 
-Run on Debian. Use VSCode (on windows) using Remote SSH connection.
+# Introduction
+Testing minimises use of mocking. The test server uses the pymscada python
+module to run a basic ```pymscada bus``` and ```pymscada wwwserver``` with
+some tags so that the Angular tests can run against a real webserver and
+socket. ```pymscada wwwserver``` serves pages from ```./dist/angmscada```
+to serve the actual test and debugging environment pages.
 
-## Debian
-### Setup
+# Testing
+```bash
+cd angmscada/docs/test_server
+source .venv/bin/activate
+nohup pymscada bus --config bus.yaml --verbose &
+nohup pymscada wwwserver --config wwwserver.yaml --tags tags.yaml --verbose &
+tail -f nohup.out
+```
+
+```
+start chrome --incognito --remote-debugging-port=9222 http://192.168.1.28:8324/
+```
+
+Then either
+```bash
+ng build --configuration development --watch
+```
+or
+
+In VSCode (or Cursor) choose `headless chrome` from ```launch.json``` debugging
+options.
+
+# Environment
+VSCode (or Cursor) in Windows 11. Use the Remote - SSH extension to log on
+to the Debian 12 headless development computer.
+
+somewhere add
+```
+sudo 
+
+```
 
 Started with a headless Debian 12 with ssh, apache2, git and git-docs.
 During install also:
 
 ```bash
 su -
+apt install chromium
 apt install npm
 npm install -g @angular/cli
+npm install --save-dev jasmine-spec-reporter
 adduser mscada
 su mscada
-git clone https://github.com/jamie0walton/pymscada.git
 git clone https://github.com/jamie0walton/angmscada.git
-# see pymscada Dev Environment.md for pymscada setup
 cd angmscada
 npm install
+cd docs/test_server/
+python3 -m venv .venv
+source .venv/bin/activate
+python -c "import sys; print(sys.prefix)"
+pip install pymscada
+pymscada -h
 ng build --configuration development --watch
 ```
-
-This will bring things to the point where pymscada can find some pages to serve
-from ```./dist/angmscada```, i.e. it will serve a webpage on the network.
-
-### VSCode and Debugging
-
-In Windows with VSCode set up to use Remote - SSH, connect from Windows to the 
-Debian dev box and then open ```\home\mscada\angmscada```, VSCode may prompt
-you for the Angular Language service.
-
-When pymscada-wwwserver service is running (and a few others) open a command
-window and ```start chrome --remote-debugging-port=9222``` inside chrome
-<Ctrl+Shift+I>, go to the Network tab and turn on ```Disable cache```.
-
-```bat command prompt
-start chrome --incognito --remote-debugging-port=9222 https://192.168.73.43/pymscada/
-```
-```bash
-ng build --configuration development --watch
-```
-
-Back in VSCode, Run and Debug, select ```chrome python``` and the debugger
-should connect at which point you can Restart the page and follow through
-with the debugging tool.
-
-### Setup
-
-You'll need nodejs, git, CPython and VScode.
-
-S
-
-Assuming a base directory of ```Git``` Open three windows:
-- VSCode with ```Git\pymscada``` open, in three terminals run:
-  - ```pymscada run bus --verbose```
-  - ```pymscada run wwwserver --config .\docs\examples\wwwserver.yaml --tags .\docs\examples\tags.yaml --verbose```
-  - ```pymscada run files --config .\docs\examples\files.yaml```
-- VSCode with ```Git\angmscada``` open, in one terminal run:
-  - ```ng build --configuration development --watch```
-- At a command prompt:
-  - ```start chrome --remote-debugging-port=9222```
-- Chrome opens
-  - <Ctrl+Shift+I> and check the cache is disabled
-  - Open [http://localhost:8324]
-  - The demo page should come up in Chrome
-  - in VSCode with angmscada, start debug and restart to confirm the chrome page refreshes

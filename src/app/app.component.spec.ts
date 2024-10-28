@@ -6,36 +6,36 @@ import { FormComponent } from './components/form/form.component'
 import { Component } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 
-describe('AppComponent', () => {
-  beforeEach(() => TestBed.configureTestingModule({
-    declarations: [AppComponent, MockBusComponent, NavBarComponent, PagesComponent, FormComponent],
-    imports: [FormsModule, ReactiveFormsModule]
-  }))
+describe('app', () => {
+    beforeEach(() => TestBed.configureTestingModule({
+        declarations: [AppComponent, MockBusComponent, NavBarComponent, PagesComponent, FormComponent],
+        imports: [FormsModule, ReactiveFormsModule]
+    }))
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  })
+    it('should create the app', () => {
+        const fixture = TestBed.createComponent(AppComponent)
+        const app = fixture.componentInstance
+        expect(app).toBeTruthy()
+    })
 
-  it(`should have as title 'pymscada'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('pymscada');
-  })
+    it(`should have as title 'pymscada'`, () => {
+        const fixture = TestBed.createComponent(AppComponent)
+        const app = fixture.componentInstance
+        expect(app.title).toEqual('pymscada')
+    })
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    // console.log(compiled.querySelector('.container-fluid div'))
-    expect(compiled.querySelector('.container-fluid div')?.textContent).toContain('Mobile');
-  })
+    it('should render title', () => {
+        const fixture = TestBed.createComponent(AppComponent)
+        fixture.detectChanges();
+        const compiled = fixture.nativeElement as HTMLElement
+        // console.log(compiled.querySelector('.container-fluid div'))
+        expect(compiled.querySelector('.container-fluid div')?.textContent).toContain('Mobile')
+    })
 })
 
 @Component({
-  selector: 'app-bus',
-  template: ''
+    selector: 'app-bus',
+    template: ''
 })
 class MockBusComponent {
 }

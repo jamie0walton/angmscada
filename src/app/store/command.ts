@@ -7,27 +7,17 @@ export interface Command {
     value: any
 }
 
-// export interface OpCommand {
-//     type: string
-//     action: string
-//     id: number | undefined
-//     by?: string
-//     site?: string
-//     date?: number
-//     note?: string
-// }
-
 @Injectable({
     providedIn: 'root'
 })
 export class CommandSubject {
-    subject: Subject<Command> // | OpCommand>
+    subject: Subject<Command>
 
     constructor() {
-        this.subject = new Subject<Command>() //  | OpCommand>()
+        this.subject = new Subject<Command>()
     }
 
-    command(command: Command) { //} | OpCommand) {
+    command(command: Command) {
         console.log("command", command)
         this.subject.next(command)
     }
