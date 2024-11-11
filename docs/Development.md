@@ -30,15 +30,23 @@ or
 In VSCode (or Cursor) choose `headless chrome` from ```launch.json``` debugging
 options.
 
-# Environment
-VSCode (or Cursor) in Windows 11. Use the Remote - SSH extension to log on
-to the Debian 12 headless development computer.
-
-somewhere add
+# Production
+```bash
+ng build --configuration production
+cd ../pymscada-html  # assumes you are in angmscada
+python3 update_wwwserver.py
+vi pyproject.toml  # change version
+git add .
+git commit -m "bump version"
+git push
+source ~/.venv/bin/activate
+pdm build
+pdm publish
 ```
-sudo 
 
-```
+Of course you need to adjust for your branch.
+
+# Setup on the Dev machine
 
 Started with a headless Debian 12 with ssh, apache2, git and git-docs.
 During install also:

@@ -2,6 +2,7 @@
 
 # Jamie added
 /docs/test_server/.venv/
+/docs/test_server/nohup.out
 
 # Compiled output
 /dist

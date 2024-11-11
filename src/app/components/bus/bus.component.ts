@@ -99,13 +99,11 @@ export class BusComponent implements OnInit, OnDestroy {
     }
 
     BinaryMessage(msg: any) {
-        let dview = new DataView(msg as ArrayBuffer)
-        let id = dview.getUint16(0)
-        let type = dview.getUint16(2)
-        let time_us = Number(dview.getBigUint64(4))
+        const dview = new DataView(msg as ArrayBuffer)
+        const id = dview.getUint16(0)
+        const type = dview.getUint16(2)
+        const time_us = Number(dview.getBigUint64(4))
         let value: string | number | null = null
-        let times_ms: number[] = []
-        let values: number[] = []
         switch (type) {
             case INT_TYPE:
                 value = Number(dview.getBigInt64(12))
@@ -121,23 +119,24 @@ export class BusComponent implements OnInit, OnDestroy {
                 this.tagstore.update(id, Math.trunc(time_us / 1000), value)
                 break
             case BYTES_TYPE:
-                // let _rta_id = dview.getUint16(12)  deprecated
-                id = dview.getUint16(14)
-                type = dview.getUint16(16)
-                if (id == 0 || type == 0) {return}
-                if (type == INT_TYPE) {
+                const bytes_id = dview.getUint16(14)
+                const bytes_type = dview.getUint16(16)
+                let times_ms: number[] = []
+                let values: number[] = []
+                if (bytes_id == 0 || bytes_type == 0) {return}
+                if (bytes_type == INT_TYPE) {
                     for (let j = 18; j < dview.byteLength; j += 16) {
                         times_ms.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
                         values.push(Number(dview.getBigInt64(j + 8)))
                     }
                 }
-                else if (type == FLOAT_TYPE) {
+                else if (bytes_type == FLOAT_TYPE) {
                     for (let j = 18; j < dview.byteLength; j += 16) {
                         times_ms.push(Math.trunc(Number(dview.getBigUint64(j)) / 1000))
                         values.push(Number(dview.getFloat64(j + 8)))
                     }
                 }
-                this.tagstore.update_history(id, times_ms, values)
+                this.tagstore.update_history(bytes_id, times_ms, values)
                 break
             default:
                 console.warn('BinaryMessage unknown type', type)

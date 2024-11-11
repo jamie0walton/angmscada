@@ -1,0 +1,10 @@
+# Project rules
+
+# General rules
+- Use TypeScript
+- Use Angular
+
+# Style rules
+- Use 4 spaces for indentation
+- Use single quotes for strings
+- Do not use optional semicolons
