@@ -543,7 +543,9 @@ export class UplotComponent implements OnInit, OnDestroy {
 
     initConfig() {
         this.series = this.item.config.series
-        this.tags = this.item.config.tags.map((x: any) => this.tagstore.tag_by_name[x.tagname])
+        this.tags = this.series.map((x: any) => {
+            return this.tagstore.tag_by_name[x.tagname]
+        })
         this.udataset.initialise(this.tags)
         this.bands = this.item.config.hasOwnProperty('bands') ? this.item.config.bands : null
         this.parse_ms()
@@ -557,7 +559,6 @@ export class UplotComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        // -----------initialise from the page config items
         this.initConfig()
         this.subs.push(
             this.source.subscribe(() => {

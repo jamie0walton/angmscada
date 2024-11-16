@@ -129,7 +129,7 @@ export class TagSubject {
             this.subjects[tag.name] = new BehaviorSubject<Tag>(tag)
         }
         this.subjects[tag.name].next(this.tag_by_name[tag.name])
-        console.log(tag)
+        console.log("add_tag", tag)
     }
 
     update_tag(tag: Tag, time_ms: number, value: any) {
@@ -142,7 +142,6 @@ export class TagSubject {
             }
         }
         else if (typeof value === 'string') {
-            console.log(time_ms, value)
             tag.stringhistory.times_ms.push(time_ms)
             tag.stringhistory.values.push(value)
             while (tag.stringhistory.times_ms.length > 20) {

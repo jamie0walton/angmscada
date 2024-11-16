@@ -1,7 +1,7 @@
 bus_ip: 127.0.0.1
-bus_port: 9324
+bus_port: 1325
 ip: 0.0.0.0
-port: 9325
+port: 8325
 get_path: /home/jamie/angmscada/dist/angmscada
 serve_path: /home/jamie/angmscada/dist/angmscada
 pages:

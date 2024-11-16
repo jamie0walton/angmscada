@@ -35,31 +35,31 @@ describe('components\\value', () => {
         await fixture.whenStable()
     })
 
-    it('should create', () => {
+    it('create', () => {
         expect(valueComponent).toBeTruthy()
     })
 
-    it('should display the correct description', () => {
+    it('display the correct description', () => {
         const descElement = fixture.debugElement.query(By.css('.ms-pad-v-s'))
         expect(descElement.nativeElement.textContent.trim()).toBe('Test Description')
     })
 
-    it('should apply the correct style class', () => {
+    it('apply the correct style class', () => {
         const rowElement = fixture.debugElement.query(By.css('.row'))
         expect(rowElement.nativeElement.classList).toContain('test-style')
     })
 
-    it('should display the correct formatted value for float', () => {
+    it('display the correct formatted value for float', () => {
         const valueElement = fixture.debugElement.query(By.css('.col-8.ms-pad-v-e'))
         expect(valueElement.nativeElement.textContent).toContain('123.45')
     })
 
-    it('should display the correct units', () => {
+    it('display the correct units', () => {
         const unitsElement = fixture.debugElement.query(By.css('.col-4.ms-pad-v-s'))
         expect(unitsElement.nativeElement.textContent).toContain('units')
     })
 
-    it('should update when tag value changes', async () => {
+    it('update when tag value changes', async () => {
         const newTime = Date.now()
         tagStore.update(6, newTime, 150.67)
         fixture.detectChanges()
@@ -70,7 +70,7 @@ describe('components\\value', () => {
 
     // Add more tests for different formats (int, multi, time, date, etc.)
 
-    it('should have correct tag data', () => {
+    it('have correct tag data', () => {
         expect(valueComponent['tag']).withContext('Component should have tag data').toBeTruthy()
         expect(valueComponent['tag'].desc).toBe('Test Description')
         expect(valueComponent['tag'].value).toBe(123.45)

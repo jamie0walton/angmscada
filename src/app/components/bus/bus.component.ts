@@ -13,13 +13,8 @@ const FLOAT_TYPE = 2
 const STRING_TYPE = 3
 const BYTES_TYPE = 4
 
-const SYS_TAGS = [
-    '__history__',  // required for tagstore to get history
-    // '__bus__',  // 
-    // '__files__',  // 
-    // '__opnotes__',  // 
-    // '__alarms__',  // 
-]
+// These tags are hard coded in the tag store.
+const SYS_TAGS = ['__history__', '__opnotes__', '__files__', '__alarms__']
 
 @Component({
     selector: 'app-bus',
@@ -89,9 +84,6 @@ export class BusComponent implements OnInit, OnDestroy {
                 break
             case 'pages':
                 this.init_pages(data)
-                break
-            case 'file':
-                this.sendfilestore.fromWs(data)
                 break
             default:
                 console.warn('StringMessage unknown type', type)

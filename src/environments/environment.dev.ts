@@ -8,7 +8,10 @@
 // Prod and some Dev environments
 let wsp = window.location.pathname.split('/')
 wsp.pop()
-let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
+// Use this for karma server
+// let ws = window.location.origin.replace(/^http/, 'ws') + wsp.join('/') + '/ws'
+// Use this for testing against an external pymscada server with more functions
+let ws = 'ws://192.168.1.28:8324/ws'
 
 export const environment = {
     production: false,

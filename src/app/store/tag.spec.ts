@@ -13,7 +13,7 @@ describe('store\\tag', () => {
         setupMockTags(tagStore)
     })
 
-    it('should have correct properties for Temperature tag', () => {
+    it('have correct properties for Temperature tag', () => {
         const tempTag = tagStore.tag_by_name['Temperature']
         expect(tempTag.id).toBe(1)
         expect(tempTag.value).toBe(22.5)
@@ -22,27 +22,27 @@ describe('store\\tag', () => {
         expect(tempTag.history.values[0]).toBe(21.5)
     })
 
-    it('should have correct properties for Pressure tag', () => {
+    it('have correct properties for Pressure tag', () => {
         const pressureTag = tagStore.tag_by_name['Pressure']
         expect(pressureTag.id).toBe(2)
     })
 
-    it('should have correct properties for Status tag', () => {
+    it('have correct properties for Status tag', () => {
         const statusTag = tagStore.tag_by_name['Status']
         expect(statusTag.id).toBe(3)
     })
 
-    it('should have correct history for Temperature tag', () => {
+    it('have correct history for Temperature tag', () => {
         const tempTag = tagStore.tag_by_name['Temperature']
         expect(tempTag.history.times_ms.length).toBe(3)
     })
 
-    it('should have correct string history for Status tag', () => {
+    it('have correct string history for Status tag', () => {
         const statusTag = tagStore.tag_by_name['Status']
         expect(statusTag.stringhistory.times_ms.length).toBe(3)
     })
 
-    it('should update tag values', () => {
+    it('update tag values', () => {
         const scratchTag = tagStore.tag_by_name['Scratch']
         const initialLength = scratchTag.history.values.length
         const newTime = Date.now()
@@ -51,7 +51,7 @@ describe('store\\tag', () => {
         expect(scratchTag.value).toBe(24.5)
     })
 
-    it('should provide a subject for observing tag changes', (done) => {
+    it('provide a subject for observing tag changes', (done) => {
         const scratchSubject = tagStore.subject('Scratch')
         let emissionCount = 0
         const subscription = scratchSubject.subscribe(tag => {

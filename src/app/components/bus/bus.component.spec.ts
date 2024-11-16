@@ -26,7 +26,7 @@ describe('components\\bus', () => {
     let pageSubject: PageSubject
     let commandSubject: CommandSubject
 
-    beforeEach(() => {
+    beforeEach((done) => {
         TestBed.configureTestingModule({
             declarations: [ BusComponent ],
             providers: [
@@ -47,13 +47,23 @@ describe('components\\bus', () => {
 
         fixture = TestBed.createComponent(BusComponent)
         component = fixture.componentInstance
+        
+        // Add WebSocket availability check
+        const testWs = new WebSocket('ws://127.0.0.1:9325/ws')
+        testWs.onopen = () => {
+            testWs.close()
+            done()
+        }
+        testWs.onerror = () => {
+            done.fail('WebSocket server is not available. Make sure pymscada wwwserver is running.')
+        }
     })
 
-    it('should have the correct ws url', () => {
+    it('have the correct ws url', () => {
         expect(configSubject.get().ws).toBe('ws://127.0.0.1:9325/ws')
     })
 
-    it('should run ngOnInit and establish WebSocket connection', (done) => {
+    it('run ngOnInit and establish WebSocket connection', (done) => {
         fixture.detectChanges() // This triggers ngOnInit
         setTimeout(() => {
             expect(component.ws).toBeDefined()
@@ -62,7 +72,7 @@ describe('components\\bus', () => {
         }, 500)
     })
 
-    it('should return the value of the IntVal tag', (done) => {
+    it('return the value of the IntVal tag', (done) => {
         let test: number = 0
         fixture.detectChanges() // This triggers ngOnInit
         let tagsub = tagSubject.subject('IntVal').subscribe(tag => {
@@ -80,7 +90,7 @@ describe('components\\bus', () => {
         }, 1500)
     })
 
-    it('should increment the IntSet tag', (done) => {
+    it('increment the IntSet tag', (done) => {
         let count = 0
         fixture.detectChanges() // This triggers ngOnInit
         let tagsub = tagSubject.subject('IntSet').subscribe(tag => {

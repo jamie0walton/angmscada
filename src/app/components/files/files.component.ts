@@ -23,6 +23,7 @@ export class FilesComponent implements OnInit, OnDestroy {
     subs: any
     tag: Tag
     files: File[] = []
+    filter: {path: string} = {path: ''}
 
     constructor() {
         this.subs = []
@@ -35,9 +36,13 @@ export class FilesComponent implements OnInit, OnDestroy {
 
     tagAction() {
         this.files = []
+        let filere: RegExp = new RegExp(this.filter.path, 'i')
         let last = ''
         for (let i = 0; i < this.tag.value.dat.length; i++) {
             const element = this.tag.value.dat[i]
+            if (!filere.test(element.path)) {
+                continue
+            }
             if (last != element.path) {
                 this.files.push({
                     type: 'h3',
@@ -65,8 +70,11 @@ export class FilesComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        if (this.item.config.hasOwnProperty('filter')) {
+            this.filter.path = this.item.config.filter
+        }
         this.subs.push(
-            this.tagstore.subject(this.item.tagname).asObservable().subscribe((tag: any) => {
+            this.tagstore.subject('__files__').asObservable().subscribe((tag: any) => {
                 if (this.tag.id === null) {
                     this.tag = tag
                 }

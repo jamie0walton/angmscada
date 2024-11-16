@@ -8,19 +8,19 @@ describe('shared\\time_series bisect', () => {
         expect(bisect(vect, value)).toBe(2)
     })
     
-    it('should return the first index greater if bounded', () => {
+    it('return the first index greater if bounded', () => {
         const vect = [1, 2, 3, 4, 5]
         const value = 2.5
         expect(bisect(vect, value)).toBe(2)
     })
     
-    it('should return 0 if lower than all', () => {
+    it('return 0 if lower than all', () => {
         const vect = [1, 2, 3, 4, 5]
         const value = 0.5
         expect(bisect(vect, value)).toBe(0)
     })
     
-    it('should return length if lower than all', () => {
+    it('return length if lower than all', () => {
         const vect = [1, 2, 3, 4, 5]
         const value = 50
         expect(bisect(vect, value)).toBe(5)
@@ -40,7 +40,7 @@ describe('shared\\time_series bisect', () => {
 })
 
 describe('shared\\time_series merge_time_series', () => {
-    it('should append a on b', () => {
+    it('append a on b', () => {
         let a: TimeNumberSeries = {
             times_ms: [101, 102, 103, 104, 105],
             values: [0, 100, 0, -100, 0]
@@ -56,7 +56,7 @@ describe('shared\\time_series merge_time_series', () => {
         expect(merge_time_series(a, b)).toEqual(c)
     })
 
-    it('should append b on a', () => {
+    it('append b on a', () => {
         let a: TimeNumberSeries = {
             times_ms: [101, 102, 103, 104, 105],
             values: [0, 100, 0, -100, 0]
@@ -72,7 +72,7 @@ describe('shared\\time_series merge_time_series', () => {
         expect(merge_time_series(a, b)).toEqual(c)
     })
 
-    it('should merge a on b', () => {
+    it('merge a on b', () => {
         let a: TimeNumberSeries = {
             times_ms: [101, 102, 103, 104, 105],
             values: [0, 100, 0, -100, 0]
@@ -88,7 +88,7 @@ describe('shared\\time_series merge_time_series', () => {
         expect(merge_time_series(a, b)).toEqual(c)
     })
 
-    it('should merge b on a', () => {
+    it('merge b on a', () => {
         let a: TimeNumberSeries = {
             times_ms: [101, 102, 103, 104, 105],
             values: [0, 100, 0, -100, 0]

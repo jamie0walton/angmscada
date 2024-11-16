@@ -25,7 +25,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     tag: Tag
     show: OpNote[]
     site_groups: {name: string, sites: string[], checked: boolean}[]
-    filter: {date: number, site: string, note: string}
+    filter: {date: number, site: string, by: string, note: string}
     form: MsForm.Form
 
     constructor(
@@ -41,6 +41,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.filter = {
             date: Number(Date.now()),
             site: this.config.site || '',
+            by: '',
             note: ''
         }
         this.form = new MsForm.Form()
@@ -102,17 +103,18 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         if(this.tag.value === null) {
             return
         }
-        if (this.filter.site.length === 0 && this.filter.note.length === 0) {
+        if (this.filter.site.length === 0 && this.filter.by.length === 0 && this.filter.note.length === 0) {
             this.show = this.tag.value
             return
         }
         this.show = []
-        let dosite = false
+        let dosite = this.filter.site.length > 0
+        let doby = this.filter.by.length > 0
+        let donote = this.filter.note.length > 0
         let sitere: RegExp = new RegExp(this.filter.site, 'i')
-        if (this.filter.site.length > 0) {dosite = true}
-        let donote = false
+        let byre: RegExp = new RegExp(this.filter.by, 'i')
         let notere: RegExp = new RegExp(this.filter.note, 'i')
-        if (this.filter.note.length > 0) {donote = true}
+
         for (let i = 0; i < this.tag.value.length; i++) {
             const e = this.tag.value[i]
             let note: OpNote = {
@@ -122,21 +124,11 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 by: e.by,
                 note: e.note
             }
-            if (dosite && donote) {
-                if (sitere.test(e.site) && notere.test(e.note)) {
-                    this.show.push(note)
-                }
-            }
-            else if (dosite) {
-                if (sitere.test(e.site)) {
-                    this.show.push(note)
-                }
-            }
-            else if (donote) {
-                if (notere.test(e.note)) {
-                    this.show.push(note)
-                }
-            }
+            let matches = true
+            if (dosite && !sitere.test(e.site)) matches = false
+            if (doby && !byre.test(e.by)) matches = false
+            if (donote && !notere.test(e.note)) matches = false
+            if (matches) this.show.push(note)
         }
     }
 
@@ -172,6 +164,11 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         site.inputtype = 'filter'
         site.options = this.item.config.site
         site.stringvalue = this.filter.site
+        let by = new MsForm.Control()
+        by.name = 'by'
+        by.inputtype = 'filter'
+        by.options = this.item.config.by
+        by.stringvalue = this.filter.by
         let note = new MsForm.Control()
         note.name = 'note'
         note.inputtype = 'str'
@@ -182,7 +179,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.form.requestid = 'opnotes filter'
         this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, site, note]
+        this.form.controls = [start, site, by, note]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -195,6 +192,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             if (typeof(cmd.setvalue['site']) === 'string') {
                 this.filter.site = cmd.setvalue['site']
                 this.updatesitegroups()
+            }
+            if (typeof(cmd.setvalue['by']) === 'string') {
+                this.filter.by = cmd.setvalue['by']
             }
             if (typeof(cmd.setvalue['note']) === 'string') {
                 this.filter.note = cmd.setvalue['note']

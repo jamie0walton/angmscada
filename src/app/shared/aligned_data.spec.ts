@@ -17,7 +17,7 @@ function joins(...numlists: number[][]) {
 }
 
 describe('shared\\aligned_data', () => {
-    it('UplotVectors: single set tests', () => {
+    it('single set tests', () => {
         let v, r
         v = new UplotVectors()
         v.add_history(10, tens.map(x => x * 1000), Array(tens.length).fill(1))
@@ -54,7 +54,7 @@ describe('shared\\aligned_data', () => {
 
     })
 
-    it('UplotVectors: multi set tests', () => {
+    it('multi set tests', () => {
         let v, r
         v = new UplotVectors()
         v.add_history(1, tens.map(x => x * 1000), Array(tens.length).fill(1))
@@ -78,7 +78,7 @@ describe('shared\\aligned_data', () => {
         ])
     })
 
-    it('UplotVectors: test smoother', () => {
+    it('test smoother', () => {
         let v, r
         v = new UplotVectors()
         v.add_history(12, [5000].map(x => x * 1000), [5000])
@@ -211,7 +211,7 @@ describe('shared\\aligned_data', () => {
         ])
     })
 
-    it('UplotVectors: averaging smoother - one trace', () => {
+    it('averaging smoother - one trace', () => {
         let v
         v = new UplotVectors()
         v.add_history(22,
@@ -266,7 +266,7 @@ describe('shared\\aligned_data', () => {
         ])
     })
 
-    it('UplotVectors: averaging smoother - uplot data', () => {
+    it('averaging smoother - uplot data', () => {
         let v, r
         v = new UplotVectors()
         v.add_history(55, [0, 10, 20, 30, 40].map(x => x * 1000), [3, 6, 9, 12, 15])
@@ -307,7 +307,7 @@ describe('shared\\aligned_data', () => {
         ])
     })
 
-    it('UplotVectors: median smoother - one trace', () => {
+    it('median smoother - one trace', () => {
         let v
         v = new UplotVectors()
         v.add_history(22,
@@ -362,7 +362,7 @@ describe('shared\\aligned_data', () => {
         ])
     })
 
-    it('UplotVectors: median smoother - uplot data', () => {
+    it('median smoother - uplot data', () => {
         let v, r
         v = new UplotVectors()
         v.add_history(55, [0, 10, 20, 30, 40].map(x => x * 1000), [3, 6, 9, 12, 15])

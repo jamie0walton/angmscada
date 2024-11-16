@@ -17,8 +17,12 @@ nohup pymscada wwwserver --config wwwserver.yaml --tags tags.yaml --verbose &
 tail -f nohup.out
 ```
 
+Preferred ports:
+- Production  1324 for bus 8324 for webserver
+- Karma       1325         8325
+- Development 1326         8326
 ```
-start chrome --incognito --remote-debugging-port=9222 http://192.168.1.28:8324/
+start chrome --incognito --remote-debugging-port=9222 http://192.168.1.28:8326/
 ```
 
 Then either

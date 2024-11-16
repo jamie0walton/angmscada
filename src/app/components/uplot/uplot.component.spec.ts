@@ -58,7 +58,7 @@ describe('components\\uplot\\component', () => {
     component.udataset = uplotDataSet;
   });
 
-  it('should create', () => {
+  it('create', () => {
 //    component.ngOnInit();
 //    fixture.detectChanges();
 //    expect(component).toBeTruthy();
