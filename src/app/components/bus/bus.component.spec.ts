@@ -40,7 +40,7 @@ describe('components\\bus', () => {
         }).compileComponents()
 
         configSubject = TestBed.inject(ConfigSubject)
-        configSubject.set_ws('ws://127.0.0.1:9325/ws')
+        configSubject.set_ws('ws://127.0.0.1:8325/ws')
         tagSubject = TestBed.inject(TagSubject)
         pageSubject = TestBed.inject(PageSubject)
         commandSubject = TestBed.inject(CommandSubject)
@@ -49,18 +49,19 @@ describe('components\\bus', () => {
         component = fixture.componentInstance
         
         // Add WebSocket availability check
-        const testWs = new WebSocket('ws://127.0.0.1:9325/ws')
+        const testWs = new WebSocket('ws://127.0.0.1:8325/ws')
         testWs.onopen = () => {
             testWs.close()
             done()
         }
-        testWs.onerror = () => {
+        testWs.onerror = (e) => {
+            console.log(e)
             done.fail('WebSocket server is not available. Make sure pymscada wwwserver is running.')
         }
     })
 
     it('have the correct ws url', () => {
-        expect(configSubject.get().ws).toBe('ws://127.0.0.1:9325/ws')
+        expect(configSubject.get().ws).toBe('ws://127.0.0.1:8325/ws')
     })
 
     it('run ngOnInit and establish WebSocket connection', (done) => {

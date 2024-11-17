@@ -6,7 +6,7 @@
       // run pymscada wwwserver, see docs/test_server/wwwserver.yaml
       // ng build --configuration development --watch
       // start chrome --remote-debugging-port=9222 --disable-application-cache
-      // http://192.168.1.28:9324/
+      // http://192.168.1.28:9326/
       "name": "manual chrome",
       "type": "chrome",
       "request": "attach",

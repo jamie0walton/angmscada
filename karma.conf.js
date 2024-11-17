@@ -6,7 +6,7 @@ module.exports = function (config) {
       { pattern: 'dist/angmscada/**/*', watched: true, included: false, served: true }
     ],
     proxies: {
-      '/': 'http://192.168.1.28:8324/'
+      '/': 'http://192.168.1.28:8325/'
     },
     browserNoActivityTimeout: 300000,
     captureTimeout: 300000,
