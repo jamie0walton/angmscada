@@ -15,6 +15,7 @@ let ws = 'ws://192.168.1.28:8325/ws'
 
 export const environment = {
     production: false,
+    buildDate: new Date().toISOString(),
     ws: ws
 };
 

@@ -4,6 +4,7 @@ import { environment } from 'src/environments/environment'
 
 export interface Config {
     ws: string
+    buildDate: string
     update: number
     page: number
     connected: boolean
@@ -23,6 +24,7 @@ export class ConfigSubject {
     constructor() {
         this.config = {
             ws: environment.ws,
+            buildDate: environment.buildDate,
             update: 5000,
             page: 0,
             connected: false,
