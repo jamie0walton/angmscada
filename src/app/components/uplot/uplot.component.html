@@ -1,18 +1,18 @@
 <div class="d-flex">
-  <div class="me-auto">
+  <div class="me-4">
     <h3>{{desc}}</h3>
   </div>
-  <div class="pe-4" (click)="downloadcsv()">
+  <div class="ms-auto me-4" (click)="toggleLegend()">
+    <app-icon icon="legend" width="20" height="20"></app-icon>
+  </div>
+  <div class="me-4" (click)="formScale()">
+    <app-icon icon="scales" width="20" height="20"></app-icon>
+  </div>
+  <div class="me-4" (click)="formSmooth()">
+    <app-icon icon="smooth" width="20" height="20"></app-icon>
+  </div>
+  <div class="me-4" (click)="downloadcsv()">
     <app-icon icon="download" width="20" height="20"></app-icon>
-  </div>
-  <div class="pe-4" (click)="toggleLegend()">
-    <app-icon icon="list" width="20" height="20"></app-icon>
-  </div>
-  <div class="pe-4" (click)="formSmooth()">
-    <app-icon icon="chart" width="20" height="20"></app-icon>
-  </div>
-  <div class="pe-4" (click)="formScale()">
-    <app-icon icon="gear" width="20" height="20"></app-icon>
   </div>
 </div>
 <div class="ms-uplot" #msu>

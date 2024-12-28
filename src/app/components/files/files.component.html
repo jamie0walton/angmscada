@@ -1,13 +1,4 @@
-<div class="d-flex">
-  <div class="me-auto">
-    <h2>{{item.desc}}</h2>
-  </div>
-  <!-- <div class="mt-1 mb-1">
-    <div class="pt-0 pb-0 btn btn-outline-secondary" (click)="showForm()">
-      NEW
-    </div>
-  </div> -->
-</div>
+<h2>{{item.desc}}</h2>
 <div class="row" *ngIf="tag.value != null">
   <div *ngFor="let x of files; index as i" [ngClass]="{'col-12 col-md-6 col-xl-4':!x.wide, 'col-12': x.wide}">
     <div [ngSwitch]="x.type">

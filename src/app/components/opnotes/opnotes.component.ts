@@ -11,6 +11,7 @@ interface OpNote {
     site: string
     by: string
     note: string
+    abnormal: number
 }
 
 @Component({
@@ -25,8 +26,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     tag: Tag
     show: OpNote[]
     site_groups: {name: string, sites: string[], checked: boolean}[]
-    filter: {date: number, site: string, by: string, note: string}
+    filter: {date: number, site: string, by: string, note: string, abnormal: number}
     form: MsForm.Form
+    abnormal: boolean = false
 
     constructor(
         private configstore: ConfigSubject,
@@ -42,9 +44,15 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             date: Number(Date.now()),
             site: this.config.site || '',
             by: '',
-            note: ''
+            note: '',
+            abnormal: 0
         }
         this.form = new MsForm.Form()
+   }
+
+   filter_abnormal() {
+       this.filter.abnormal = 1 - this.filter.abnormal
+       this.updateshow()
    }
 
     downloadcsv() {
@@ -103,18 +111,20 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         if(this.tag.value === null) {
             return
         }
-        if (this.filter.site.length === 0 && this.filter.by.length === 0 && this.filter.note.length === 0) {
+        if (this.filter.site.length === 0 && this.filter.by.length === 0 && this.filter.note.length === 0 && this.filter.abnormal === 0) {
             this.show = this.tag.value
+            this.abnormal = this.tag.value.some((note: OpNote) => note.abnormal === 1)
             return
         }
         this.show = []
         let dosite = this.filter.site.length > 0
         let doby = this.filter.by.length > 0
         let donote = this.filter.note.length > 0
+        let doabnormal = this.filter.abnormal === 1
         let sitere: RegExp = new RegExp(this.filter.site, 'i')
         let byre: RegExp = new RegExp(this.filter.by, 'i')
         let notere: RegExp = new RegExp(this.filter.note, 'i')
-
+        let abnormal = false
         for (let i = 0; i < this.tag.value.length; i++) {
             const e = this.tag.value[i]
             let note: OpNote = {
@@ -122,14 +132,20 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 date_ms: e.date_ms,
                 site: e.site,
                 by: e.by,
-                note: e.note
+                note: e.note,
+                abnormal: e.abnormal
             }
             let matches = true
             if (dosite && !sitere.test(e.site)) matches = false
             if (doby && !byre.test(e.by)) matches = false
             if (donote && !notere.test(e.note)) matches = false
-            if (matches) this.show.push(note)
+            if (doabnormal && e.abnormal !== 1) matches = false
+            if (matches) {
+                this.show.push(note)
+                if (e.abnormal === 1) abnormal = true
+            }
         }
+        this.abnormal = abnormal
     }
 
     checkbox(gid: number) {
@@ -219,6 +235,11 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         let note = new MsForm.Control()
         note.name = 'note'
         note.inputtype = 'textarea'
+        let abnormal = new MsForm.Control()
+        abnormal.name = 'abnormal'
+        abnormal.inputtype = 'multi'
+        abnormal.options = ['Normal', 'Abnormal']
+        abnormal.optionvalue = 0
         // setup the form
         if(index === -1) {
             this.form.requestid = this.tag.name + " -1"
@@ -228,6 +249,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             by.stringvalue = "Enter author"
             date_ms.stringvalue = datetimestring(new Date())
             note.stringvalue = "Describe"
+            abnormal.numbervalue = 0
         }
         else {
             const editnote = this.show[index]
@@ -238,8 +260,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             by.stringvalue = editnote.by
             date_ms.stringvalue = datetimestring(new Date(editnote.date_ms))
             note.stringvalue = editnote.note
+            abnormal.numbervalue = editnote.abnormal
         }
-        this.form.controls = [date_ms, site, by, note]
+        this.form.controls = [date_ms, site, by, note, abnormal]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -264,7 +287,8 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                     'by': cmd.setvalue['by'],
                     'site': cmd.setvalue['site'],
                     'date_ms': date_ms,
-                    'note': cmd.setvalue['note']
+                    'note': cmd.setvalue['note'],
+                    'abnormal': cmd.setvalue['abnormal']
                 }
             })
         }

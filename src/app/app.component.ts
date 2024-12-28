@@ -1,6 +1,18 @@
 import { Component, OnInit } from '@angular/core'
 import { ConfigSubject } from 'src/app/store/config'
 
+/**
+ * URL Parameters:
+ * ws   - WebSocket connection string. Examples:
+ *        ws://localhost:8000/ws         - Standard WebSocket
+ *        wss://example.com:8443/ws      - Secure WebSocket
+ *        <empty>                        - Production assumes ./ws
+ * site - Site identifier. Example: ?site=MySite
+ * yaml - Configuration file path. Example: ?yaml=/config/mysite.yaml
+ * 
+ * Example:
+ * https://scada.company.com?ws=wss://192.168.1.1/ws&site=MySite
+ */
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',

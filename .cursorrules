@@ -1,10 +1,16 @@
-# Project rules
+Note: Cursor advised that cursor doesn't read this file.
 
-# General rules
-- Use TypeScript
-- Use Angular
+In chats:
+- Only offer minimal changes that address the specific request
+- If other changes seem appropriate, describe them briefly as an option
+- If a change seems bad, advise but still provide the change
 
-# Style rules
+For typescript files:
 - Use 4 spaces for indentation
+- Use single quotes for strings
+- Do not use optional semicolons
+
+For html files:
+- Use 2 spaces for indentation
 - Use single quotes for strings
 - Do not use optional semicolons

@@ -21,7 +21,7 @@ $mscolor_limited_dark: hsl(0, 0%, 40%);  // #8c8c8c
 $primary: $mscolor_man;
 $secondary: $mscolor_software;
 $headings-color: $mscolor_man;
-$danger: $mscolor_software_dark;
+// $danger: $mscolor_software_dark;
 
 $border-radius: .15rem;
 $spacer: .7rem;
@@ -34,6 +34,9 @@ $h3-font-size: $font-size-base * 1.4;
 $h4-font-size: $font-size-base * 1.2;
 $h5-font-size: $font-size-base * 1.1;
 $h6-font-size: $font-size-base;
+
+// $btn-padding-x: 0.2rem;
+//$btn-padding-y: 0.1rem;
 
 // scss-docs-start import-stack
 // Configuration

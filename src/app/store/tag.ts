@@ -67,6 +67,7 @@ interface OpNote {
     by: string
     site: string
     note: string
+    abnormal: number
 }
 
 @Injectable({
@@ -191,7 +192,8 @@ export class TagSubject {
                     date_ms: rec[1],
                     site: rec[2],
                     by: rec[3],
-                    note: rec[4]
+                    note: rec[4],
+                    abnormal: rec[5]
                 }
                 if (rec[0] in startidx) {
                     opnotes[startidx[rec[0]]] = update

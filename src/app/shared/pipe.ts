@@ -62,7 +62,7 @@ export class msDatePipe implements PipeTransform {
 export class msNL2BRPipe implements PipeTransform {
     transform(txt: string): string {
         if (typeof txt == 'string') {
-            return "<p>" + txt.replace(/\r?\n|\r/g, '<br/>') + "</p>"
+            return "<p class='mb-2'>" + txt.replace(/\r?\n|\r/g, '<br/>') + "</p>"
         }
         else {
             return ""
