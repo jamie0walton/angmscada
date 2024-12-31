@@ -6,6 +6,7 @@ import { Page, PageSubject } from 'src/app/store/page'
 import { Menu, MenuSubject } from 'src/app/store/menu'
 import { SendFile, SendFileSubject } from 'src/app/store/sendfile'
 import { Command, CommandSubject } from 'src/app/store/command'
+import { name2rgba } from 'src/app/shared/functions'
 
 // These type codes are used by pymscada wwwserver for sending data
 const INT_TYPE = 1
@@ -76,7 +77,7 @@ export class BusComponent implements OnInit, OnDestroy {
         const type: any = msg['type']
         const data: any = msg['payload']
         switch (type) {
-            case 'tag':  // json for dict and some lists
+            case 'tag':
                 this.tagstore.update(data.tagid, Math.trunc(data.time_us / 1000), data.value)
                 break
             case 'tag_info':
@@ -84,6 +85,11 @@ export class BusComponent implements OnInit, OnDestroy {
                 break
             case 'pages':
                 this.init_pages(data)
+                break
+            case 'webclient':
+                console.log('webclient', data)
+                const navColor = name2rgba(data.navbar_color, 1)
+                document.body.style.setProperty('--ms-nav-bg', navColor)
                 break
             default:
                 console.warn('StringMessage unknown type', type)
