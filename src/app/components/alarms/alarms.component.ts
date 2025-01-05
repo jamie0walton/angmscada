@@ -17,12 +17,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
     show: Alarm[]
     filter: {
         date: number, 
-        tagname: string,
+        tag_alm: string,
         kind_ALM: number,
         kind_RTN: number,
         kind_ACT: number,
         kind_INF: number,
-        desc: string
+        desc: string,
+        in_alm: boolean
     }
     form: MsForm.Form
 
@@ -36,12 +37,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.show = []
         this.filter = {
             date: Number(Date.now()),
-            tagname: '',
+            tag_alm: '',
             kind_ALM: 0,
             kind_RTN: 0,
             kind_ACT: 0,
             kind_INF: 0,
-            desc: ''
+            desc: '',
+            in_alm: false
         }
         this.form = new MsForm.Form()
    }
@@ -54,7 +56,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         let csv = 'id,date,tagname,kind,desc\n'
         for (let i = 0; i < this.show.length; i++) {
             const e = this.show[i]
-            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.tagname + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',"' + e.desc.replace(/"/g, '""') + '"\n'
+            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.tag_alm + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',"' + e.desc.replace(/"/g, '""') + '"\n'
         }
         // Deliver CSV
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -65,33 +67,40 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         URL.revokeObjectURL(link.href)
     }
 
+    filter_in_alm() {
+        this.filter.in_alm = !this.filter.in_alm
+        this.updateshow()
+    }
+
     updateshow() {
         if(this.alarms.length === 0) {
             return
         }
         let filter_kind = (this.filter.kind_ALM + this.filter.kind_RTN + this.filter.kind_ACT + this.filter.kind_INF) > 0 ? true : false
-        if (this.filter.tagname.length === 0 && 
+        if (this.filter.tag_alm.length === 0 && 
             !filter_kind && 
-            this.filter.desc.length === 0) {
+            this.filter.desc.length === 0 &&
+            !this.filter.in_alm) {
             this.show = this.alarms
             return
         }
         this.show = []
-        let dotagname = this.filter.tagname.length > 0
+        let dotagname = this.filter.tag_alm.length > 0
         let dodesc = this.filter.desc.length > 0
-        let tagnamere: RegExp = new RegExp(this.filter.tagname, 'i')
+        let tagnamere: RegExp = new RegExp(this.filter.tag_alm, 'i')
         let descre: RegExp = new RegExp(this.filter.desc, 'i')
         for (let i = 0; i < this.alarms.length; i++) {
             const e = this.alarms[i]
             let note: Alarm = {
                 id: e.id,
                 date_ms: e.date_ms,
-                tagname: e.tagname,
+                tag_alm: e.tag_alm,
                 kind: e.kind,
-                desc: e.desc
+                desc: e.desc,
+                in_alm: e.in_alm
             }
             let matches = true
-            if (dotagname && !tagnamere.test(e.tagname)) matches = false
+            if (dotagname && !tagnamere.test(e.tag_alm)) matches = false
             if (filter_kind) {
                 if (this.filter.kind_ALM == 0 && e.kind == 0 ||
                     this.filter.kind_RTN == 0 && e.kind == 1 ||
@@ -101,7 +110,12 @@ export class AlarmsComponent implements OnInit, OnDestroy {
             }
             if (dodesc && !descre.test(e.desc)) matches = false
             if (matches) {
-                this.show.push(note)
+                if (this.filter.in_alm && !e.in_alm) {
+                    matches = false
+                }
+                if (matches) {
+                    this.show.push(note)
+                }
             }
         }
     }
@@ -112,10 +126,10 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         start.inputtype = 'date'
         start.stringvalue = datestring(new Date(this.filter.date))
 
-        let tagname = new MsForm.Control()
-        tagname.name = 'tagname'
-        tagname.inputtype = 'filter'
-        tagname.stringvalue = this.filter.tagname
+        let tag_alm = new MsForm.Control()
+        tag_alm.name = 'tagname'
+        tag_alm.inputtype = 'filter'
+        tag_alm.stringvalue = this.filter.tag_alm
 
         let alm = new MsForm.Control()
         alm.name = 'Alarm'
@@ -145,7 +159,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.form.requestid = 'alarms filter'
         this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, tagname, alm, rtn, act, inf, desc]
+        this.form.controls = [start, tag_alm, alm, rtn, act, inf, desc]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -155,8 +169,8 @@ export class AlarmsComponent implements OnInit, OnDestroy {
                 this.filter.date = cmd.setvalue['start']
                 this.alarmstore.request_history(this.filter.date)
             }
-            if (typeof(cmd.setvalue['tagname']) === 'string') {
-                this.filter.tagname = cmd.setvalue['tagname']
+            if (typeof(cmd.setvalue['tag_alm']) === 'string') {
+                this.filter.tag_alm = cmd.setvalue['tag_alm']
             }
             if (typeof(cmd.setvalue['Alarm']) === 'number') {
                 this.filter.kind_ALM = cmd.setvalue['Alarm']
@@ -178,8 +192,10 @@ export class AlarmsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.filter.date = Date.now() - (this.item.config?.age_d || 2) * 24 * 3600 * 1000
-        this.alarmstore.request_history(this.filter.date)
+        if (this.item.config?.age_d) {
+            this.alarmstore.set_age_d(this.item.config.age_d)
+        }
+        this.filter.date = Date.now() - this.alarmstore.age_d * 86400000
         this.subs.push(
             this.alarmstore.subject.asObservable().subscribe((alarms: any) => {
                 this.alarms = alarms

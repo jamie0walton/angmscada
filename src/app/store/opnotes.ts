@@ -21,6 +21,7 @@ export class OpNoteSubject {
     private opnotes: OpNote[]
     private tagstore: TagSubject
     private commandstore: CommandSubject
+    age_d: number = 30
     private requested_date: number | undefined = undefined
 
     constructor() {
@@ -90,6 +91,11 @@ export class OpNoteSubject {
             this.opnotes = []
         }
         this.subject.next(this.opnotes)
+    }
+
+    set_age_d(age_d: number) {
+        this.age_d = age_d
+        this.request_history(Date.now() - this.age_d * 86400000)
     }
 
     request_history(start_ms: number) {

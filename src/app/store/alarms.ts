@@ -6,9 +6,10 @@ import { CommandSubject } from './command'
 export interface Alarm {
     id: number
     date_ms: number
-    tagname: string
+    tag_alm: string
     kind: number
     desc: string
+    in_alm: boolean
 }
 
 @Injectable({
@@ -19,6 +20,7 @@ export class AlarmSubject {
     private alarms: Alarm[]
     private tagstore: TagSubject
     private commandstore: CommandSubject
+    age_d: number = 2
     private requested_date: number | undefined = undefined
 
     constructor() {
@@ -38,9 +40,10 @@ export class AlarmSubject {
                 let alarm: Alarm = {
                     id: tag_value.id,
                     date_ms: tag_value.date_ms,
-                    tagname: tag_value.tagname,
+                    tag_alm: tag_value.tag_alm,
                     kind: tag_value.kind,
-                    desc: tag_value.desc
+                    desc: tag_value.desc,
+                    in_alm: tag_value.in_alm
                 }
                 if (index === -1) {  // not present, insert in descending order
                     const insertIndex = this.alarms.findIndex((obj) => obj.date_ms < alarm.date_ms);
@@ -65,9 +68,10 @@ export class AlarmSubject {
                 let update = {
                     id: rec[0],
                     date_ms: rec[1],
-                    tagname: rec[2],
+                    tag_alm: rec[2],
                     kind: rec[3],
-                    desc: rec[4]
+                    desc: rec[4],
+                    in_alm: rec[5]
                 }
                 if (rec[0] in startidx) {
                     this.alarms[startidx[rec[0]]] = update
@@ -82,6 +86,11 @@ export class AlarmSubject {
             this.alarms = []
         }
         this.subject.next(this.alarms)
+    }
+
+    set_age_d(age_d: number) {
+        this.age_d = age_d
+        this.request_history(Date.now() - this.age_d * 86400000)
     }
 
     request_history(start_ms: number) {

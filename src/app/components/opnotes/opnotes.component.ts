@@ -37,12 +37,12 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             abnormal: 0
         }
         this.form = new MsForm.Form()
-   }
+    }
 
-   filter_abnormal() {
-       this.filter.abnormal = 1 - this.filter.abnormal
-       this.updateshow()
-   }
+    filter_abnormal() {
+        this.filter.abnormal = 1 - this.filter.abnormal
+        this.updateshow()
+    }
 
     downloadcsv() {
         /*
@@ -246,7 +246,10 @@ export class OpNotesComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.filter.date = Date.now() - (this.item.config?.age_d || 30) * 24 * 3600 * 1000
+        if (this.item.config?.age_d) {
+            this.opnotesstore.set_age_d(this.item.config.age_d)
+        }
+        this.filter.date = Date.now() - this.opnotesstore.age_d * 86400000
         const groups = Object.keys(this.item.config?.site_groups || [])
         for (let i = 0; i < groups.length; i++) {
             const group = groups[i]
