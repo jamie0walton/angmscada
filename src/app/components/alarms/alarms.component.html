@@ -1,29 +1,41 @@
-<div class="d-flex justify-content-between">
-  <div>
+<!-- List the notes on the screen -->
+<div class="mb-1 d-flex align-items-center">
+  <div class="me-4">
     <h3>Alarms</h3>
   </div>
-  <div>
-    Callout Disabled Count: {{filtered}}
-  </div>
-  <div class="pe-4">
-    <div class="pt-0 pb-0 btn btn-outline-secondary" (click)="showControl()">
-      Callout
+  <div class="d-flex ms-auto">
+    <div class="me-4" (click)="downloadcsv()">
+      <app-icon icon="download" width="20" height="20"></app-icon>
     </div>
   </div>
 </div>
-<div class="row bg-primary text-light border-bottom-0" (click)="showFilter()">
-  <div class="col-3 mt-1 mb-1">
-    <span class="ms-inline-icon" [ngClass]="{'text-decoration-underline':filter[0].length > 0}">
-      <app-icon icon="filter" width="20" height="20"></app-icon>
-      Tagname
-    </span>
+<div class="row bg-primary text-light border-bottom-0" (click)="formFilter()">
+  <div class="col-12 col-md-4 mt-0 mb-0">
+    <div class="row">
+      <div class="col-5 mt-1 mb-1" style="display:inline-flex">
+        <app-icon icon="filter" width="16" height="16"></app-icon>&nbsp;Time
+      </div>
+      <div class="col-3 mt-1 mb-1" [ngStyle]="{'text-decoration': (filter.kind_ALM || filter.kind_RTN || filter.kind_ACT || filter.kind_INF) ? 'underline' : 'none'}">Kind</div>
+      <div class="col-4 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.tagname !== '' ? 'underline' : 'none'}">Tagname</div>
+    </div>
   </div>
-  <div class="col-6 mt-1 mb-1" [ngClass]="{'text-decoration-underline':filter[1].length > 0}">Description</div>
-  <div class="col-1 mt-1 mb-1" [ngClass]="{'text-decoration-underline':filter[2].length > 0}">Callout</div>
+  <div class="col-12 col-md-8 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.desc !== '' ? 'underline' : 'none'}">Description</div>
 </div>
-<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{'background-color': (i%2 == 0 ? '#f0f0f0' : '')}"
-  (click)="showMulti(x)">
-  <div class="col-3 mt-1 mb-1 pe-0 truncate">{{x[0]}}</div>
-  <div class="col-6 mt-1 mb-1 pe-0">{{x[1]}}</div>
-  <div class="col-1 mt-1 mb-1 pe-0">{{x[2]}}</div>
+<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{
+    'background-color': (i%2 == 0 ? '#d0d0d0' : '')}">
+  <div class="col-12 col-md-4 small">
+    <div class="row">
+      <div class="col-5">
+        <p class="mb-1">{{x.date_ms | date:'d-MMM-yy HH:mm'}}</p>
+      </div>
+      <div class="col-3">
+        <p class="mb-1">{{['ALM', 'RTN', 'ACT', 'INFO'][x.kind]}}</p>
+      </div>
+      <div class="col-4">
+        <p class="mb-1">{{x.tagname}}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-8" [innerHTML]="x.desc">
+  </div>
 </div>

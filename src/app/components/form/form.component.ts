@@ -113,6 +113,9 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'drag_n_drop':
                     value = this.filex
                     break
+                case 'checkbox':
+                    value = value ? 1 : 0
+                    break
                 default:
                     break
             }
@@ -150,6 +153,9 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'filter':
                 case 'drag_n_drop':
                     value = control.stringvalue || ''                    
+                    break
+                case 'checkbox':
+                    value = control.numbervalue ? 1 : 0
                     break
                 default:
                     break

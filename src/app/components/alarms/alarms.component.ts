@@ -1,211 +1,193 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core'
-import { Tag, TagSubject } from 'src/app/store/tag'
-import { MsForm, FormSubject } from 'src/app/store/form'
-import { CommandSubject } from 'src/app/store/command'
+import { ConfigSubject, Config } from 'src/app/store/config'
+import { AlarmSubject, Alarm } from 'src/app/store/alarms'
+import { FormSubject, MsForm } from 'src/app/store/form'
+import { datestring, datetimestring, csvdatetimestring } from 'src/app/shared/datetime'
 
 @Component({
     selector: 'app-alarms',
-    templateUrl: './alarms.component.html'
+    templateUrl: './alarms.component.html',
+    styleUrls: []
 })
 export class AlarmsComponent implements OnInit, OnDestroy {
     subs: any = []
     @Input() item: any
-    tag: Tag
-    raw: string[][]
-    show: string[][]
-    filtered: number
-    display: string
-    displayfilter: boolean
-    filter: string[]
-    name: string
-    desc: string
-    actionform: MsForm.Form
-    filterform: MsForm.Form
+    config: Config
+    alarms: Alarm[]
+    show: Alarm[]
+    filter: {
+        date: number, 
+        tagname: string,
+        kind_ALM: number,
+        kind_RTN: number,
+        kind_ACT: number,
+        kind_INF: number,
+        desc: string
+    }
     form: MsForm.Form
 
     constructor(
-        private tagstore: TagSubject,
-        private commandstore: CommandSubject,
+        private configstore: ConfigSubject,
+        private alarmstore: AlarmSubject,
         private formstore: FormSubject
     ) {
-        this.tag = new Tag()
-        this.raw = []
+        this.config = this.configstore.get()
+        this.alarms = []
         this.show = []
-        this.filtered = 0
-        this.display = 'none'
-        this.displayfilter = false
-        this.filter = ['', '', '']
-        this.name = ''
-        this.desc = ''
-        this.actionform = new MsForm.Form()
-        this.actionform.requestid = 'alarms action'
-        this.actionform.name = 'Change callout'
-        this.actionform.description = 'Enable / Disable all filtered alarms'
-        this.actionform.controls = [
-            {
-                inputtype: 'multi',
-                name: 'Callout',
-                options: ['', 'Enable Callout', 'Disable Callout']
-            }
-        ]
-        this.filterform = new MsForm.Form()
-        this.filterform.requestid = 'alarms filter'
-        this.filterform.name = 'Alarms List'
-        this.filterform.description = 'Change alarm filter - case sensitive'
-        this.filterform.controls = [
-            {
-                inputtype: 'filter',
-                name: 'Tagname',
-                options: ['AnBa', 'AnG1', 'AnG2', 'AnSs', 'AnSo'],
-                stringvalue: ''
-            },
-            {
-                inputtype: 'filter',
-                name: 'Description',
-                stringvalue: ''
-            },
-            {
-                inputtype: 'filter',
-                name: 'Callout Mode',
-                options: ['On', 'Off'],
-                stringvalue: ''
-            }
-        ]
+        this.filter = {
+            date: Number(Date.now()),
+            tagname: '',
+            kind_ALM: 0,
+            kind_RTN: 0,
+            kind_ACT: 0,
+            kind_INF: 0,
+            desc: ''
+        }
         this.form = new MsForm.Form()
-        this.form.requestid = 'alarms multi'
-    }
+   }
 
-    showControl() {
-        this.formstore.pubFormOpts(this.actionform)
-    }
-
-    formAlarmAction(cmd: MsForm.Close) {
-        if (cmd.action === 'submit') {
-            if(cmd.setvalue['Callout'] == 0) { return }
-            let callout
-            if(cmd.setvalue['Callout'] == 1) {
-                callout = true
-            }
-            else {
-                callout = false
-            }
-            this.commandstore.command({
-                "type": "set",
-                "tagname": this.item.tagname[1],
-                "value": {
-                    'action': 'bulkupdate',
-                    'callout': callout,
-                    'filter': this.filter
-                }
-            })
+    downloadcsv() {
+        /*
+        15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
+        */
+        // Make CSV
+        let csv = 'id,date,tagname,kind,desc\n'
+        for (let i = 0; i < this.show.length; i++) {
+            const e = this.show[i]
+            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.tagname + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',"' + e.desc.replace(/"/g, '""') + '"\n'
         }
+        // Deliver CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = 'alarms.csv'
+        link.click()
+        URL.revokeObjectURL(link.href)
     }
 
-    // setCallout(on: boolean) {
-    //     this.commandstore.command({
-    //         "type": "set",
-    //         "tagname": this.item.tagname[1],
-    //         "value": {
-    //             'action': 'bulkupdate',
-    //             'callout': on,
-    //             'filter': this.filter
-    //         }
-    //     })
-    // }
-
-    updateFilter() {
-        this.filtered = 0
+    updateshow() {
+        if(this.alarms.length === 0) {
+            return
+        }
+        let filter_kind = (this.filter.kind_ALM + this.filter.kind_RTN + this.filter.kind_ACT + this.filter.kind_INF) > 0 ? true : false
+        if (this.filter.tagname.length === 0 && 
+            !filter_kind && 
+            this.filter.desc.length === 0) {
+            this.show = this.alarms
+            return
+        }
         this.show = []
-        for (let i = 0; i < this.raw.length; i++) {
-            const row = this.raw[i]
-            if (row[2] === "Off") {
-                this.filtered += 1
+        let dotagname = this.filter.tagname.length > 0
+        let dodesc = this.filter.desc.length > 0
+        let tagnamere: RegExp = new RegExp(this.filter.tagname, 'i')
+        let descre: RegExp = new RegExp(this.filter.desc, 'i')
+        for (let i = 0; i < this.alarms.length; i++) {
+            const e = this.alarms[i]
+            let note: Alarm = {
+                id: e.id,
+                date_ms: e.date_ms,
+                tagname: e.tagname,
+                kind: e.kind,
+                desc: e.desc
             }
-            let addok = true
-            for (let j = 0; j < this.filter.length; j++) {
-                const filter = this.filter[j]
-                if (!row[j].includes(filter)) {
-                    addok = false
-                }
+            let matches = true
+            if (dotagname && !tagnamere.test(e.tagname)) matches = false
+            if (filter_kind) {
+                if (this.filter.kind_ALM == 0 && e.kind == 0 ||
+                    this.filter.kind_RTN == 0 && e.kind == 1 ||
+                    this.filter.kind_ACT == 0 && e.kind == 2 ||
+                    this.filter.kind_INF == 0 && e.kind == 3)
+                    matches = false
             }
-            if (addok) {
-                this.show.push(row)
+            if (dodesc && !descre.test(e.desc)) matches = false
+            if (matches) {
+                this.show.push(note)
             }
         }
     }
 
-    showFilter() {
-        this.filterform.controls[0].stringvalue = this.filter[0]
-        this.filterform.controls[1].stringvalue = this.filter[1]
-        this.filterform.controls[2].stringvalue = this.filter[2]
-        this.formstore.pubFormOpts(this.filterform)
-    }
+    formFilter() {
+        let start = new MsForm.Control()
+        start.name = 'start'
+        start.inputtype = 'date'
+        start.stringvalue = datestring(new Date(this.filter.date))
 
-    showMulti(tag: string[]) {
-        let control = new MsForm.Control()
-        control.inputtype = 'multi'
-        control.name = tag[0]
-        control.options = ['On', 'Off']
-        control.optionvalue = ['On', 'Off'].indexOf(tag[2])
-        this.form.controls = [control]
-        this.form.name = tag[0]
-        this.form.description = tag[1]
+        let tagname = new MsForm.Control()
+        tagname.name = 'tagname'
+        tagname.inputtype = 'filter'
+        tagname.stringvalue = this.filter.tagname
+
+        let alm = new MsForm.Control()
+        alm.name = 'Alarm'
+        alm.inputtype = 'checkbox'
+        alm.numbervalue = this.filter.kind_ALM
+
+        let rtn = new MsForm.Control()
+        rtn.name = 'Return to Normal'
+        rtn.inputtype = 'checkbox'
+        rtn.numbervalue = this.filter.kind_RTN
+
+        let act = new MsForm.Control()
+        act.name = 'Action'
+        act.inputtype = 'checkbox'
+        act.numbervalue = this.filter.kind_ACT
+
+        let inf = new MsForm.Control()
+        inf.name = 'Information'
+        inf.inputtype = 'checkbox'
+        inf.numbervalue = this.filter.kind_INF
+
+        let desc = new MsForm.Control()
+        desc.name = 'description'
+        desc.inputtype = 'str'
+        desc.stringvalue = this.filter.desc
+
+        this.form.requestid = 'alarms filter'
+        this.form.name = "Set Display Filter"
+        this.form.delete = false
+        this.form.controls = [start, tagname, alm, rtn, act, inf, desc]
         this.formstore.pubFormOpts(this.form)
     }
 
     formFilterAction(cmd: MsForm.Close) {
-        if (cmd.action === 'submit') {
-            this.filter = [
-                cmd.setvalue['Tagname'] as string,
-                cmd.setvalue['Description'] as string,
-                cmd.setvalue['Callout Mode'] as string
-            ]
-            this.updateFilter()
-        }
-    }
-
-    formAction(cmd: MsForm.Close) {
-        if (cmd.action === 'submit') {
-            let tagname = Object.keys(cmd.setvalue)[0]
-            let value = cmd.setvalue[tagname]
-            this.commandstore.command({
-                "type": "set",
-                "tagname": this.item.tagname[1],
-                "value": {
-                    'action': 'tagupdate',
-                    'tagname': tagname,
-                    'callout': [true, false][value as number]
-                }
-            })
+        if (cmd.action == 'submit') {
+            if (typeof(cmd.setvalue['start']) === 'number') {
+                this.filter.date = cmd.setvalue['start']
+                this.alarmstore.request_history(this.filter.date)
+            }
+            if (typeof(cmd.setvalue['tagname']) === 'string') {
+                this.filter.tagname = cmd.setvalue['tagname']
+            }
+            if (typeof(cmd.setvalue['Alarm']) === 'number') {
+                this.filter.kind_ALM = cmd.setvalue['Alarm']
+            }
+            if (typeof(cmd.setvalue['Return to Normal']) === 'number') {
+                this.filter.kind_RTN = cmd.setvalue['Return to Normal']
+            }
+            if (typeof(cmd.setvalue['Action']) === 'number') {
+                this.filter.kind_ACT = cmd.setvalue['Action']
+            }
+            if (typeof(cmd.setvalue['Information']) === 'number') {
+                this.filter.kind_INF = cmd.setvalue['Information']
+            }
+            if (typeof(cmd.setvalue['desc']) === 'string') {
+                this.filter.desc = cmd.setvalue['desc']
+            }
+            this.updateshow()
         }
     }
 
     ngOnInit(): void {
+        this.filter.date = Date.now() - (this.item.config?.age_d || 2) * 24 * 3600 * 1000
+        this.alarmstore.request_history(this.filter.date)
         this.subs.push(
-            this.tagstore.subject(this.item.tagname[0]).asObservable().subscribe((tag: any) => {
-                if (this.tag.id === null) {
-                    this.tag = tag
-                }
-                else {
-                    this.tag.value = tag.value
-                    this.tag.time_ms = tag.time_ms
-                }
-                this.raw = []
-                for (let i = 0; i < tag.value.length; i++) {
-                    const row = this.tag.value[i]
-                    this.raw.push(row)
-                }
-                this.updateFilter()
+            this.alarmstore.subject.asObservable().subscribe((alarms: any) => {
+                this.alarms = alarms
+                this.updateshow()
             }),
             this.formstore.closesubject.asObservable().subscribe(cmd => {
-                if (cmd.requestid == 'alarms action') {
-                    this.formAlarmAction(cmd)
-                }
-                else if (cmd.requestid == 'alarms filter') {
+                if (cmd.requestid.startsWith('alarms filter')) {
                     this.formFilterAction(cmd)
-                }
-                else if (cmd.requestid == 'alarms multi') {
-                    this.formAction(cmd)
                 }
             })
         )

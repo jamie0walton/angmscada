@@ -61,13 +61,21 @@ export class Tag implements Tag {
     }
 }
 
-interface OpNote {
+export interface OpNote {
     id: number
     date_ms: number
     by: string
     site: string
     note: string
     abnormal: number
+}
+
+export interface Alarm {
+    id: number
+    date_ms: number
+    tagname: string
+    kind: number
+    desc: string
 }
 
 @Injectable({
@@ -206,20 +214,16 @@ export class TagSubject {
         }
     }
 
-    update_alarms(tag: Tag, time_ms: number, value: any) {
-
-    }
-
-    update_files(tag: Tag, time_ms: number, value: any) {
-
-    }
 
     update(id: number, time_ms: number, value: any) {
         let tag: Tag = this.tag_by_id[id]
         switch (tag.name) {
-            case '__opnotes__':
-                this.update_opnotes(tag, value)
-                break
+//            case '__opnotes__':
+//                this.update_opnotes(tag, value)
+//                break
+//            case '__alarms__':
+//                this.update_alarms(tag, value)
+//                break
             default:
                 this.update_tag(tag, time_ms, value)
         }

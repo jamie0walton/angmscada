@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import { Subject } from 'rxjs'
 import { Tag } from './tag'
 
-const INPUT = ['', 'description', 'filter', 'multi', 'setpoint', 'int', 'float', 'str', 'textarea', 'time', 'date', 'datetime', 'drag_n_drop'] as const
+const INPUT = ['', 'description', 'filter', 'multi', 'setpoint', 'int', 'float', 'str', 'textarea', 'time', 'date', 'datetime', 'drag_n_drop', 'checkbox'] as const
 const ACTIONS = ['set', 'rta']
 
 // MobileSCADA form modal.

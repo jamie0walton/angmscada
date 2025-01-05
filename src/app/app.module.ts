@@ -7,6 +7,7 @@ import { BusComponent } from './components/bus/bus.component'
 import { NavBarComponent } from './components/navbar/navbar.component'
 import { PagesComponent } from './components/pages/pages.component'
 import { AlarmsComponent } from './components/alarms/alarms.component'
+import { OnCallComponent } from './components/oncall/oncall.component'
 import { CalloutComponent } from './components/callout/callout.component'
 import { DescStringBigComponent } from './components/desc-string-big/desc-string-big.component'
 import { DescStringListComponent } from './components/desc-string-list/desc-string-list.component'
@@ -29,6 +30,7 @@ import { msSelectPipe, msMultiPipe, msTimePipe, msDatePipe, msNL2BRPipe } from '
     NavBarComponent,
     PagesComponent,
     AlarmsComponent,
+    OnCallComponent,
     CalloutComponent,
     DescStringBigComponent,
     DescStringListComponent,

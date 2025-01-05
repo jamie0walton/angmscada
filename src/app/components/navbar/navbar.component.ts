@@ -22,20 +22,21 @@ export class NavBarComponent implements OnInit, OnDestroy {
     collapse: boolean
     showmodal: boolean
     connected: boolean
-    reload: boolean
+    reload: boolean = false
+    navbar_color: string = ''
+    mscada_link: string = ''
 
     constructor(
         private configstore: ConfigSubject,
         private menustore: MenuSubject
     ) {
-        this.title = ""
+        this.title = ''
         this.menu = []
         this.newmenu = []
         this.selected = 0
         this.collapse = true
         this.showmodal = false
         this.connected = false
-        this.reload = false
     }
 
     onClick(menuitem: number) {
@@ -53,7 +54,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
                 this.selected = value.page
                 this.connected = value.connected
                 this.reload = value.reload
-        }),
+                this.navbar_color = value.navbar_color
+                this.mscada_link = value.mscada_link
+            }),
             this.menustore.subject.asObservable().subscribe(value => {
                 let h = value.slice(0, 1)
                 let l = value.slice(1)

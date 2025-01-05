@@ -11,6 +11,10 @@ export interface Config {
     reload: boolean
     site?: string
     yaml?: string
+    navbar_color: string
+    mscada_link: string
+    people: object
+    sites: object
 }
 
 @Injectable({
@@ -28,7 +32,11 @@ export class ConfigSubject {
             update: 5000,
             page: 0,
             connected: false,
-            reload: false
+            reload: false,
+            navbar_color: 'var(--bs-primary)',
+            mscada_link: 'https://github.com/jamie0walton/pymscada',
+            people: {},
+            sites: {}
         }
         this.subject = new BehaviorSubject<Config>(this.config)
         this.saved = {}
@@ -79,6 +87,22 @@ export class ConfigSubject {
     get_saved(name: string): any {
         // Long term recovery for components that have stored a large calc value
         return this.saved[name] || null
+    }
+
+    set(data: any) {
+        if (data.hasOwnProperty('navbar_color')) {
+            this.config.navbar_color = data.navbar_color
+        }
+        if (data.hasOwnProperty('mscada_link')) {
+            this.config.mscada_link = data.mscada_link
+        }
+        if (data.hasOwnProperty('people')) {
+            this.config.people = data.people
+        }
+        if (data.hasOwnProperty('sites')) {
+            this.config.sites = data.sites
+        }
+        this.subject.next(this.config)
     }
 
     reset() { }
