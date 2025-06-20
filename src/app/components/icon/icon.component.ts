@@ -9,6 +9,7 @@ export class IconComponent implements OnInit {
     @Input() icon: any
     @Input() width?: any
     @Input() height?: any
+    @Input() color?: string
 
     ngOnInit(): void {
         if (typeof this.width != 'string') {

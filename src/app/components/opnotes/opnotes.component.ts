@@ -151,26 +151,26 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         start.stringvalue = datestring(new Date(this.filter.date))
 
         let site = new MsForm.Control()
-        site.name = 'site'
+        site.name = 'Site'
         site.inputtype = 'filter'
-        site.options = this.item.config.site
+        site.options = this.config.sites.map((site: any) => site.name)
         site.stringvalue = this.filter.site
 
         let by = new MsForm.Control()
-        by.name = 'by'
+        by.name = 'By'
         by.inputtype = 'filter'
-        by.options = this.item.config.by
+        by.options = this.config.people.map((person: any) => person.name)
         by.stringvalue = this.filter.by
 
         let note = new MsForm.Control()
-        note.name = 'note'
-        note.inputtype = 'str'
+        note.name = 'Note'
+        note.inputtype = 'filter'
         note.stringvalue = this.filter.note
 
         this.form.requestid = 'opnotes filter'
         this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, site, by, note]
+        this.form.controls = [start, by, site, note]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -180,15 +180,15 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 this.filter.date = cmd.setvalue['start']
                 this.opnotesstore.request_history(this.filter.date)
             }
-            if (typeof(cmd.setvalue['site']) === 'string') {
-                this.filter.site = cmd.setvalue['site']
+            if (typeof(cmd.setvalue['Site']) === 'string') {
+                this.filter.site = cmd.setvalue['Site']
                 this.updatesitegroups()
             }
-            if (typeof(cmd.setvalue['by']) === 'string') {
-                this.filter.by = cmd.setvalue['by']
+            if (typeof(cmd.setvalue['By']) === 'string') {
+                this.filter.by = cmd.setvalue['By']
             }
-            if (typeof(cmd.setvalue['note']) === 'string') {
-                this.filter.note = cmd.setvalue['note']
+            if (typeof(cmd.setvalue['Note']) === 'string') {
+                this.filter.note = cmd.setvalue['Note']
             }
             this.updateshow()
         }
@@ -199,12 +199,12 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         let site = new MsForm.Control()
         site.name = 'site'
         site.inputtype = 'filter'
-        site.options = this.item.config.site
+        site.options = this.config.sites.map((site: any) => site.name)
 
         let by = new MsForm.Control()
         by.name = 'by'
         by.inputtype = 'filter'
-        by.options = this.item.config.by
+        by.options = this.config.people.map((person: any) => person.name)
 
         let date_ms = new MsForm.Control()
         date_ms.name = 'date_ms'
@@ -262,6 +262,9 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.updatesitegroups()
         this.opnotesstore.request_history(this.filter.date)
         this.subs.push(
+            this.configstore.subject.asObservable().subscribe((config: any) => {
+                this.config = config
+            }),
             this.opnotesstore.subject.asObservable().subscribe((opnotes: any) => {
                 this.opnotes = opnotes
                 this.updateshow()

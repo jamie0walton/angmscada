@@ -1,5 +1,5 @@
 <!-- https://icons.getbootstrap.com/ -->
-<div [ngSwitch]="icon">
+<div [ngSwitch]="icon" [style.color]="color">
     <svg *ngSwitchCase="'filter'" xmlns="http://www.w3.org/2000/svg" [attr.width]="width" [attr.height]="height" fill="currentColor" viewBox="0 0 16 16">
         <path d="M15 0v4l-5 5v4l-4 2V9L1 4V0zM2 1v2.5l5 5v5l2-1v-4l5-5V1z"/>
     </svg>
@@ -13,6 +13,15 @@
         <path d="M0 0h1v15h15v1H0Zm2 13v1C4.5 14 3.5 2 5 2s.5 12 3 12 1-6 2-6h6V7h-6c-1.5 0-.5 6-2 6S7.5 1 5 1 3.5 13 2 13"/>
     </svg>
     <svg *ngSwitchCase="'download'" xmlns="http://www.w3.org/2000/svg" [attr.width]="width" [attr.height]="height" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M.5 9.9a.5.5 0 00-.5.5v2.5a2 2 0 002 2H14a2 2 0 002-2V10.4a.5.5 0 00-1 0v2.5a1 1 0 01-1 1H2a1 1 0 01-1-1V10.4A.5.5 0 00.5 9.9m4.2-1a.5.5 0 11.7-.7l2.1 2.1V1.5a.5.5 0 011 0v8.8l2.1-2.1a.5.5 0 01.7.7l-3 3a.5.5 0 01-.7 0Z"/>
+        <path d="M0 10v3a2 2 0 002 2H14a2 2 0 002-2V10H15v3a1 1 0 01-1 1H2A1 1 0 011 13V10H0m5-.3.5-.7 2 1.8V0h1V10.8l2-1.8.5.7-3 2.6Z"/>
+    </svg>
+    <svg *ngSwitchCase="'bell'" xmlns="http://www.w3.org/2000/svg" [attr.width]="width" [attr.height]="height" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M14 11.2l2 1v1H0v-1l2-1C2 7 3 1 7 1 7-.3 9-.3 9 1c4 0 5 6 5 10.2m-11 1H13C13 9 13 2 8 2S3 9 3 12.2m2.6 1.4a1.4 1.4 0 104.8 0Z"/>
+    </svg>
+    <svg *ngSwitchCase="'pen'" xmlns="http://www.w3.org/2000/svg" [attr.width]="width" [attr.height]="height" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M14.4 3.1a.5.5 0 010 .7L4.2 14l-3.1.8.8-3.1L12.1 1.6a.5.5 0 01.7 0ZM13.5.8a1.5 1.5 0 00-2 0A1.5 1.5 0 009.4.9L6.1 4.1a.5.5 0 10.7.7l3.3-3.3a.5.5 0 01.6-.1L1.1 11.1 0 15.3a.5.5 0 00.6.6l4.2-1.1a.5.5 0 000 0L15.1 4.6a1.5 1.5 0 00.1-2.1A1.2 1.2 0 1013.5.8"/>
+    </svg>
+    <svg *ngSwitchCase="'pencil'" xmlns="http://www.w3.org/2000/svg" [attr.width]="width" [attr.height]="height" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M12.146.146a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-10 10-5.168 2.11a.5.5 0 01-.65-.65L2.1 10.2ZM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207Zm1.586 3L10.5 3.207 4 9.707V10.6H5.5V12h.793ZM3.1 10.6l-.174.181-1.528 3.821 3.821-1.528.106-.106H4.8V11.5H3.1v-.9"/>
     </svg>
 </div>

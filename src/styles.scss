@@ -171,3 +171,43 @@ input[type="file"] {
 .fileover {
     background: $mscolor_man;
 }
+
+// This allows the colors to be set via the bus websocket.
+:root {
+    --ms-primary: hsl(194, 52%, 28%); 
+    --ms-secondary: hsl(27, 92%, 35%);
+}
+
+.navbar {
+    background-color: var(--ms-primary);
+}
+
+//.dropdown-menu {
+//    background-color: var(--ms-primary);
+//}
+
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+    background-color: var(--ms-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--ms-primary);
+}
+
+.ms-bg-primary {
+    background-color: var(--ms-primary);
+}
+
+.ms-bg-secondary {
+    background-color: var(--ms-secondary);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--ms-secondary);
+    --bs-btn-border-color: var(--ms-secondary);
+    --bs-btn-hover-bg: var(--ms-secondary);
+    --bs-btn-hover-border-color: var(--ms-secondary);
+    --bs-btn-active-bg: var(--ms-secondary);
+    --bs-btn-active-border-color: var(--ms-secondary);
+}

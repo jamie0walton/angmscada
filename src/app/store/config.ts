@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { BehaviorSubject } from 'rxjs'
 import { environment } from 'src/environments/environment'
+import { name2rgb } from '../shared/functions'
 
 export interface Config {
     ws: string
@@ -11,10 +12,15 @@ export interface Config {
     reload: boolean
     site?: string
     yaml?: string
-    navbar_color: string
     mscada_link: string
-    people: object
-    sites: object
+    people: {
+        name: string
+        email?: string
+        phone?: string
+    }[]
+    sites: {
+        name: string
+    }[]
 }
 
 @Injectable({
@@ -33,10 +39,9 @@ export class ConfigSubject {
             page: 0,
             connected: false,
             reload: false,
-            navbar_color: 'var(--bs-primary)',
             mscada_link: 'https://github.com/jamie0walton/pymscada',
-            people: {},
-            sites: {}
+            people: [],
+            sites: []
         }
         this.subject = new BehaviorSubject<Config>(this.config)
         this.saved = {}
@@ -46,37 +51,9 @@ export class ConfigSubject {
         return this.config
     }
 
-    set_ws(ws: string) {
-        this.config.ws = ws
+    update(updates: Partial<Config>) {
+        Object.assign(this.config, updates)
         this.subject.next(this.config)
-    }
-
-    set_connected(update: boolean) {
-        this.config.connected = update
-        this.subject.next(this.config)
-    }
-
-    set_reload(update: boolean) {
-        this.config.reload = update
-        this.subject.next(this.config)
-    }
-
-    set_update(update: number) {
-        this.config.update = update
-        this.subject.next(this.config)
-    }
-
-    set_page(page: number) {
-        this.config.page = page
-        this.subject.next(this.config)
-    }
-
-    set_site(site: string) {
-        this.config.site = site
-    }
-
-    set_yaml(yaml: string) {
-        this.config.yaml = yaml
     }
 
     set_saved(name: string, data: any) {
@@ -90,8 +67,11 @@ export class ConfigSubject {
     }
 
     set(data: any) {
-        if (data.hasOwnProperty('navbar_color')) {
-            this.config.navbar_color = data.navbar_color
+        if (data.hasOwnProperty('primary_color')) {
+            document.documentElement.style.setProperty('--ms-primary', name2rgb(data.primary_color))
+        }
+        if (data.hasOwnProperty('secondary_color')) {
+            document.documentElement.style.setProperty('--ms-secondary', name2rgb(data.secondary_color))
         }
         if (data.hasOwnProperty('mscada_link')) {
             this.config.mscada_link = data.mscada_link

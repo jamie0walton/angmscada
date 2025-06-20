@@ -73,9 +73,11 @@ export interface OpNote {
 export interface Alarm {
     id: number
     date_ms: number
-    tagname: string
+    tag_alm: string
     kind: number
+    group: string
     desc: string
+    in_alm: boolean
 }
 
 @Injectable({

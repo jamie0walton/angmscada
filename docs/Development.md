@@ -53,10 +53,17 @@ at a websocket with more interesting information that the test server in this
 repository. The most interesting bit being real trend data (which you have set
 up already :), of course ).
 
+Windows 'start' is not listening on 9222 so use the following:
+```cmd
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --incognito --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-debug" https://192.168.73.43/pymscada/?ws=wss://192.168.73.43/pymscada/ws
+```
+
+```powershell
+& 'C:\Program Files\Google\Chrome\Application\chrome.exe' --incognito --remote-debugging-port=9222 --user-data-dir="$env:TEMP\chrome-debug" https://192.168.73.43/pymscada/?ws=wss://192.168.73.43/pymscada/ws
+```
+
 ```cmd
 start chrome --incognito --remote-debugging-port=9222 http://192.168.73.43:8325/?ws=ws://192.168.1.28:8326/
-
-start chrome --incognito --remote-debugging-port=9222 https://192.168.73.43/pymscada/?ws=wss://192.168.73.43/pymscada/ws
 ```
 
 Then either

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core'
-import { ConfigSubject } from 'src/app/store/config'
+import { Config, ConfigSubject } from 'src/app/store/config'
 
 /**
  * URL Parameters:
@@ -28,17 +28,21 @@ export class AppComponent implements OnInit {
     ngOnInit(): void {
         console.log('angmscada build', this.configstore.get().buildDate)
         const urlParams = new URLSearchParams(window.location.search)
+        const updates: Partial<Config> = {}
         const ws = urlParams.get('ws')
-        const site = urlParams.get('site')
-        const yaml = urlParams.get('yaml')
         if (ws !== null) {
-            this.configstore.set_ws(ws)
+            updates.ws = ws
         }
+        const site = urlParams.get('site')
         if (site !== null) {
-            this.configstore.set_site(site)
+            updates.site = site
         }
+        const yaml = urlParams.get('yaml')
         if (yaml !== null) {
-            this.configstore.set_yaml(yaml)
+            updates.yaml = yaml
+        }
+        if (Object.keys(updates).length > 0) {
+            this.configstore.update(updates)
         }
     }
 }

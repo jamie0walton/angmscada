@@ -1,30 +1,30 @@
 <!-- List the notes on the screen -->
-<div class="mb-1 d-flex align-items-center">
+<div class="d-flex align-items-center">
   <div class="me-4">
     <h3>Operator Notes</h3>
   </div>
   <div class="me-4" *ngFor="let g of site_groups; index as i" (click)="checkbox(i)">
     <input type="checkbox" [checked]="g.checked" (change)="$event.preventDefault()">&nbsp;{{g.name}}
   </div>
-  <div class="d-flex ms-auto">
-    <button *ngIf="abnormal" class="me-2 px-2 py-1 btn btn-danger"  (click)="filter_abnormal()" style="font-family: 'Arial Narrow', sans-serif;">
+  <div class="d-flex ms-auto align-items-center">
+    <button *ngIf="abnormal" class="me-4 px-2 py-1 btn btn-danger"  (click)="filter_abnormal()" style="font-family: 'Arial Narrow', sans-serif;">
       ABNORMAL
     </button>
-    <button class="me-4 px-2 py-1 btn btn-outline-secondary" (click)="formAdd(-1)">
-      NEW
-    </button>
+    <div class="me-4" (click)="formAdd(-1)">
+      <app-icon icon="pencil" width="20" height="20"></app-icon>
+    </div>
     <div class="me-4" (click)="downloadcsv()">
       <app-icon icon="download" width="20" height="20"></app-icon>
     </div>
   </div>
 </div>
-<div class="row bg-primary text-light border-bottom-0" (click)="formFilter()">
+<div class="row ms-bg-primary text-light border-bottom-0" (click)="formFilter()">
   <div class="col-12 col-md-4 mt-0 mb-0">
     <div class="row">
       <div class="col-4 mt-1 mb-1" style="display:inline-flex">
         <app-icon icon="filter" width="16" height="16"></app-icon>&nbsp;Time
       </div>
-      <div class="col-4 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.by !== '' ? 'underline' : 'none'}">Operator</div>
+      <div class="col-4 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.by !== '' ? 'underline' : 'none'}">By</div>
       <div class="col-4 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.site !== '' ? 'underline' : 'none'}">Site</div>
     </div>
   </div>

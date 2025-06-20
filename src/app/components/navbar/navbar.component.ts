@@ -15,15 +15,14 @@ type MenuItem = {
 })
 export class NavBarComponent implements OnInit, OnDestroy {
     subs: any = []
-    title: string // first menu item
-    menu: Menu[] // the rest of the menu
+    title: string
+    menu: Menu[]
     newmenu: MenuItem[][]
-    selected: number // active selected page from the menu
+    on_page: number
     collapse: boolean
     showmodal: boolean
     connected: boolean
     reload: boolean = false
-    navbar_color: string = ''
     mscada_link: string = ''
 
     constructor(
@@ -33,14 +32,14 @@ export class NavBarComponent implements OnInit, OnDestroy {
         this.title = ''
         this.menu = []
         this.newmenu = []
-        this.selected = 0
+        this.on_page = 0
         this.collapse = true
         this.showmodal = false
         this.connected = false
     }
 
     onClick(menuitem: number) {
-        this.configstore.set_page(menuitem)
+        this.configstore.update({ page: menuitem })
         this.collapse = true
     }
 
@@ -51,10 +50,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.subs.push(
             this.configstore.subject.asObservable().subscribe(value => {
-                this.selected = value.page
+                this.on_page = value.page
                 this.connected = value.connected
                 this.reload = value.reload
-                this.navbar_color = value.navbar_color
                 this.mscada_link = value.mscada_link
             }),
             this.menustore.subject.asObservable().subscribe(value => {

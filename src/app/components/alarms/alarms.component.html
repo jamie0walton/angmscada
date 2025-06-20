@@ -1,41 +1,41 @@
 <!-- List the notes on the screen -->
-<div class="mb-1 d-flex align-items-center">
+<div class="d-flex align-items-center">
   <div class="me-4">
-    <h3>Alarms</h3>
+    <h3>Alarm History</h3>
   </div>
-  <div class="d-flex ms-auto">
-    <button class="me-2 px-2 py-1 btn btn-warning"  (click)="filter_in_alm()" style="font-family: 'Arial Narrow', sans-serif;">
-      ALARM
-    </button>
+  <div class="d-flex ms-auto align-items-center">
     <div class="me-4" (click)="downloadcsv()">
       <app-icon icon="download" width="20" height="20"></app-icon>
     </div>
   </div>
 </div>
-<div class="row bg-primary text-light border-bottom-0" (click)="formFilter()">
+<div class="row ms-bg-primary text-light border-bottom-0" (click)="formFilter()">
   <div class="col-12 col-md-5 mt-0 mb-0">
     <div class="row">
-      <div class="col-5 mt-1 mb-1" style="display:inline-flex">
+      <div class="col-4 mt-1 mb-1" style="display:inline-flex">
         <app-icon icon="filter" width="16" height="16"></app-icon>&nbsp;Time
       </div>
       <div class="col-2 mt-1 mb-1" [ngStyle]="{'text-decoration': (filter.kind_ALM || filter.kind_RTN || filter.kind_ACT || filter.kind_INF) ? 'underline' : 'none'}">Kind</div>
-      <div class="col-5 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.tag_alm!== '' ? 'underline' : 'none'}">Tag Alarm</div>
+      <div class="col-2 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.group!== '' ? 'underline' : 'none'}">Group</div>
+      <div class="col-4 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.alarm!== '' ? 'underline' : 'none'}">Alarm</div>
     </div>
   </div>
   <div class="col-12 col-md-7 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.desc !== '' ? 'underline' : 'none'}">Description</div>
 </div>
-<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{
-    'background-color': x.in_alm ? '#FFA500' : (i%2 == 0 ? '#d0d0d0' : '')}">
+<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{'background-color': i%2 == 0 ? '#d0d0d0' : ''}">
   <div class="col-12 col-md-5 small">
     <div class="row">
-      <div class="col-5">
+      <div class="col-4">
         <p class="mb-1">{{x.date_ms | date:'d-MMM-yy HH:mm'}}</p>
       </div>
       <div class="col-2">
         <p class="mb-1">{{['ALM', 'RTN', 'ACT', 'INFO'][x.kind]}}</p>
       </div>
-      <div class="col-5">
-        <p class="mb-1">{{x.tag_alm}}</p>
+      <div class="col-2">
+        <p class="mb-1">{{x.group}}</p>
+      </div>
+      <div class="col-4">
+        <p class="mb-1">{{x.alarm}}</p>
       </div>
     </div>
   </div>

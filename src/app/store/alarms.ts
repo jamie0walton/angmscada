@@ -3,13 +3,29 @@ import { BehaviorSubject } from 'rxjs'
 import { TagSubject } from 'src/app/store/tag'
 import { CommandSubject } from './command'
 
+/**
+Note the python __alarms__ tag is set in the server as:
+    dictionary style
+    self.rta.value = {
+        'id': result[0],
+        'date_ms': result[1],
+        'tag_alm': result[2],
+        'kind': result[3],
+        'desc': result[4],
+        'group': result[5]
+    }
+    bulk style
+    self.rta.value = {'__rta_id__': request['__rta_id__'],
+                        'data': results}
+*/
+
 export interface Alarm {
     id: number
     date_ms: number
-    tag_alm: string
+    alarm: string
     kind: number
+    group: string
     desc: string
-    in_alm: boolean
 }
 
 @Injectable({
@@ -40,10 +56,10 @@ export class AlarmSubject {
                 let alarm: Alarm = {
                     id: tag_value.id,
                     date_ms: tag_value.date_ms,
-                    tag_alm: tag_value.tag_alm,
+                    alarm: tag_value.tag_alm,
                     kind: tag_value.kind,
-                    desc: tag_value.desc,
-                    in_alm: tag_value.in_alm
+                    group: tag_value.group,
+                    desc: tag_value.desc
                 }
                 if (index === -1) {  // not present, insert in descending order
                     const insertIndex = this.alarms.findIndex((obj) => obj.date_ms < alarm.date_ms);
@@ -68,10 +84,10 @@ export class AlarmSubject {
                 let update = {
                     id: rec[0],
                     date_ms: rec[1],
-                    tag_alm: rec[2],
+                    alarm: rec[2],
                     kind: rec[3],
                     desc: rec[4],
-                    in_alm: rec[5]
+                    group: rec[5]
                 }
                 if (rec[0] in startidx) {
                     this.alarms[startidx[rec[0]]] = update

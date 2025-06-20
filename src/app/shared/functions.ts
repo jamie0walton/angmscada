@@ -295,3 +295,12 @@ export function name2rgba(name: string, alpha: number): string {
         return 'rgba(0,0,0,' + alpha + ')'
     }
 }
+
+export function name2rgb(name: string): string {
+    if (name.toLowerCase() in colors) {
+        return 'rgb(' + [...colors[name]].join(',') + ')'
+    }
+    else {
+        return 'rgb(0,0,0)'
+    }
+}

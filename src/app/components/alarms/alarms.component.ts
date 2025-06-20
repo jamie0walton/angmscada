@@ -17,13 +17,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
     show: Alarm[]
     filter: {
         date: number, 
-        tag_alm: string,
+        alarm: string,
         kind_ALM: number,
         kind_RTN: number,
         kind_ACT: number,
         kind_INF: number,
-        desc: string,
-        in_alm: boolean
+        group: string,
+        desc: string
     }
     form: MsForm.Form
 
@@ -37,13 +37,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.show = []
         this.filter = {
             date: Number(Date.now()),
-            tag_alm: '',
+            alarm: '',
             kind_ALM: 0,
             kind_RTN: 0,
             kind_ACT: 0,
             kind_INF: 0,
             desc: '',
-            in_alm: false
+            group: ''
         }
         this.form = new MsForm.Form()
    }
@@ -53,10 +53,10 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
         */
         // Make CSV
-        let csv = 'id,date,tagname,kind,desc\n'
+        let csv = 'id,date,tagname,kind,group,desc\n'
         for (let i = 0; i < this.show.length; i++) {
             const e = this.show[i]
-            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.tag_alm + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',"' + e.desc.replace(/"/g, '""') + '"\n'
+            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.alarm + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',' + e.group + ',"' + e.desc.replace(/"/g, '""') + '"\n'
         }
         // Deliver CSV
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -67,40 +67,38 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         URL.revokeObjectURL(link.href)
     }
 
-    filter_in_alm() {
-        this.filter.in_alm = !this.filter.in_alm
-        this.updateshow()
-    }
-
     updateshow() {
         if(this.alarms.length === 0) {
             return
         }
         let filter_kind = (this.filter.kind_ALM + this.filter.kind_RTN + this.filter.kind_ACT + this.filter.kind_INF) > 0 ? true : false
-        if (this.filter.tag_alm.length === 0 && 
+        if (this.filter.alarm.length === 0 && 
             !filter_kind && 
             this.filter.desc.length === 0 &&
-            !this.filter.in_alm) {
+            this.filter.group.length === 0) {
             this.show = this.alarms
             return
         }
         this.show = []
-        let dotagname = this.filter.tag_alm.length > 0
+        let dotagname = this.filter.alarm.length > 0
         let dodesc = this.filter.desc.length > 0
-        let tagnamere: RegExp = new RegExp(this.filter.tag_alm, 'i')
+        let dogroup = this.filter.group.length > 0
+        let tagnamere: RegExp = new RegExp(this.filter.alarm, 'i')
         let descre: RegExp = new RegExp(this.filter.desc, 'i')
+        let groupre: RegExp = new RegExp(this.filter.group, 'i')
         for (let i = 0; i < this.alarms.length; i++) {
             const e = this.alarms[i]
             let note: Alarm = {
                 id: e.id,
                 date_ms: e.date_ms,
-                tag_alm: e.tag_alm,
+                alarm: e.alarm,
                 kind: e.kind,
-                desc: e.desc,
-                in_alm: e.in_alm
+                group: e.group,
+                desc: e.desc
             }
             let matches = true
-            if (dotagname && !tagnamere.test(e.tag_alm)) matches = false
+            if (dotagname && !tagnamere.test(e.alarm)) matches = false
+            if (dogroup && !groupre.test(e.group)) matches = false
             if (filter_kind) {
                 if (this.filter.kind_ALM == 0 && e.kind == 0 ||
                     this.filter.kind_RTN == 0 && e.kind == 1 ||
@@ -110,12 +108,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
             }
             if (dodesc && !descre.test(e.desc)) matches = false
             if (matches) {
-                if (this.filter.in_alm && !e.in_alm) {
-                    matches = false
-                }
-                if (matches) {
-                    this.show.push(note)
-                }
+                this.show.push(note)
             }
         }
     }
@@ -126,13 +119,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         start.inputtype = 'date'
         start.stringvalue = datestring(new Date(this.filter.date))
 
-        let tag_alm = new MsForm.Control()
-        tag_alm.name = 'tagname'
-        tag_alm.inputtype = 'filter'
-        tag_alm.stringvalue = this.filter.tag_alm
+        let alarm = new MsForm.Control()
+        alarm.name = 'Alarm'
+        alarm.inputtype = 'filter'
+        alarm.stringvalue = this.filter.alarm
 
         let alm = new MsForm.Control()
-        alm.name = 'Alarm'
+        alm.name = 'In Alarm'
         alm.inputtype = 'checkbox'
         alm.numbervalue = this.filter.kind_ALM
 
@@ -151,15 +144,20 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         inf.inputtype = 'checkbox'
         inf.numbervalue = this.filter.kind_INF
 
+        let group = new MsForm.Control()
+        group.name = 'Group'
+        group.inputtype = 'filter'
+        group.stringvalue = this.filter.group
+
         let desc = new MsForm.Control()
-        desc.name = 'description'
-        desc.inputtype = 'str'
+        desc.name = 'Description'
+        desc.inputtype = 'filter'
         desc.stringvalue = this.filter.desc
 
         this.form.requestid = 'alarms filter'
         this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, tag_alm, alm, rtn, act, inf, desc]
+        this.form.controls = [start, alm, rtn, act, inf, group, alarm, desc]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -169,11 +167,11 @@ export class AlarmsComponent implements OnInit, OnDestroy {
                 this.filter.date = cmd.setvalue['start']
                 this.alarmstore.request_history(this.filter.date)
             }
-            if (typeof(cmd.setvalue['tag_alm']) === 'string') {
-                this.filter.tag_alm = cmd.setvalue['tag_alm']
+            if (typeof(cmd.setvalue['Alarm']) === 'string') {
+                this.filter.alarm = cmd.setvalue['Alarm']
             }
-            if (typeof(cmd.setvalue['Alarm']) === 'number') {
-                this.filter.kind_ALM = cmd.setvalue['Alarm']
+            if (typeof(cmd.setvalue['In Alarm']) === 'number') {
+                this.filter.kind_ALM = cmd.setvalue['In Alarm']
             }
             if (typeof(cmd.setvalue['Return to Normal']) === 'number') {
                 this.filter.kind_RTN = cmd.setvalue['Return to Normal']
@@ -184,8 +182,11 @@ export class AlarmsComponent implements OnInit, OnDestroy {
             if (typeof(cmd.setvalue['Information']) === 'number') {
                 this.filter.kind_INF = cmd.setvalue['Information']
             }
-            if (typeof(cmd.setvalue['desc']) === 'string') {
-                this.filter.desc = cmd.setvalue['desc']
+            if (typeof(cmd.setvalue['Group']) === 'string') {
+                this.filter.group = cmd.setvalue['Group']
+            }
+            if (typeof(cmd.setvalue['Description']) === 'string') {
+                this.filter.desc = cmd.setvalue['Description']
             }
             this.updateshow()
         }

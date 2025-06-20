@@ -144,7 +144,7 @@ export class BusComponent implements OnInit, OnDestroy {
         this.ws.binaryType = 'arraybuffer'
         this.ws.onopen = () => {
             console.log('makeWSConnection success', this.config.ws, this.ws?.readyState)
-            this.configstore.set_connected(true)
+            this.configstore.update({ connected: true })
             SYS_TAGS.forEach((element: string) => {
                 this.sub_if_not_seen(element)
             })
@@ -165,8 +165,10 @@ export class BusComponent implements OnInit, OnDestroy {
         this.ws.onclose = (msg) => {
             console.log('WS closed (note aiohttp has a 5 minute inactivity timeout):', msg)
             this.ws = null  // didn't like delete
-            this.configstore.set_connected(false)
-            this.configstore.set_reload(true)
+            this.configstore.update({
+                connected: false,
+                reload: true
+            })
         }
     }
 
@@ -234,7 +236,6 @@ export class BusComponent implements OnInit, OnDestroy {
         }
         this.pagestore.load(pages)
         this.menustore.load(menu)
-        this.configstore.set_page(0)
     }
 
     ngOnInit() {
