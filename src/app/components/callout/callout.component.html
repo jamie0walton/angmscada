@@ -1,12 +1,15 @@
 <h3>Callout</h3>
-<div class="row bg-primary text-light border-bottom-0" (click)="showFilter()">
-  <div class="col-4 mt-1 mb-1">Callee</div>
-  <div class="col-6 mt-1 mb-1">Email or Phone</div>
-  <div class="col-2 mt-1 mb-1">Role</div>
+<div class="row ms-bg-primary text-light border-bottom-0">
+  <div class="col-3 mt-1 mb-1">Callee</div>
+  <div class="col-2 mt-1 mb-1">SMS</div>
+  <div class="col-1 mt-1 mb-1">Delay</div>
+  <div class="col-6 mt-1 mb-1">Groups</div>
 </div>
-<div class="row" *ngFor="let x of tag.value; index as i" [ngStyle]="{'background-color': (i%2 == 0 ? '#f0f0f0' : '')}"
-  (click)="showMulti(i)">
-  <div class="col-4 mt-1 mb-1 pe-0">{{x[0]}}</div>
-  <div class="col-6 mt-1 mb-1 pe-0 truncate">{{x[1]}}</div>
-  <div class="col-2 mt-1 mb-1 pe-0">{{x[2]}}</div>
+<div class="row" *ngFor="let callee of calleeData.callees; index as i" 
+  [ngStyle]="{'background-color': (i%2 == 0 ? '#d0d0d0' : '')}"
+  (click)="showForm(i)">
+  <div class="col-3 mt-1 mb-1 pe-0">{{callee.name}}</div>
+  <div class="col-2 mt-1 mb-1 pe-0 truncate">{{callee.sms}}</div>
+  <div class="col-1 mt-1 mb-1 pe-0">{{callee.delay_ms === -1 ? 'N/A' : (callee.delay_ms / 60000)}}</div>
+  <div class="col-6 mt-1 mb-1 pe-0">{{callee.group.join(', ')}}</div>
 </div>

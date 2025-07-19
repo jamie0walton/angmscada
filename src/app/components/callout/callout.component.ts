@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { MsForm, FormSubject } from 'src/app/store/form'
 import { CommandSubject } from 'src/app/store/command'
-
-const DUTY_OPTS = ['off', 'oncall', 'backup1', 'backup2', 'escalate']
+import { CalleeSubject, CalleeData } from 'src/app/store/callee'
 
 @Component({
     selector: 'app-callout',
@@ -17,11 +16,13 @@ export class CalloutComponent implements OnInit, OnDestroy {
     name: string
     to: string
     form: MsForm.Form
+    calleeData: CalleeData
 
     constructor(
         private tagstore: TagSubject,
         private commandstore: CommandSubject,
-        private formstore: FormSubject
+        private formstore: FormSubject,
+        private calleeStore: CalleeSubject
     ) {
         this.tag = new Tag()
         this.display = 'none'
@@ -29,53 +30,57 @@ export class CalloutComponent implements OnInit, OnDestroy {
         this.to = ''
         this.form = new MsForm.Form()
         this.form.requestid = 'callout'
+        this.calleeData = { callees: [], groups: [] }
     }
 
-    showFilter() {}
+    showForm(index: number) {
+        const callee = this.calleeData.callees[index]
+        
+        // Create form controls
+        let name = new MsForm.Control()
+        name.name = 'name'
+        name.inputtype = 'description'
+        name.stringvalue = callee.name
 
-    showMulti(index: number) {
-        let name = this.tag.value[index][0]
-        let number = this.tag.value[index][1]
-        let level = this.tag.value[index][2]
-        let control = new MsForm.Control()
-        control.inputtype = 'multi'
-        control.name = number
-        control.options = DUTY_OPTS
-        control.optionvalue = DUTY_OPTS.indexOf(level)
-        this.form.controls = [control]
-        this.form.name = name
-        this.form.description = number
+        let sms = new MsForm.Control()
+        sms.name = 'sms'
+        sms.inputtype = 'description'
+        sms.stringvalue = callee.sms
+
+        let delay = new MsForm.Control()
+        delay.name = 'delay'
+        delay.inputtype = 'int'
+        delay.numbervalue = callee.delay_ms === -1 ? 0 : callee.delay_ms / 60000
+        delay.min = -1
+        delay.units = 'minutes'
+
+        let groups = new MsForm.Control()
+        groups.name = 'groups'
+        groups.inputtype = 'multi'
+        groups.options = this.calleeData.groups.map(g => g.name)
+        groups.optionvalue = callee.group.map(g => 
+            this.calleeData.groups.findIndex(grp => grp.name === g)
+        ).filter(i => i !== -1)[0] || 0
+
+        this.form.requestid = this.item.tagname + ' ' + callee.name
+        this.form.name = "Edit Callee"
+        this.form.delete = false
+        this.form.controls = [name, sms, delay, groups]
         this.formstore.pubFormOpts(this.form)
     }
 
     formAction(cmd: MsForm.Close) {
-        if (cmd.action === 'submit') {
-            let number = Object.keys(cmd.setvalue)[0]
-            let setpt = cmd.setvalue[number]
-            this.commandstore.command({
-                "type": "set",
-                "tagname": this.item.tagname[1],
-                "value": {
-                    'to': number,
-                    'duty': setpt
-                }
-            })
-        }
+        this.calleeStore.callee_action(cmd)
     }
 
     ngOnInit(): void {
+        this.calleeStore.subscribe(this.item.tagname)
         this.subs.push(
-            this.tagstore.subject(this.item.tagname[0]).asObservable().subscribe((tag: any) => {
-                if (this.tag.id === null) {
-                    this.tag = tag
-                }
-                else {
-                    this.tag.value = tag.value
-                    this.tag.time_ms = tag.time_ms
-                }
+            this.calleeStore.subject.asObservable().subscribe((data: CalleeData) => {
+                this.calleeData = data
             }),
             this.formstore.closesubject.asObservable().subscribe(cmd => {
-                if (cmd.requestid === 'callout') {
+                if (cmd.requestid.startsWith(this.item.tagname)) {
                     this.formAction(cmd)
                 }
             })

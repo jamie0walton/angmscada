@@ -245,6 +245,10 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         this.formstore.pubFormOpts(this.form)
     }
 
+    formAction(cmd: MsForm.Close) {
+        this.opnotesstore.opnote_action(cmd)
+    }
+
     ngOnInit(): void {
         if (this.item.config?.age_d) {
             this.opnotesstore.set_age_d(this.item.config.age_d)
@@ -271,7 +275,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
             }),
             this.formstore.closesubject.asObservable().subscribe(cmd => {
                 if (cmd.requestid.startsWith('__opnotes__')) {
-                    this.opnotesstore.opnote_action(cmd)
+                    this.formAction(cmd)
                 }
                 else if (cmd.requestid === 'opnotes filter') {
                     this.formFilterAction(cmd)

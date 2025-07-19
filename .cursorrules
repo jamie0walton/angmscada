@@ -1,9 +1,10 @@
-Note: Cursor advised that cursor doesn't read this file.
-
-In chats:
 - Only offer minimal changes that address the specific request
 - If other changes seem appropriate, describe them briefly as an option
 - If a change seems bad, advise but still provide the change
+- Never update local state, wait for server response
+- Do not add comments that merely restate simple code actions
+- Follow established patterns
+- Delegate actions to stores
 
 For typescript files:
 - Use 4 spaces for indentation
