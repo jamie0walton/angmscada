@@ -30,7 +30,7 @@ export class CalloutComponent implements OnInit, OnDestroy {
         this.to = ''
         this.form = new MsForm.Form()
         this.form.requestid = 'callout'
-        this.calleeData = { callees: [], groups: [] }
+        this.calleeData = { callees: [], groups: [], escalation: [] }
     }
 
     showForm(index: number) {
@@ -47,30 +47,29 @@ export class CalloutComponent implements OnInit, OnDestroy {
         sms.inputtype = 'description'
         sms.stringvalue = callee.sms
 
-        let delay = new MsForm.Control()
-        delay.name = 'delay'
-        delay.inputtype = 'int'
-        delay.numbervalue = callee.delay_ms === -1 ? 0 : callee.delay_ms / 60000
-        delay.min = -1
-        delay.units = 'minutes'
+        let role = new MsForm.Control()
+        role.name = 'role'
+        role.inputtype = 'filter'
+        role.options = this.calleeData.escalation
+        role.stringvalue = callee.role
 
         let groups = new MsForm.Control()
-        groups.name = 'groups'
-        groups.inputtype = 'multi'
-        groups.options = this.calleeData.groups.map(g => g.name)
-        groups.optionvalue = callee.group.map(g => 
-            this.calleeData.groups.findIndex(grp => grp.name === g)
-        ).filter(i => i !== -1)[0] || 0
+        groups.name = 'group'
+        groups.inputtype = 'filter'
+        groups.options = Object.keys(this.calleeData.groups)
+        groups.stringvalue = callee.group
 
-        this.form.requestid = this.item.tagname + ' ' + callee.name
+        this.form.requestid = this.item.tagname
         this.form.name = "Edit Callee"
         this.form.delete = false
-        this.form.controls = [name, sms, delay, groups]
+        this.form.controls = [name, sms, role, groups]
         this.formstore.pubFormOpts(this.form)
     }
 
     formAction(cmd: MsForm.Close) {
-        this.calleeStore.callee_action(cmd)
+        if (cmd.requestid == this.item.tagname) {
+            this.calleeStore.callee_action(cmd)
+        }
     }
 
     ngOnInit(): void {

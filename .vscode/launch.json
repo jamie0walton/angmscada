@@ -4,13 +4,15 @@
   "configurations": [
     {
       // run pymscada wwwserver, see docs/test_server/wwwserver.yaml
-      // ng build --configuration development --watch
-      // start chrome --remote-debugging-port=9222 --disable-application-cache
-      // http://192.168.1.28:9326/
+      // ng build --configuration development
+      // wait forever for it to do the maps :(
+      // start chrome --remote-debugging-port=9222 --user-data-dir="C:\temp\chrome-debug" http://192.168.73.43/
+      // try to connect :(
       "name": "manual chrome",
       "type": "chrome",
       "request": "attach",
-      "port": 9222
+      "port": 9222,
+      "webRoot": "${workspaceFolder}"
     },
     {
 /*

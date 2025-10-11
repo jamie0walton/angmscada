@@ -19,6 +19,8 @@ export class FormComponent implements OnInit, OnDestroy {
     delete: boolean = false
     filex: File|null = null
     filename: string = ''
+    filteredOptions: {[key: string]: string[]} = {}
+    filterText: {[key: string]: string} = {}
 
     constructor(
         private formstore: FormSubject
@@ -30,6 +32,36 @@ export class FormComponent implements OnInit, OnDestroy {
     patch(key: string, value: string) {
         this.form.patchValue({ [key]: value })
         this.form.markAsDirty()
+        const control = this.controls.find(c => c.name === key)
+        if (control && control.inputtype === 'filter') {
+            this.clearFilter(key)
+        }
+    }
+
+    onFilterKeydown(event: KeyboardEvent, controlName: string) {
+        const key = event.key.toLowerCase()
+        if (key.length === 1) {
+            this.filterText[controlName] = key
+            this.updateFilteredOptions(controlName)
+        }
+    }
+
+    updateFilteredOptions(controlName: string) {
+        const control = this.controls.find(c => c.name === controlName)
+        if (control && control.options) {
+            if (this.filterText[controlName]) {
+                this.filteredOptions[controlName] = control.options.filter(option => 
+                    option.toLowerCase().startsWith(this.filterText[controlName])
+                )
+            } else {
+                this.filteredOptions[controlName] = control.options
+            }
+        }
+    }
+
+    clearFilter(controlName: string) {
+        this.filterText[controlName] = ''
+        this.updateFilteredOptions(controlName)
     }
 
     onFilesDropped(files: FileList) {
@@ -116,6 +148,9 @@ export class FormComponent implements OnInit, OnDestroy {
                 case 'checkbox':
                     value = value ? 1 : 0
                     break
+                case 'description':
+                    value = value
+                    break
                 default:
                     break
             }
@@ -130,6 +165,8 @@ export class FormComponent implements OnInit, OnDestroy {
         this.description = config.description
         this.controls = config.controls
         this.delete = config.delete
+        this.filteredOptions = {}
+        this.filterText = {}
         let formcontrols: {[key: string]: UntypedFormControl} = {}
         for (let i = 0; i < this.controls.length; i++) {
             const control = this.controls[i]
@@ -150,12 +187,21 @@ export class FormComponent implements OnInit, OnDestroy {
                     break
                 case 'str':
                 case 'textarea':
-                case 'filter':
                 case 'drag_n_drop':
                     value = control.stringvalue || ''                    
                     break
+                case 'filter':
+                    value = control.stringvalue || ''
+                    if (control.options) {
+                        this.filteredOptions[control.name] = control.options
+                        this.filterText[control.name] = ''
+                    }
+                    break
                 case 'checkbox':
                     value = control.numbervalue ? 1 : 0
+                    break
+                case 'description':
+                    value = control.stringvalue || ''
                     break
                 default:
                     break

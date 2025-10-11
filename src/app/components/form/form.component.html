@@ -12,7 +12,7 @@
             <div [ngSwitch]="c.inputtype">
               <!-- Plain Description -->
               <div *ngSwitchCase="'description'" class="mb-3 w-100">
-                <p>{{c.name}}</p>
+                <p><strong>{{c.name}}:</strong> {{c.stringvalue}}</p>
               </div>
               <!-- float entry -->
               <div *ngSwitchCase="'float'" class="mb-3">
@@ -90,10 +90,10 @@
               <!-- Filter text entry with a clear field option -->
               <div *ngSwitchCase="'filter'" class="input-group mb-3">
                 <div appDropdown>
-                  <button class="btn btn-outline-secondary dropdown-toggle" type="button">{{c.name}}</button>
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" (keydown)="onFilterKeydown($event, c.name)">{{c.name}}</button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item bg-light" (click)="patch(c.name,'')">Clear</a>
-                    <a class="dropdown-item" *ngFor="let o of c.options" (click)="patch(c.name,o)">{{o}}</a>
+                    <a class="dropdown-item bg-light" (click)="patch(c.name,''); clearFilter(c.name)">Clear</a>
+                    <a class="dropdown-item" *ngFor="let o of filteredOptions[c.name] || c.options" (click)="patch(c.name,o)">{{o}}</a>
                   </div>
                 </div>
                 <input type="text" class="form-control" [formControlName]="c.name" (click)="$event.stopPropagation()">

@@ -1,17 +1,5 @@
-- Only offer minimal changes that address the specific request
-- If other changes seem appropriate, describe them briefly as an option
-- If a change seems bad, advise but still provide the change
-- Never update local state, wait for server response
-- Do not add comments that merely restate simple code actions
-- Follow established patterns
-- Delegate actions to stores
-
-For typescript files:
-- Use 4 spaces for indentation
-- Use single quotes for strings
-- Do not use optional semicolons
-
-For html files:
-- Use 2 spaces for indentation
-- Use single quotes for strings
+- Use 4 spaces for indentation in Typescript
+- Use 2 spaces for indentation in html
+- Use single quotes for strings in Typescript
+- Use single quotes for strings in html
 - Do not use optional semicolons

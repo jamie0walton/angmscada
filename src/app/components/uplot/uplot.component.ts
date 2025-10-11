@@ -139,7 +139,18 @@ export class UplotComponent implements OnInit, OnDestroy {
                     let res = this.arrayMinMax(this.udataset.show[i + 1], lastminmax)
                     minmax[trace.scale] = [res[0], res[1]]
                 }
-                minmax[trace.scale] = [Math.trunc(minmax[trace.scale][0] * 100) / 100, Math.trunc(minmax[trace.scale][1] * 100 + 1) / 100]
+                if(minmax[trace.scale] && minmax[trace.scale][0] !== null && minmax[trace.scale][1] !== null) {
+                    minmax[trace.scale] = [Math.trunc(minmax[trace.scale][0] * 100) / 100, Math.trunc(minmax[trace.scale][1] * 100 + 1) / 100]
+                }
+                else if(this.plot && trace.scale && this.plot.scales[trace.scale]) {
+                    minmax[trace.scale] = [
+                        this.plot.scales[trace.scale].min ?? 0,
+                        this.plot.scales[trace.scale].max ?? 100
+                    ]
+                }
+                else {
+                    minmax[trace.scale] = [0, 100]
+                }
             }
             let seen = new Set()
             for (let i = 0; i < this.plot.series.length; i++) {
@@ -157,10 +168,13 @@ export class UplotComponent implements OnInit, OnDestroy {
                         let controlmin = new MsForm.Control()
                         controlmin.inputtype = 'filter'
                         controlmin.name = trace.scale + ' min'
-                        let range = this.udataset.axes[trace.scale].configrange
+                        let range = this.udataset.axes[trace.scale]?.configrange || [
+                            this.plot.scales[trace.scale]?.min ?? 0,
+                            this.plot.scales[trace.scale]?.max ?? 100
+                        ]
                         controlmin.options = [
                             range[0].toString(),
-                            minmax[trace.scale][0].toString()
+                            minmax[trace.scale]?.[0]?.toString() || (this.plot.scales[trace.scale]?.min ?? 0).toString()
                         ]
                         controls.push(controlmin)
                         let controlmax = new MsForm.Control()
@@ -168,7 +182,7 @@ export class UplotComponent implements OnInit, OnDestroy {
                         controlmax.name = trace.scale + ' max'
                         controlmax.options = [
                             range[1].toString(),
-                            minmax[trace.scale][1].toString()
+                            minmax[trace.scale]?.[1]?.toString() || (this.plot.scales[trace.scale]?.max ?? 100).toString()
                         ]
                         controls.push(controlmax)
                     }
