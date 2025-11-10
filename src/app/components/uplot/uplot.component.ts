@@ -522,14 +522,16 @@ export class UplotComponent implements OnInit, OnDestroy {
                 let axis: uPlot.Axis = {
                     scale: obj.scale,
                     values: SCALE,
-                    grid: {stroke: "#999", width: 0.5}
+                    grid: {stroke: "#999", width: 0.5},
+                    show: obj.hasOwnProperty('show') ? obj.show : true
                 }
                 this.options.axes!.push(axis)
             }
             else {  // with scale and possibly side
                 let axis: uPlot.Axis = {
                     scale: obj.scale,
-                    grid: {stroke: "#999", width: 0.5}
+                    grid: {stroke: "#999", width: 0.5},
+                    show: obj.hasOwnProperty('show') ? obj.show : true
                 }
                 if(obj.hasOwnProperty('side')){ axis.side = obj.side }
                 this.options.axes!.push(axis)

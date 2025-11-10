@@ -119,7 +119,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
                 if (e.abnormal === 1) abnormal = true
             }
         }
-        this.abnormal = abnormal
+        this.abnormal = abnormal || this.filter.abnormal === 1
     }
 
     checkbox(gid: number) {
@@ -194,7 +194,7 @@ export class OpNotesComponent implements OnInit, OnDestroy {
         }
     }
 
-    formAdd(index: number) {
+    formEdit(index: number) {
         // create the form controls
         let site = new MsForm.Control()
         site.name = 'site'

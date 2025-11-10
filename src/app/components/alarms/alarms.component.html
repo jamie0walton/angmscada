@@ -22,7 +22,7 @@
   </div>
   <div class="col-12 col-md-7 mt-1 mb-1" [ngStyle]="{'text-decoration': filter.desc !== '' ? 'underline' : 'none'}">Description</div>
 </div>
-<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{'background-color': i%2 == 0 ? '#d0d0d0' : ''}">
+<div class="row" *ngFor="let x of show; index as i" [ngStyle]="{'background-color': i%2 == 0 ? '#d0d0d0' : ''}" (click)="formEdit(x.alarm)">
   <div class="col-12 col-md-5 small">
     <div class="row">
       <div class="col-4">

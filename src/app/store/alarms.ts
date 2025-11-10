@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core'
 import { BehaviorSubject } from 'rxjs'
 import { TagSubject } from 'src/app/store/tag'
 import { CommandSubject } from './command'
+import { MsForm } from 'src/app/store/form'
 
 /**
 Note the python __alarms__ tag is set in the server as:
@@ -56,7 +57,7 @@ export class AlarmSubject {
                 let alarm: Alarm = {
                     id: tag_value.id,
                     date_ms: tag_value.date_ms,
-                    alarm: tag_value.tag_alm,
+                    alarm: tag_value.alarm_string,
                     kind: tag_value.kind,
                     group: tag_value.group,
                     desc: tag_value.desc
@@ -120,6 +121,18 @@ export class AlarmSubject {
             value: {
                 action: 'BULK HISTORY',
                 date_ms: this.requested_date
+            }
+        })
+    }
+
+    alarm_action(cmd: MsForm.Close) {
+       this.commandstore.command({
+            'type': 'rta',
+            'tagname': '__alarms__',
+            'value': {
+                'action': 'ENABLE',
+                'alarm id': cmd.setvalue['alarm id'],
+                'enable': cmd.setvalue['enable']
             }
         })
     }

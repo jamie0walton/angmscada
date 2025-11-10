@@ -10,7 +10,7 @@
     <button *ngIf="abnormal" class="me-4 px-2 py-1 btn btn-danger"  (click)="filter_abnormal()" style="font-family: 'Arial Narrow', sans-serif;">
       ABNORMAL
     </button>
-    <div class="me-4" (click)="formAdd(-1)">
+    <div class="me-4" (click)="formEdit(-1)">
       <app-icon icon="pencil" width="20" height="20"></app-icon>
     </div>
     <div class="me-4" (click)="downloadcsv()">
@@ -33,7 +33,7 @@
 <div class="row" *ngFor="let x of show; index as i" [ngStyle]="{
     'background-color': (i%2 == 0 ? '#d0d0d0' : ''),
     'box-shadow': x.abnormal === 1 ? 'inset 8px 0 0 #ff0000' : 'none'
-}" (click)="formAdd(i)">
+}" (click)="formEdit(i)">
   <div class="col-12 col-md-4 small">
     <div class="row">
       <div class="col-4">

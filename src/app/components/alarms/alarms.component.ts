@@ -192,6 +192,29 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         }
     }
 
+    formEdit(alarmname: string) {
+        let alarm = new MsForm.Control()
+        alarm.name = 'alarm id'
+        alarm.inputtype = 'description'
+        alarm.stringvalue = alarmname
+
+        let state = new MsForm.Control()
+        state.name = 'enable'
+        state.inputtype = 'filter'
+        state.options = ['Enable', 'Disable until 8am', 'Disable until 4pm', 'Disable until Monday 8am']
+        state.stringvalue = 'Enable'
+
+        this.form.requestid = 'alarms enable'
+        this.form.name = 'Alarm Annunciation'
+        this.form.delete = false
+        this.form.controls = [alarm, state]
+        this.formstore.pubFormOpts(this.form)
+    }
+
+    formAction(cmd: MsForm.Close) {
+        this.alarmstore.alarm_action(cmd)
+    }
+
     ngOnInit(): void {
         if (this.item.config?.age_d) {
             this.alarmstore.set_age_d(this.item.config.age_d)
@@ -203,7 +226,10 @@ export class AlarmsComponent implements OnInit, OnDestroy {
                 this.updateshow()
             }),
             this.formstore.closesubject.asObservable().subscribe(cmd => {
-                if (cmd.requestid.startsWith('alarms filter')) {
+                if (cmd.requestid == 'alarms enable') {
+                    this.formAction(cmd)
+                }
+                else if (cmd.requestid.startsWith('alarms filter')) {
                     this.formFilterAction(cmd)
                 }
             })
