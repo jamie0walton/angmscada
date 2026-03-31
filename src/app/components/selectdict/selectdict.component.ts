@@ -72,6 +72,7 @@ export class SelectDictComponent extends BaseFormComponent {
     localFormAction(cmd: MsForm.Close) {
         if (cmd.action === 'submit' && this.tag.name in cmd.setvalue) {
             let newvalue = {
+                "times": [...this.tag.value.times],
                 "labels": [...this.tag.value.labels],
                 "values": [...this.tag.value.values],
                 "locks": [...this.tag.value.locks]
