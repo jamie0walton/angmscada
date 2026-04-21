@@ -10,12 +10,13 @@
         <app-opnotes *ngSwitchCase="'opnotes'" [item]="i"></app-opnotes>
         <app-callout *ngSwitchCase="'callout'" [item]="i"></app-callout>
         <app-alarms *ngSwitchCase="'alarms'" [item]="i"></app-alarms>
-        <div *ngSwitchCase="'h1'"><h1>{{i.desc}}</h1></div>
-        <div *ngSwitchCase="'h2'"><h2>{{i.desc}}</h2></div>
-        <div *ngSwitchCase="'h3'"><h3>{{i.desc}}</h3></div>
-        <div *ngSwitchCase="'p'"><p>{{i.desc}}</p></div>
-        <div *ngSwitchCase="'br'"><br/></div>
-        <div *ngSwitchCase="'hr'"><hr/></div>
+        <div *ngSwitchCase="'h1'"><h1 class="{{i.style}}">{{i.desc}}</h1></div>
+        <div *ngSwitchCase="'h2'"><h2 class="{{i.style}}">{{i.desc}}</h2></div>
+        <div *ngSwitchCase="'h3'"><h3 class="{{i.style}}">{{i.desc}}</h3></div>
+        <div *ngSwitchCase="'p'"><p class="{{i.style}}">{{i.desc}}</p></div>
+        <div *ngSwitchCase="'br'"><br class="{{i.style}}"/></div>
+        <div *ngSwitchCase="'hr'"><hr class="{{i.style}}"/></div>
+        <div *ngSwitchCase="'linebreak'"><div class="w-100 h-0 overflow-hidden"></div></div>
         <div *ngSwitchDefault><p>Nothing defined for {{i.type}}</p></div>
       </div>
     </div>
