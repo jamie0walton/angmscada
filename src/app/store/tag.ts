@@ -151,6 +151,25 @@ export class TagSubject {
                 tag.history.times_ms.push(time_ms)
                 tag.history.values.push(value)
             }
+            else {
+                // Use tail end search as this is normally much shorter
+                let keep_to = -1
+                for (let i = tag.history.times_ms.length - 1; i >= 0; i--) {
+                    if (tag.history.times_ms[i] >= time_ms) {
+                        keep_to = i
+                    }
+                    else {
+                        break
+                    }
+                }
+                if (keep_to != -1) {
+                    tag.history.times_ms.splice(keep_to)
+                    tag.history.values.splice(keep_to)
+                }
+                tag.history.times_ms.push(time_ms)
+                tag.history.values.push(value)
+                tag.new_history = true
+            }
         }
         else if (typeof value === 'string') {
             tag.stringhistory.times_ms.push(time_ms)
@@ -160,13 +179,13 @@ export class TagSubject {
                 tag.stringhistory.values.shift()
             }
         }
-        tag.new_history = false
     }
 
     update(id: number, time_ms: number, value: any) {
         let tag: Tag = this.tag_by_id[id]
         this.update_tag(tag, time_ms, value)
         this.subjects[tag.name].next(tag)
+        tag.new_history = false
     }
 
     /**

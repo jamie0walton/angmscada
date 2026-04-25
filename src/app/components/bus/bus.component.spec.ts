@@ -40,7 +40,7 @@ describe('components\\bus', () => {
         }).compileComponents()
 
         configSubject = TestBed.inject(ConfigSubject)
-        configSubject.set_ws('ws://127.0.0.1:8325/ws')
+        configSubject.update({ ws: 'ws://127.0.0.1:8325/ws' })
         tagSubject = TestBed.inject(TagSubject)
         pageSubject = TestBed.inject(PageSubject)
         commandSubject = TestBed.inject(CommandSubject)
