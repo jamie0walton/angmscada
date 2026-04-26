@@ -185,6 +185,7 @@ export class UplotDataSet {
     add_tag_value(tag: Tag) {
         const tag_idx = this.tags.indexOf(tag)
         const tag_count = this.tags.length
+        console.log('uplot add_history tag', {tag: tag.name, trace_id: tag_idx})
         if (tag.new_history) {
             this.aligned.add_history(tag_idx, tag.history.times_ms, tag.history.values)
         }
@@ -204,6 +205,7 @@ export class UplotDataSet {
         this.tags = tags
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
+            console.log('uplot add_history tag', {tag: tag.name, trace_id: i})
             this.aligned.add_history(i, tag.history.times_ms, tag.history.values)
         }
         this.show = this.aligned.get_uplot_data()

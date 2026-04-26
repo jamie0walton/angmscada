@@ -53,7 +53,7 @@ describe('shared\\time_series merge_time_series', () => {
             times_ms: [1, 2, 101, 102, 103, 104, 105],
             values: [999, 998, 0, 100, 0, -100, 0]
         }
-        expect(merge_time_series(a, b)).toEqual(c)
+        expect(merge_time_series(b, a)).toEqual(c)
     })
 
     it('append b on a', () => {
@@ -83,9 +83,9 @@ describe('shared\\time_series merge_time_series', () => {
         }
         let c: TimeNumberSeries = {
             times_ms: [1, 2, 101, 102, 103, 104, 105],
-            values: [999, 998, 1, 101, 0, -100, 0]
+            values: [999, 998, 0, 100, 0, -100, 0]
         }
-        expect(merge_time_series(a, b)).toEqual(c)
+        expect(merge_time_series(b, a)).toEqual(c)
     })
 
     it('merge b on a', () => {
@@ -99,7 +99,7 @@ describe('shared\\time_series merge_time_series', () => {
         }
         let c: TimeNumberSeries = {
             times_ms: [101, 102, 103, 104, 105, 901, 902],
-            values: [0, 100, 0, -100, 0, 999, 998]
+            values: [0, 100, 0, -101, -1, 999, 998]
         }
         expect(merge_time_series(a, b)).toEqual(c)
     })
