@@ -12,8 +12,7 @@ Note the python __alarms__ tag is set in the server as:
         'date_ms': result[1],
         'tag_alm': result[2],
         'kind': result[3],
-        'desc': result[4],
-        'group': result[5]
+        'desc': result[4]
     }
     bulk style
     self.rta.value = {'__rta_id__': request['__rta_id__'],
@@ -25,7 +24,6 @@ export interface Alarm {
     date_ms: number
     alarm: string
     kind: number
-    group: string
     desc: string
 }
 
@@ -59,7 +57,6 @@ export class AlarmSubject {
                     date_ms: tag_value.date_ms,
                     alarm: tag_value.alarm_string,
                     kind: tag_value.kind,
-                    group: tag_value.group,
                     desc: tag_value.desc
                 }
                 if (index === -1) {  // not present, insert in descending order
@@ -87,8 +84,7 @@ export class AlarmSubject {
                     date_ms: rec[1],
                     alarm: rec[2],
                     kind: rec[3],
-                    desc: rec[4],
-                    group: rec[5]
+                    desc: rec[4]
                 }
                 if (rec[0] in startidx) {
                     this.alarms[startidx[rec[0]]] = update

@@ -15,6 +15,7 @@ export interface Tag {
     time_ms: number
     min: number | null
     max: number | null
+    deadband: number | null
     units: string | null
     multi: string[] | null
     dp: number
@@ -42,6 +43,7 @@ export class Tag implements Tag {
         this.time_ms = 0
         this.min = null
         this.max = null
+        this.deadband = null
         this.units = null
         this.multi = null
         this.dp = 0
@@ -122,6 +124,7 @@ export class TagSubject {
         if (src.hasOwnProperty('time_ms')) { tag.time_ms = src.time_ms }
         if (src.hasOwnProperty('min')) { tag.min = src.min }
         if (src.hasOwnProperty('max')) { tag.max = src.max }
+        if (src.hasOwnProperty('deadband')) { tag.deadband = src.deadband }
         if (src.hasOwnProperty('units')) { tag.units = src.units }
         if (src.hasOwnProperty('multi')) {
             tag.multi = src.multi;

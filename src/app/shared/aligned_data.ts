@@ -2,6 +2,10 @@
 // time and value trace vector additions and insertions.
 // Maintain a smoothed set for each trace, provide either
 // raw or smoothed on a switch setting.
+
+// uplot expects a single time series and every set of trace
+// values to be exactly aligned with the time series with
+// null values where the trace has no data.
 import { bisect } from "./functions"
 
 const SMOOTHERS = ['raw', 'average', 'median']
@@ -249,8 +253,12 @@ export class UplotVectors {
 
     private initializeNewTrace(trace_id: number, exist_len: number) {
         this.trace_by_col.push(trace_id)
+        let values: (number|null)[] = []
+        for (let i = 0; i < exist_len; i++) {
+            values.push(null)
+        }
         this.traces[trace_id] = {
-            values: Array(exist_len).fill(null),
+            values: values,
             smooth: [],
             smooth_from: 0,
             smoothing: false,
@@ -269,10 +277,14 @@ export class UplotVectors {
             if (do_id === trace_id) {
                 do_trace.values = do_trace.values.concat(values)
             } else {
-                do_trace.values = do_trace.values.concat(Array(times.length).fill(null))
+                for (let i = 0; i < times.length; i++) {
+                    do_trace.values.push(null)
+                }
             }
             if (do_trace.smoothing) {
-                do_trace.smooth = do_trace.smooth.concat(Array(times.length).fill(null))
+                for (let i = 0; i < times.length; i++) {
+                    do_trace.smooth.push(null)
+                }
             }
         }
     }
@@ -321,16 +333,24 @@ export class UplotVectors {
 
     private appendRemainingNewData(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, times: number[], values: (number | null)[], new_pos: number): number[] {
         const new_remain_len = times.length - new_pos
-        new_times = new_times.concat(times.slice(new_pos))
+        for (let i = new_pos; i < times.length; i++) {
+            new_times.push(times[i])
+        }
         for (const do_id of this.trace_by_col) {
             const do_trace = this.traces[do_id]
             if (do_trace.smoothing) {
-                new_smooth[do_id] = new_smooth[do_id].concat(Array(new_remain_len).fill(null))
+                for (let i = 0; i < new_remain_len; i++) {
+                    new_smooth[do_id].push(null)
+                }
             }
             if (do_id === trace_id) {
-                new_values[do_id] = new_values[do_id].concat(values.slice(new_pos))
+                for (let i = new_pos; i < values.length; i++) {
+                    new_values[do_id].push(values[i])
+                }
             } else {
-                new_values[do_id] = new_values[do_id].concat(Array(new_remain_len).fill(null))
+                for (let i = 0; i < new_remain_len; i++) {
+                    new_values[do_id].push(null)
+                }
             }
         }
         return new_times
@@ -338,17 +358,25 @@ export class UplotVectors {
 
     private appendRemainingExistingData(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, exist_pos: number): number[] {
         const exist_remain_len = this.times.length - exist_pos
-        new_times = new_times.concat(this.times.slice(exist_pos))
+        for (let i = exist_pos; i < this.times.length; i++) {
+            new_times.push(this.times[i])
+        }
         for (const do_id of this.trace_by_col) {
             const do_trace = this.traces[do_id]
             if (do_trace.smoothing) {
                 if (do_id === trace_id) {
-                    new_smooth[do_id] = new_smooth[do_id].concat(Array(exist_remain_len).fill(null))
+                    for (let i = 0; i < exist_remain_len; i++) {
+                        new_smooth[do_id].push(null)
+                    }
                 } else {
-                    new_smooth[do_id] = new_smooth[do_id].concat(do_trace.smooth.slice(exist_pos))
+                    for (let i = exist_pos; i < do_trace.smooth.length; i++) {
+                        new_smooth[do_id].push(do_trace.smooth[i])
+                    }
                 }
             }
-            new_values[do_id] = new_values[do_id].concat(do_trace.values.slice(exist_pos))
+            for (let i = exist_pos; i < do_trace.values.length; i++) {
+                new_values[do_id].push(do_trace.values[i])
+            }
         }
         return new_times
     }
@@ -377,13 +405,19 @@ export class UplotVectors {
 
     private handleExistingDataPoint(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, exist_pos: number, next_new_time: number): [number[], number] {
         const add_in_this = bisect(this.times, next_new_time)
-        new_times = new_times.concat(this.times.slice(exist_pos, add_in_this))
+        for (let i = exist_pos; i < add_in_this; i++) {
+            new_times.push(this.times[i])
+        }
         for (const do_id of this.trace_by_col) {
             const do_trace = this.traces[do_id]
             if (do_trace.smoothing) {
-                new_smooth[do_id] = new_smooth[do_id].concat(do_trace.smooth.slice(exist_pos, add_in_this))
+                for (let i = exist_pos; i < add_in_this; i++) {
+                    new_smooth[do_id].push(do_trace.smooth[i])
+                }
             }
-            new_values[do_id] = new_values[do_id].concat(do_trace.values.slice(exist_pos, add_in_this))
+            for (let i = exist_pos; i < add_in_this; i++) {
+                new_values[do_id].push(do_trace.values[i])
+            }
         }
         return [new_times, add_in_this]
     }
@@ -391,7 +425,9 @@ export class UplotVectors {
     private handleNewDataPoint(new_times: number[], new_values: {[trace_id: number]: (number|null)[]}, new_smooth: {[trace_id: number]: (number|null)[]}, trace_id: number, times: number[], values: (number | null)[], new_pos: number, next_exist_time: number): [number[], number] {
         const exist_in_new = bisect(times, next_exist_time)
         const add_new_len = exist_in_new - new_pos
-        new_times = new_times.concat(times.slice(new_pos, exist_in_new))
+        for (let i = new_pos; i < exist_in_new; i++) {
+            new_times.push(times[i])
+        }
         for (const do_id of this.trace_by_col) {
             const do_trace = this.traces[do_id]
             if (do_trace.smoothing) {
@@ -399,18 +435,26 @@ export class UplotVectors {
                     if (do_trace.smooth_from > new_smooth[do_id].length) {
                         do_trace.smooth_from = new_smooth[do_id].length
                     }
-                    new_smooth[do_id] = new_smooth[do_id].concat(Array(add_new_len).fill(null))
+                    for (let i = 0; i < add_new_len; i++) {
+                        new_smooth[do_id].push(null)
+                    }
                 } else {
                     if (do_trace.smooth_from >= new_smooth[do_id].length) {
                         do_trace.smooth_from += add_new_len
                     }
-                    new_smooth[do_id] = new_smooth[do_id].concat(Array(add_new_len).fill(null))
+                    for (let i = 0; i < add_new_len; i++) {
+                        new_smooth[do_id].push(null)
+                    }
                 }
             }
             if (do_id === trace_id) {
-                new_values[do_id] = new_values[do_id].concat(values.slice(new_pos, exist_in_new))
+                for (let i = new_pos; i < exist_in_new; i++) {
+                    new_values[do_id].push(values[i])
+                }
             } else {
-                new_values[do_id] = new_values[do_id].concat(Array(add_new_len).fill(null))
+                for (let i = 0; i < add_new_len; i++) {
+                    new_values[do_id].push(null)
+                }
             }
         }
         return [new_times, exist_in_new]

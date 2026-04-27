@@ -1,15 +1,13 @@
 <h3>Callout</h3>
 <div class="row ms-bg-primary text-light border-bottom-0">
-  <div class="col-3 mt-1 mb-1">Callee</div>
-  <div class="col-3 mt-1 mb-1">SMS</div>
-  <div class="col-2 mt-1 mb-1">Role</div>
-  <div class="col-4 mt-1 mb-1">Group</div>
+  <div class="col-4 mt-1 mb-1">Callee</div>
+  <div class="col-4 mt-1 mb-1">SMS</div>
+  <div class="col-4 mt-1 mb-1">Role</div>
 </div>
 <div class="row" *ngFor="let callee of calleeData.callees; index as i" 
   [ngStyle]="{'background-color': (i%2 == 0 ? '#d0d0d0' : '')}"
   (click)="showForm(i)">
-  <div class="col-3 mt-1 mb-1 pe-0">{{callee.name}}</div>
-  <div class="col-3 mt-1 mb-1 pe-0 truncate">{{callee.sms}}</div>
-  <div class="col-2 mt-1 mb-1 pe-0">{{callee.role}}</div>
-  <div class="col-4 mt-1 mb-1 pe-0">{{callee.group}}</div>
+  <div class="col-4 mt-1 mb-1 pe-0">{{callee.name}}</div>
+  <div class="col-4 mt-1 mb-1 pe-0 truncate">{{callee.sms}}</div>
+  <div class="col-4 mt-1 mb-1 pe-0">{{callee.role}}</div>
 </div>

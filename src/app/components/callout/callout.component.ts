@@ -30,7 +30,7 @@ export class CalloutComponent implements OnInit, OnDestroy {
         this.to = ''
         this.form = new MsForm.Form()
         this.form.requestid = 'callout'
-        this.calleeData = { callees: [], groups: [], escalation: [] }
+        this.calleeData = { callees: [], escalation: [] }
     }
 
     showForm(index: number) {
@@ -53,16 +53,10 @@ export class CalloutComponent implements OnInit, OnDestroy {
         role.options = this.calleeData.escalation
         role.stringvalue = callee.role
 
-        let groups = new MsForm.Control()
-        groups.name = 'group'
-        groups.inputtype = 'filter'
-        groups.options = Object.keys(this.calleeData.groups)
-        groups.stringvalue = callee.group
-
         this.form.requestid = this.item.tagname
         this.form.name = "Edit Callee"
         this.form.delete = false
-        this.form.controls = [name, sms, role, groups]
+        this.form.controls = [name, sms, role]
         this.formstore.pubFormOpts(this.form)
     }
 

@@ -2,6 +2,8 @@ import { inject } from '@angular/core'
 import { Tag, TagSubject } from 'src/app/store/tag'
 import { UplotVectors } from 'src/app/shared/aligned_data'
 
+const DEADBAND_FORCE_MS = 3600000
+
 export class UplotDataSet {
     tagstore = inject(TagSubject)
     tags: Tag[]
@@ -20,6 +22,8 @@ export class UplotDataSet {
     reset_scales: boolean
     age: number
     future: number
+    lastPlotValue: (number|null)[]
+    lastPlotTimeMs: (number|null)[]
 
 
     constructor() {
@@ -34,6 +38,8 @@ export class UplotDataSet {
         this.reset_scales = true
         this.age = 0
         this.future = 0
+        this.lastPlotValue = []
+        this.lastPlotTimeMs = []
     }
 
     /**
@@ -184,13 +190,22 @@ export class UplotDataSet {
      */
     add_tag_value(tag: Tag) {
         const tag_idx = this.tags.indexOf(tag)
-        const tag_count = this.tags.length
-        console.log('uplot add_history tag', {tag: tag.name, trace_id: tag_idx})
+//        console.log('uplot add_history tag', {tag: tag.name, trace_id: tag_idx})
         if (tag.new_history) {
             this.aligned.add_history(tag_idx, tag.history.times_ms, tag.history.values)
+            if (tag_idx >= 0) {
+                this.seedLastPlotFromTag(tag_idx, tag)
+            }
         }
         else {
+            if (this.shouldSkipSingleForDeadband(tag, tag_idx)) {
+                return
+            }
             this.aligned.add_history(tag_idx, [tag.time_ms], [tag.value])
+            if (tag_idx >= 0 && typeof tag.value === 'number') {
+                this.lastPlotValue[tag_idx] = tag.value
+                this.lastPlotTimeMs[tag_idx] = tag.time_ms
+            }
         }
         this.show = this.aligned.get_uplot_data()
         this.updateshow = true
@@ -203,12 +218,55 @@ export class UplotDataSet {
      */
     initialise(tags: Tag[]) {
         this.tags = tags
+        this.lastPlotValue = new Array(tags.length).fill(null)
+        this.lastPlotTimeMs = new Array(tags.length).fill(null)
         for (let i = 0; i < tags.length; i++) {
             const tag = tags[i]
             console.log('uplot add_history tag', {tag: tag.name, trace_id: i})
             this.aligned.add_history(i, tag.history.times_ms, tag.history.values)
+            this.seedLastPlotFromTag(i, tag)
         }
         this.show = this.aligned.get_uplot_data()
         this.updateshow = true
+    }
+
+    private seedLastPlotFromTag(tag_idx: number, tag: Tag) {
+        const n = tag.history.times_ms.length
+        if (n > 0 && typeof tag.history.values[n - 1] === 'number') {
+            this.lastPlotValue[tag_idx] = tag.history.values[n - 1]
+            this.lastPlotTimeMs[tag_idx] = tag.history.times_ms[n - 1]
+        }
+        else {
+            this.lastPlotValue[tag_idx] = null
+            this.lastPlotTimeMs[tag_idx] = null
+        }
+    }
+
+    private shouldSkipSingleForDeadband(tag: Tag, tag_idx: number): boolean {
+        if (tag_idx < 0) {
+            return false
+        }
+        if (typeof tag.value !== 'number') {
+            return false
+        }
+        if (tag.deadband == null) {
+            return false
+        }
+        const db = tag.deadband
+        if (typeof db !== 'number' || db < 0) {
+            return false
+        }
+        const lastV = this.lastPlotValue[tag_idx]
+        const lastT = this.lastPlotTimeMs[tag_idx]
+        if (lastV === null || lastT === null) {
+            return false
+        }
+        if (typeof lastV !== 'number') {
+            return false
+        }
+        if (tag.time_ms - lastT >= DEADBAND_FORCE_MS) {
+            return false
+        }
+        return Math.abs(tag.value - lastV) <= db
     }
 }

@@ -22,7 +22,6 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         kind_RTN: number,
         kind_ACT: number,
         kind_INF: number,
-        group: string,
         desc: string
     }
     form: MsForm.Form
@@ -42,8 +41,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
             kind_RTN: 0,
             kind_ACT: 0,
             kind_INF: 0,
-            desc: '',
-            group: ''
+            desc: ''
         }
         this.form = new MsForm.Form()
    }
@@ -53,10 +51,13 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         15 Jul 2024, Excel is so broken, very hard to get a CSV to work.
         */
         // Make CSV
-        let csv = 'id,date,tagname,kind,group,desc\n'
+        let csv = 'id,date,tagname,kind,desc\n'
         for (let i = 0; i < this.show.length; i++) {
             const e = this.show[i]
-            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms)) + ',' + e.alarm + ',' + ['Alarm', 'Return to Normal', 'Action', 'Information'][e.kind] + ',' + e.group + ',"' + e.desc.replace(/"/g, '""') + '"\n'
+            csv += e.id + ',' + csvdatetimestring(new Date(e.date_ms))
+                + ',' + e.alarm + ',' + ['Alarm', 'Return to Normal',
+                'Action', 'Information'][e.kind] + ',"'
+                + e.desc.replace(/"/g, '""') + '"\n'
         }
         // Deliver CSV
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -74,18 +75,15 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         let filter_kind = (this.filter.kind_ALM + this.filter.kind_RTN + this.filter.kind_ACT + this.filter.kind_INF) > 0 ? true : false
         if (this.filter.alarm.length === 0 && 
             !filter_kind && 
-            this.filter.desc.length === 0 &&
-            this.filter.group.length === 0) {
+            this.filter.desc.length === 0) {
             this.show = this.alarms
             return
         }
         this.show = []
         let dotagname = this.filter.alarm.length > 0
         let dodesc = this.filter.desc.length > 0
-        let dogroup = this.filter.group.length > 0
         let tagnamere: RegExp = new RegExp(this.filter.alarm, 'i')
         let descre: RegExp = new RegExp(this.filter.desc, 'i')
-        let groupre: RegExp = new RegExp(this.filter.group, 'i')
         for (let i = 0; i < this.alarms.length; i++) {
             const e = this.alarms[i]
             let note: Alarm = {
@@ -93,12 +91,10 @@ export class AlarmsComponent implements OnInit, OnDestroy {
                 date_ms: e.date_ms,
                 alarm: e.alarm,
                 kind: e.kind,
-                group: e.group,
                 desc: e.desc
             }
             let matches = true
             if (dotagname && !tagnamere.test(e.alarm)) matches = false
-            if (dogroup && !groupre.test(e.group)) matches = false
             if (filter_kind) {
                 if (this.filter.kind_ALM == 0 && e.kind == 0 ||
                     this.filter.kind_RTN == 0 && e.kind == 1 ||
@@ -144,11 +140,6 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         inf.inputtype = 'checkbox'
         inf.numbervalue = this.filter.kind_INF
 
-        let group = new MsForm.Control()
-        group.name = 'Group'
-        group.inputtype = 'filter'
-        group.stringvalue = this.filter.group
-
         let desc = new MsForm.Control()
         desc.name = 'Description'
         desc.inputtype = 'filter'
@@ -157,7 +148,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         this.form.requestid = 'alarms filter'
         this.form.name = "Set Display Filter"
         this.form.delete = false
-        this.form.controls = [start, alm, rtn, act, inf, group, alarm, desc]
+        this.form.controls = [start, alm, rtn, act, inf, alarm, desc]
         this.formstore.pubFormOpts(this.form)
     }
 
@@ -181,9 +172,6 @@ export class AlarmsComponent implements OnInit, OnDestroy {
             }
             if (typeof(cmd.setvalue['Information']) === 'number') {
                 this.filter.kind_INF = cmd.setvalue['Information']
-            }
-            if (typeof(cmd.setvalue['Group']) === 'string') {
-                this.filter.group = cmd.setvalue['Group']
             }
             if (typeof(cmd.setvalue['Description']) === 'string') {
                 this.filter.desc = cmd.setvalue['Description']

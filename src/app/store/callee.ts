@@ -7,12 +7,10 @@ export interface Callee {
     name: string
     sms: string
     role: string
-    group: string
 }
 
 export interface CalleeData {
     callees: Callee[]
-    groups: { [key: string]: any }
     escalation: string[]
 }
 
@@ -22,7 +20,6 @@ export interface CalleeData {
 export class CalleeSubject {
     subject: BehaviorSubject<CalleeData>
     private callees: Callee[]
-    private groups: { [key: string]: any }
     private escalation: string[]
     private tagstore: TagSubject
     private commandstore: CommandSubject
@@ -31,11 +28,9 @@ export class CalleeSubject {
 
     constructor() {
         this.callees = []
-        this.groups = {}
         this.escalation = []
         this.subject = new BehaviorSubject<CalleeData>({
             callees: this.callees,
-            groups: this.groups,
             escalation: this.escalation
         })
         this.tagstore = inject(TagSubject)
@@ -55,19 +50,14 @@ export class CalleeSubject {
             this.callees = tag_value.callees.map((callee: any) => ({
                 name: callee.name || '',
                 sms: callee.sms || '',
-                role: callee.role || '',
-                group: callee.group || ''
+                role: callee.role || ''
             }))
-        }
-        if (tag_value?.hasOwnProperty('groups') && typeof tag_value.groups === 'object') {
-            this.groups = tag_value.groups
         }
         if (tag_value?.hasOwnProperty('escalation') && Array.isArray(tag_value.escalation)) {
             this.escalation = tag_value.escalation
         }
         this.subject.next({
             callees: this.callees,
-            groups: this.groups,
             escalation: this.escalation
         })
     }
@@ -90,7 +80,6 @@ export class CalleeSubject {
         if (cmd.action === 'submit') {
             const calleeName = cmd.setvalue['name'] as string
             const role = cmd.setvalue['role'] as string
-            const group = cmd.setvalue['group'] as string
 
             this.commandstore.command({
                 type: 'rta',
@@ -98,8 +87,7 @@ export class CalleeSubject {
                 value: {
                     action: 'MODIFY',
                     name: calleeName,
-                    role: role,
-                    group: group
+                    role: role
                 }
             })
         }
