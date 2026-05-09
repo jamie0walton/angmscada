@@ -220,41 +220,6 @@ export class UplotComponent implements OnInit, OnDestroy {
         }
     }
 
-    formSmooth() {
-        this.form.name = 'Smoothing'
-        let active = this.udataset.aligned.filters
-        if(this.plot != undefined) {
-            this.form.requestid = 'uplot-smooth'
-            this.form.description = 'Plot Config Smoothing'
-            this.form.action = 'update'
-            let controls: MsForm.Control[] = []
-            let filter = new MsForm.Control()
-            filter.inputtype = 'multi'
-            filter.name = 'filter'
-            filter.options = active.options
-            filter.numbervalue = active.selected
-            controls.push(filter)
-            let factor = new MsForm.Control()
-            factor.inputtype = 'int'
-            factor.name = 'factor'
-            factor.min = 3
-            factor.max = 50
-            if (active.factor < 3) {
-                factor.numbervalue = 15
-            }
-            else {
-                factor.numbervalue = active.factor
-            }
-            controls.push(factor)
-            this.form.controls = controls
-            this.formstore.pubFormOpts(this.form)
-        }
-    }
-
-    smoothAction(cmd: any) {
-        this.udataset.set_filter(cmd.filter, cmd.factor)
-    }
-
     toggleLegend() {
         if(this.legend_class == 'ms-uplot-none') {
             return
@@ -599,11 +564,6 @@ export class UplotComponent implements OnInit, OnDestroy {
                 if(cmd.requestid === 'uplot') {
                     if(cmd.action === 'submit'){
                         this.scaleAction(cmd.setvalue)
-                    }
-                }
-                else if(cmd.requestid === 'uplot-smooth') {
-                    if(cmd.action === 'submit'){
-                        this.smoothAction(cmd.setvalue)
                     }
                 }
             })

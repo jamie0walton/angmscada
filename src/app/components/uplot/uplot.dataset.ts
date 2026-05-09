@@ -173,18 +173,6 @@ export class UplotDataSet {
     }
 
     /**
-     * Set the smoothing filter, apply on set and keep updating.
-     */
-    set_filter(filter: number, factor: number) {
-        this.aligned.filters.selected = filter
-        for (let i = 0; i < this.tags.length; i++) {
-            this.aligned.smoother_choose(i, this.aligned.filters.options[filter], factor)
-        }
-        this.show = this.aligned.get_uplot_data()
-        this.updateshow = true
-    }
-
-    /**
      * Add tag values to times_ms dict. Only add tag.history if the
      * tag has not been seen or if the history now has an earlier start.
      */
