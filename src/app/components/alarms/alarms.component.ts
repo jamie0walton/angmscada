@@ -189,7 +189,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
         let state = new MsForm.Control()
         state.name = 'enable'
         state.inputtype = 'filter'
-        state.options = ['Enable', 'Disable until 8am', 'Disable until 4pm', 'Disable until Monday 8am']
+        state.options = ['Enable', 'Disable until 8am', 'Disable until 4pm', 'Disable until Monday 8am', 'Disable Forever']
         state.stringvalue = 'Enable'
 
         this.form.requestid = 'alarms enable'
@@ -213,7 +213,7 @@ export class AlarmsComponent implements OnInit, OnDestroy {
                 this.alarms = alarms
                 this.updateshow()
             }),
-            this.formstore.closesubject.asObservable().subscribe(cmd => {
+            this.formstore.closesubject.asObservable().subscribe((cmd: any) => {
                 if (cmd.requestid == 'alarms enable') {
                     this.formAction(cmd)
                 }
